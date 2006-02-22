@@ -1,0 +1,65 @@
+# da fissare i parametri per il tipo di confronto
+interpola='T'
+iana=0
+imet=0
+imod=1
+ls=-1
+ruota='T'
+boxfix='F'
+boxlm='F'
+media='F'
+massimo='F'
+prob='F'
+distr='F'
+dxb=0.5
+dyb=0.5
+nminobs=1
+diffh='F'
+diffmax=500.
+thr=50.
+perc=50.
+deterministico='T'
+probabilistico='F'
+#
+# interpola = se si vuole interpolare (usa la ngetpoint) (T o F)
+# iana = 0 se si vogliono utilizzare le osservazioni
+#      = 1 se si vuole utilizzare l'analisi
+# imet = indicatore del metodo di trattamento della variabile
+#        0 scalare
+#        1 scalare tipo direzione del vento
+#        2 vettore (in questo caso sono obbligatorie due variabili)
+# imod = indicatore del tipo di interpolazione
+#				0	punto piu` vicino
+#				1	bilineare se ls<0
+#					pesato    se ls=>0
+#			        -1	ripete l'interpolazione
+#                                       tenendo costanti TUTTI i parametri
+# ls = indicatore utilizzo maschera mare terra (sia interpola sia box)
+#      non gestita se si vuole il punto piu' vicino
+#			        <0	ignora maschera mare terra
+#				0	utilizza solo punti di mare
+#				1	utilizza solo punti di terra
+#      se imod=0 e ls=1, sulla stazione per cui il punto piu' vicino e' di mare
+#      non interpola ma le assegna dato mancante
+# ruota = T se il modello e' su griglia ruotata (es LM)
+#         F se non lo e' (es ECMWF)
+# boxfix = se si vogliono costruire box non sovrapponentesi (T o F)
+# boxlm = se le box devono comunque essere di lm (T o F) (solo cosmo-leps)
+# media = se si vuole il valore medio in una box (T o F)
+# massimo = se si vuole il valore massimo in una box (T o F)
+# prob = se si vuole il valore di frequenza/probabilita' in una box (T o F)
+#        attenzione!! Le probabilita' si possono usare solo per la precipitazione!!
+# distr = se si vuole il valore del percentile scritto in 'perc' in una box (T o F)
+# dxb = dimensione long. della box in gradi
+# dyb = dimensione lat. della box in gradi
+# diffh = se si vuole tenere conto della differenza tra la quota 
+#         del punto stazione e la quota del punto di griglia del modello
+#         (vale solo con interpola='T')
+# diffmax = differenza massima ammessa tra le quote  
+# thr = soglia per il calcolo di frequenze/probabilita', 
+#       non viene considerata se prob='F'
+# perc = percentile della distribuzione degli osservati e dei previsti su cui si 
+#       calcolano gli scores - non viene considerata se distr='F'
+# deterministico = verifica usuale del run deterministico
+#                  o, nell'ensmeble, se si vogliono gli scores usuali per elemento
+# probabilistico = verifica dell'ensemble con scores probabilistici

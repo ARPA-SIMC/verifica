@@ -1,0 +1,8 @@
+### VERIFICA
+### path per le procedure di verifica
+
+VERSHARE=@pkgdatadir@/
+
+export VERSHARE
+
+

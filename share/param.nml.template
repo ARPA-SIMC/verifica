@@ -1,0 +1,9 @@
+ $param
+   par='B12001',
+ $end
+
+Namelist per fissare il parametro da verificare. Si deve inserire un valore 
+di Blocale come stringa carattere, due solo se si tratta delle due componenti
+di una variabile che deve essere verificata in modo vettoriale (previsto 
+solo da interpola).
+I valori di Blocale si trovano in $DIRDAT/dballe.txt.

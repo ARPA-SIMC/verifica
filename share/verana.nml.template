@@ -1,0 +1,19 @@
+
+ $verana
+   analisi=.F.,
+   nore=1,
+   incora=0,
+   ds='radar     ',
+ $end
+
+# namelist da modificare solo per la verifica di analisi
+# analisi = da porre .T. solo se si vogliono verificare delle analisi
+# nore = numero di analisi da verificare al giorno (solo per analisi, 1 altrimenti)
+# incora = incremento (in minuti) tra due analisi successive (viene aggiunto a ORA per un totale di NORE)
+# ds = descrittore di 'modello' + elaborazione (5+5, 10 caratteri a scelta)
+# cvar = codice che la variabile ha nell'archivio obdc
+# indvar = numero d'ordine della variabile nell'archivio obdc
+# fact = fattore per cui la variabile viene moltiplicata per andare in archivio obdc
+# lsvar = uso della maschera mare-terra (-1 per disabilitarla)
+#
+# una namelist per variabile!!!

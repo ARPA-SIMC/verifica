@@ -1,0 +1,20 @@
+ $cumula
+   giornoi=10,
+   mesei=09,
+   annoi=2004,
+   orai=00,
+   giornof=21,
+   mesef=09,
+   annof=2004,
+   oraf=12,
+   incora=3,
+   ncum=6,
+ $end
+
+giornoi,mesei,annoi,orai = istante di inizio del periodo su cui si 
+                           vogliono le cumulate
+giornof,mesef,annof,oraf = istante di fine del periodo su cui si 
+                           vogliono le cumulate
+incora = periodo in ore su cui sono cumulate le preci presenti in archivio, 
+         da usare per la attuale cumulazione
+ncum = periodo in ore su cui si vogliono cumulare le precipitazioni

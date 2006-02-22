@@ -1,0 +1,66 @@
+Codici per l'estrazione dei modelli archiviati in GRIB_ARCH
+
+lmsmr2, lmsmr2031, lmsmr2032
+
+total precipitation: tp, g00, 1 0 $iscad 4
+2m temperature: t, g02, 1 $iscad 0 0
+2m dew point temperature: td, g02, 1 $iscad 0 0
+2m relative humidity: rh, g02, 1 $iscad 0 0
+10m horizontal wind: u, v, g10, 1 $iscad 0 0
+mean sea level pressure: msl, mslp, 1 $iscad 0 0
+nota: non e' un errore, e' proprio cosi'!
+total cloud cover: tcc, g00,  1 $iscad 0 0
+
+
+necmwfeu
+
+total precipitation: tp, g00, 1 $iscad 0 0
+2m temperature: 2t, g00, 1 $iscad 0 0
+2m dew point temperature: 2d, g00, 1 $iscad 0 0
+10m horizontal wind: 10u, 10v, g00, 1 $iscad 0 0
+mean sea level pressure: msl, g00, 1 $iscad 0 0
+total cloud cover: tcc, g00, 1 $iscad 0 0
+
+
+wamad003, swanad100, swann1100, wamad002, wammed, swanad101, swann1101
+
+significant wave height: swh, g00, 1 $iscad 0 0
+mean wave direction: mwd g00, 1 $iscad 0 0
+peak period: pp1d, g00, 1 $iscad 0 0
+mean period: mwp, g00, 1 $iscad 0 0
+
+
+medit
+
+significant wave height: swh, mslp, 1 $iscad 0 10
+mean wave direction: mwd, mslp, 1 $iscad 0 10
+peak period: pp1d, mslp, 1 $iscad 0 10
+mean period: mwp, mslp, 1 $iscad 0 10
+
+
+MODELLI:
+
+lmsmr2     LAMI no nudg 0000 (+72) ogni 3 ore
+lmsmr2031  LAMI nudg 0000 e 1200 (+72) ogni 3 ore
+lmsmr2032  LAMI progn 0000 e 1200 (+72) ogni 3 ore
+lmsmr3032  LAMI progn 40 livelli - 0000 e 1200 (+72) ogni 3 ore
+lmsmr3033  LAMI Runge-Kutta 40 livelli - 0000 e 1200 (+72) ogni 3 ore
+lmdet40    LM su ECMWF (determin. di COSMO-LEPS) 40 livelli - 1200 (+120) ogni 3 ore
+necmwfeu   ECMWF ope 1200 (+168) 
+           ogni 6 ore fino a +84 (no 6 e 66) ogni 12 ore da +96
+cleps      COSMO-LEPS - ogni 6 ore fino a +120
+epsse      EPS super-ensemble - ogni 6 ore fino a +120
+eps51      EPS ensemble 51 elementi - ogni 6 ore fino a +120
+epsrm      EPS - ogni 6 ore fino a +120
+wamad003   wam adriatico su LAMI - 0000 - ogni 3 ore fino a +72h
+swanad100  swan adriatico - 0000 e 1200 - orario fino a +48h
+swann1100  swan nesting alto adriatico - 0000 e 1200 - orario fino a +48h
+wamad002   wam adriatico su LAMBO - 0000 - ogni 3 ore fino a +72h
+medit      wam mediterraneo a 0.5° che gira a ecmwf - emissione: 12
+           scadenze: 12-18-24-36-42-48-60-66-72-96-120
+           variabili SWH(229) MDWW(235) - livello: MSLP
+wammed     wam mediterraneo su GME+LAMI - 0000 - ogni 3 ore fino a +72h
+swanad101  swan adriatico - 0000 e 1200 - orario fino a +48h
+           + hot start - dal 2.2.2005
+swann1101  swan nesting alto adriatico - 0000 e 1200
+           orario fino a +48h - + hot start - dal 2.2.2005

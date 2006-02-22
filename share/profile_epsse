@@ -1,0 +1,19 @@
+ ce=98
+ ct=128
+ gp=255
+ ivtp=142
+ ivt=167
+ ivtd=168
+ ivrh=157
+ ivu=165
+ ivv=166
+ ivff=207
+ ivdd=44
+ ivmsl=151
+ ivtcc=164
+ ivor=129
+ ivlsm=172
+
+# ho messo ivtp a 142 perche' il grib e' scritto come fosse solo large scale (142), 
+# ma e' la pioggia totale sommata. Per ora non correggo, tanto non sono estratti, 
+# li creo io.

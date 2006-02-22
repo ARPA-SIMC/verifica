@@ -1,0 +1,5 @@
+
+E' ora necessario ridurre kvar alla sola variabile che si vuole
+verificare, quindi si deve scrivere un solo gruppo di tre valori (una
+variabile). Se invece si vuole verificare una variabile vettoriale, si
+devono scrivere entrambe le componenti.

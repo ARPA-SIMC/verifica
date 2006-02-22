@@ -1,0 +1,57 @@
+### VERIFICA
+### profile che pilota l'estrazione, lanciato da prepara_nml.job
+### autore: Chiara Marsigli
+### ultima modifica: 14 febbraio 2006 - modifica per uso DbAlle
+
+g1=01
+m1=11
+a1=2004
+g2=30
+m2=11
+a2=2004
+ora=1200
+mod=lmsmr2031
+mem=1
+param="t td"
+lev="g02"
+scadenze="1 6 0 0,1 12 0 0,1 18 0 0,1 24 0 0"
+dpar="rh"
+scad1=6
+scad2=24
+inc=6
+ncum="6 12 24"
+analisi=0
+ore=0000,0100,0200,0300,0400,0500,0600,0700,0800,0900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300
+
+### parametri dell'estrazione
+# g1    = giorno iniziale del periodo da estrarre
+# g2    = giorno finale del periodo da estrarre
+# m1    = mese iniziale del periodo da estrarre
+# m2    = mese finale del periodo da estrarre
+# a1    = anno iniziale del periodo da estrarre
+# a2    = anno finale del periodo da estrarre
+# ora   = ora di partenza del run (od ora iniziale per le analisi)
+# mod   = modello da estrarre (codice di GRIB_ARCH)
+# mem = numero di elementi dell'ensemble (1 altrimenti)
+# param = campi da estarre, stesso livello e stesse scadenze, separati da spazi.
+#         documentazione nel file spiega_GRIBARCH.txt
+# lev = livello del parametro (documentazione nel file spiega_GRIBARCH.txt)
+# scadenze = scadenze del parametro (documentazione nel file spiega_GRIBARCH.txt)
+# dpar  = campi derivati, che vengono calcolati 
+#        (al massimo: rh (da t e td), ff e dd (da u e v), separate da spazi)
+# scad1 = prima scadenza 
+#         - non zero e senza zeri davanti!!! 
+#         - Non deve essere minore di inc: 
+#           per la preci e' la scadenza finale del primo periodo di cumulazione
+#         - INVECE: 0 per la verifica di analisi
+# scad2 = ultima scadenza (0 per la verifica di analisi)
+# inc   = incremento temporale, 0 per le analisi
+# la preci viene automaticamente cumulata su intervalli di $inc ore
+# ncum  = scadenze (diverse da quelle che estraggo, al massimo 6 12 e 24, 
+#         separate da spazi) su cui voglio avere la preci cumulata
+# analisi = 1 se verifico delle analisi, 0 altrimenti
+# ore = ore cui estrarre l'analisi (compresa la prima, che e' identica a ora)
+#       quattro cifre: hhmm
+#       usata per la verifica delle analisi
+###
+

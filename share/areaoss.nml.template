@@ -1,0 +1,14 @@
+ $areaoss
+   area=.false.,
+   slon1=6.5,
+   slon2=14.,
+   slat1=42.5,
+   slat2=47.,
+ $end
+
+### area = per memorizzare solo i centri delle box che stanno nell'area
+###        specificata sotto (quella delle osservazioni) (T o F)
+### slon1 = longitudine minore dell'area
+### slon2 = longitudine maggiore dell'area
+### slat1 = latitudine minore dell'area
+### slat2 = latitudine maggiore dell'area

@@ -1,0 +1,17 @@
+ $regioni
+    path='/automount/nfs/a_home/boccaner/verifica_oracle/FILE_DAT/',
+    pathana='/home/marsigli/ver_ope/dat/anagrafiche/',
+    nre=12,
+    reg='EM','PI','LI','LF','TR','BZ','VE','FR','MA','AB','TF','SA',
+    nme=1,
+    mese='11',
+    anno='2004',
+ $end                 
+
+### nre=numero di regioni
+### reg=lista di regioni (ciascuna character*2) 
+### sono al massimo 12: 
+### 'EM', 'PI', 'LI', 'LF', 'TR', 'BZ', 'VE', 'FR', 'MA', 'AB', 'TF', 'SA'
+### anno=anno considerato (4 cifre)
+### nme=numero di mesi (al massimo 12)
+### mese=lista di mesi (ciascuno character*2)

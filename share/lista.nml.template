@@ -1,0 +1,27 @@
+ $lista
+   cvar='B12001',
+   iquota=-1,
+   hlimite=500.,
+   lthr=1,
+   nsoglie=2,
+   soglie=285.,290.,
+   daily=.F.
+ $end
+
+### ATTENZIONE!!!
+### scrivere una namelist per ciascuna variabile!!!
+
+### iquota = per verificare solo punti sopra o sotto ad una certa quota
+###          -1 se le voglio tutte
+###          0 solo pianura (sotto hlimite)
+###          1 solo montagna (sopra hlimite)
+### lthr = 0 se non si vogliono calcolare gli scores per soglia
+###      = 1 per calcolare gli scores sopra le soglie
+###      =-1 per calcolare gli scores sotto le soglie
+###      = 2 per calcolare gli scores tra le soglie (classi chiuse);
+###          scrivere anche l'estremo superiore dell'ultima classe in soglie
+###      = 3 per calcolare gli scores tra le soglie (classi chiuse) se 
+###          la penultima e l'ultima soglia definiscono una classe attorno 
+###          allo zero (per la direzione del vento o dell'onda);
+###          scrivere anche l'estremo superiore dell'ultima classe in soglie
+### param=t 

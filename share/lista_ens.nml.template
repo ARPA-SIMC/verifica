@@ -1,0 +1,14 @@
+ $lista
+   iquota=-1,
+   hlimite=500.,
+   nsoglie=5,
+   soglie=.2,10.,20.,50.,100.,
+   lwght=.F.,
+   nowght=11,11,10,10,10,10,10,10,10,10,
+ $end
+
+### iquota = per verificare solo punti sopra o sotto ad una certa quota
+###          -1 se le voglio tutte
+###          0 solo pianura (sotto hlimite)
+###          1 solo montagna (sopra hlimite)
+### scrivere una namelist per ciascuna variabile!!!

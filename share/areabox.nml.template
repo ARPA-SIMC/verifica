@@ -1,0 +1,11 @@
+ $areabox
+   pblon=7.,
+   pblat=43.,
+   ni=10,
+   nj=10,
+ $end
+
+### pblon = longitudine del punto centrale della prima box
+### pblat = latitudine del punto centrale della prima box
+### ni = numero di box in longitudine
+### nj = numero di box in latitudine

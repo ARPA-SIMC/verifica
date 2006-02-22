@@ -1,0 +1,14 @@
+ $obsmask
+   rfile='/home/marsigli/ver_ope/dat_dballe/lsm_lmsmr2031.grib',
+   iana=0,
+   ruota='T',
+   dist=0.15,
+ $end
+
+# rfile = file grib con la land-sea mask del modello
+# iana = 0 se si vogliono utilizzare le osservazioni
+#      = 1 se si vuole utilizzare l'analisi
+# ruota = T se il modello e' su griglia ruotata (es LM)
+#         F se non lo e' (es ECMWF)
+# dist = distanza massima accettabile (in gradi centesimali)
+#        tra il punto di griglia e l'osservazione piu' vicina
