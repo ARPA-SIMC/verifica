@@ -1,6 +1,6 @@
     program ver_pulisci
 
-    character(19) :: database,user,password
+    character(LEN=19) :: database,user,password
     integer :: handle
     logical :: debug
     data debug/.true./

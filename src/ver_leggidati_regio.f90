@@ -30,7 +30,8 @@
 
     real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
     integer :: idata(3),block,station
-    character(7) :: scode,code(nstaz),nomest(nstaz)*20,nome*20
+    character(LEN=7) :: scode,code(nstaz)
+    character(LEN=20) :: nomest(nstaz),nome
     character reg(MNRE)*2,mese(nmesi)*2,anno(nmesi)*4
     character path*80,pathana*80,cdum*2
 

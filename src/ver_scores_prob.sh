@@ -42,12 +42,14 @@ elif [ $boxfix = 'T' ] ; then
 fi
 
 echo ' $stat' > stat.nml
-echo '   model='$mod',' >> stat.nml
+echo '   model="'$mod'",' >> stat.nml
 echo '   itipo='$itipo',' >> stat.nml
 echo '   iana='$iana',' >> stat.nml
+echo '   imet='$imet',' >> stat.nml
 echo '   imod='$imod',' >> stat.nml
 echo '   ls='$ls',' >> stat.nml
 echo '   ruota='$ruota',' >> stat.nml
+echo '   nminobs='$nminobs',' >> stat.nml
 echo '   media='$media',' >> stat.nml
 echo '   massimo='$massimo',' >> stat.nml
 echo '   prob='$prob',' >> stat.nml
@@ -57,6 +59,7 @@ echo '   dyb='$dyb',' >> stat.nml
 echo '   diffh='$diffh',' >> stat.nml
 echo '   diffmax='$diffmax',' >> stat.nml
 echo '   thr='$thr',' >> stat.nml
+echo '   perc='$perc',' >> stat.nml
 echo ' $end' >> stat.nml
 
 ver_scores_prob_dballe

@@ -53,7 +53,7 @@
     integer, ALLOCATABLE :: anaid(:)
     integer, ALLOCATABLE :: wght(:,:)
 
-    character(19) :: database,user,password
+    character(LEN=19) :: database,user,password
 
     character btable*10
     integer :: handle

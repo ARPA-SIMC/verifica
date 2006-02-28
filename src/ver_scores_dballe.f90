@@ -121,7 +121,7 @@
     real, ALLOCATABLE :: lon(:),lat(:),alt(:)
     integer, ALLOCATABLE :: anaid(:)
 
-    character(19) :: database(49),user,password
+    CHARACTER(LEN=19) :: database,user,password
 
     character btable*10
     integer :: handle
@@ -297,11 +297,13 @@
 
                 do irm=1,nrm
 
-                    if(nrm > 1)then
-                        write(cel,'(i3.3)')irm
-                        descr=descrfisso(1:nlenvera(descrfisso)) &
-                        //'el'//cel
-                    endif
+                    IF(nrm == 1)THEN
+                      descr=descrfisso
+                    ELSEIF(nrm > 1) then
+                      WRITE(cel,'(i3.3)')irm
+                      descr=descrfisso(1:nlenvera(descrfisso)) &
+                       //'el'//cel
+                    ENDIF
 
                     call idba_setc (handle,"rep_memo",descr)
 

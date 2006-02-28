@@ -1,7 +1,7 @@
     program leggi
 
-    character(10) :: btable,starbtable(12)
-    character(10) :: dati(12)
+    character(LEN=10) :: btable,starbtable(12)
+    character(LEN=10) :: dati(12)
 ! character*10 dato
     real :: dato
     logical :: found,starfound

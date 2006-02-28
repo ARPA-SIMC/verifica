@@ -61,7 +61,7 @@
     logical ::   area
     real ::      dxb,dyb,diffmax,hdiff,thr,perc
     character model*10
-    character(19) :: database(49),user,password,ds(10)
+    character(19) :: database,user,password
 ! database
     integer :: handler,handle
     logical :: init,debug,rmmiss

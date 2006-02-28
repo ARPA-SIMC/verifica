@@ -11,6 +11,11 @@ if [ -z $EDITOR ] ; then
   exit 1
 fi
 
+if [ ! -f ./repinfo.csv ] ; then
+  cp /etc/dballe/repinfo.csv ./repinfo.csv
+fi
+$EDITOR repinfo.csv
+
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi

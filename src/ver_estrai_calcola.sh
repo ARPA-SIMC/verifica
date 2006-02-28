@@ -30,6 +30,8 @@ fi
 . profilestra
 . profile_"$mod"
 
+mkdir $SCRATCH/$PROJ
+
 gioin=$g1$m1$a1
 giofi=$g2$m2$a2
 giorni="$gioin"'_'"$giofi"
