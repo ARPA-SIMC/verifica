@@ -11,8 +11,6 @@
 125 onerrorgoto 500
 140 let B sottrai A
 145 onerrorgoto 600
-146 let B moltiplica @@fact
-147 onerrorgoto 700
 150 write 2 B
 165 close 1
 170 close 2

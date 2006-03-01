@@ -6,8 +6,6 @@
 116 setkey data:@@data scad:-1,@@scadenza,-1,-1
 120 find 1 A
 122 onerrorgoto 500
-146 let A moltiplica @@fact
-147 onerrorgoto 700
 150 write 2 A
 165 close 1
 170 close 2
