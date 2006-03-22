@@ -1,0 +1,284 @@
+
+                         Uso del pacchetto di verifica
+
+   Si puo' utilizzare da una qualunque macchina LINUX. La verifica si serve
+   di un database temporaneo sui cui vengono caricati tutti i dati e da cui
+   vengono poi letti per calcolare gli score. Il database risiede su strip.
+   Ciascuno puo' disporre di un database, vuoto all'inizio, indentificato
+   univocamente da nome (DSN), user e password. Per la creazione dei nuovi
+   database chiedere a Paolo Patruno.
+
+Settaggi iniziali
+
+   Nel proprio profile (es file .bash_profile nella propria $HOME) e'
+   necessario impostare:
+
+   export EDITOR=emacs (o l'editor che si preferisce)
+   Inoltre e' necessario che sia definita la variabile $SCRATCH.
+
+   Si utilizza la variabile di sistema $VERSHARE.
+
+Eseguire la verifica
+
+   Si lavora all'interno di una propria directory di lavoro. E' necessario
+   portarsi in questa directory per lanciare le varie script, perche' tutti i
+   file di appoggio, tutte le namelist e tutti i file dei risultati vengono
+   copiati o creati nella directory corrente.
+
+   Per eseguire la verifica e' necessario lanciare 4 script in sequenza:
+
+    1. una per il caricamento dei dati di riferimento contro cui verificare
+       (p.e. osservati) su database [26]DbAlle
+
+    2. una per impostare i parametri della verifica
+
+    3. una per il caricamento dei dati da verificare (p.e. previsti da un
+       modello) su database [27]DbAlle
+
+    4. una per il calcolo degli score (leggendo previsti e osservati da
+       database [28]DbAlle)
+
+   Tutte le script si trovano in PATH e cominciano per ver_.
+
+   E' possibile verificare solo le variabili riportate nel file
+   $VERSHARE/griBlocale.txt e solo i modelli per cui esiste nella stessa
+   directory un file chiamato profile_nomemodello. Prima di iniziare la
+   verifica bisogna assicurasi che il proprio parametro sia presente in
+   griBlocale e che il proprio modello abbia il suo profile, altrimenti e'
+   necessario aggiungerli direttamente nella propria directory di lavoro (->
+   vedere [29]aggiungimodello ).
+
+  Cancellazione del database
+
+   Se si vuole lavorare su un database vuoto e' opportuno cancellarlo
+   completamente prima di iniziare. Cio' si puo' fare con la script:
+
+   ver_pulisci.sh
+
+  Caricamento dei dati di riferimento
+
+   Ciascun utente e' responsabile di crearsi le script ed i codici per
+   caricare i dati di riferimento che intende usare.
+   Prima di fare qualunque altra cosa: controllare che il file repinfo.csv
+   (che si trova in /etc/dballe/) contenga le informazioni relative ai report
+   che si useranno. Tale file va copiato nella propria directory di lavoro.
+   Se mancano i tipi report voluti si possono aggiungere a questa. Se si
+   usano le script scrivi_oss.bash e scrivi_ana.bash, repinfo.csv viene
+   copiato automaticamente nella propria directory di lavoro, a meno che non
+   esista gia' (utile nel caso ne esista uno gia' modificato per i propri
+   scopi). Questo file agisce solo sul database che si sta usando, quindi le
+   modifiche apportate non devono necessariamente essere condivise con altri,
+   ciascuno puo' usare il suo e cambiarlo tra un uso del database ed il
+   sucessivo. In quest'ultimo caso, il database va svuotato e ricreato. Per
+   sapere come modificarlo, vedere [30]prepararepinfo.
+   Inoltre nella propria directory di lavoro ci deve essere il file
+   griBlocale.txt, che allo stesso modo viene copiato automaticamente quando
+   si lanciano le script scrivi_oss.bash e scrivi_ana.bash.
+
+   Cosa e' gia' pronto:
+
+     * Caricamento di osservati da database ORACLE su [31]DbAlle tramite i
+       comandi di [32]DbArpa
+
+     * Caricamento di osservati provenienti dalla raccolta dati effettuata
+       dal Piemonte per la verifica di LAMI.
+
+          * Sono dati triorari di precipitazione, temperatura, temperatura di
+            rugiada, intensita' del vento, direzione del vento. Praticamente
+            non subiscono controllo di qualita'
+            ([33]DatiRegioniPerVerificaLami).
+
+   Per caricarli: ver_scrivi_oss.sh Se si vogliono verificare le
+   precipitazioni cumulate su periodi maggiori e' necessario eseguire anche
+   la script: ver_cumula_preci.sh
+
+     * Caricamento di analisi in formato GRIB
+
+          * E' possibile caricare campi analizzati in formato GRIB, scritti
+            in coordinate ruotate e non.
+
+   ATTENZIONE!!!
+   E' prima necessario fare nella directory di lavoro un link al file
+   contenente tali dati:
+
+   ln -s nome_file analisi.grib
+
+   ed anche un link al file di orografia appropriato (sulla stessa griglia!):
+
+   ln -s nome_file_orografia (p.e. $VERSHARE/orog_lmsmr2031.grib)
+   orografia.grib
+
+   Poi si puo' lanciare la script:
+
+     * ver_scrivi_ana.sh
+
+   per avere caricati su database [34]DbAlle i campi analizzati contenuti nel
+   file, localizzati sui punti griglia e con quota pari a quella specificata
+   del grib di orografia dato.
+
+  Impostazione dei parametri della verifica
+
+   Per l'impostazione dei parametri della verifica di lancia:
+
+     * ver_prepara_nml.sh
+
+   che apre in editor un file dove si scelgono il modello da verificare, la
+   variabile, il livello, le scadenze. E' possibile verificare tanto i
+   forecast dei modelli quanto le loro analisi, l'unica differenza e' la
+   scadenza di previsione scelta. Per i modelli contenuti in GRIB_ARCH esiste
+   una documentazione alla pagina [35]XgribArch.
+
+  Caricamento dei dati da verificare
+
+   I dati da verificare (p.e. previsti da un modello) devono trovarsi nella
+   propria directory $SCRATCH/nome_progetto sotto forma di una unico file
+   grib chiamato nome_modello.grib. Per ottenere questo file (gia' col nome
+   giusto e nel posto giusto) e' possibile utilizzare un'altra script, che
+   estrae i previsti dall'archivio grib (GRIB_ARCH) secondo quanto e' stato
+   specificato lanciando la script prepara_nml.bash. Per l'estrazione:
+
+     * ver_estrai_calcola.sh nome_progetto
+
+   che mette il file nella sottodirectory nome_progetto del proprio $SCRATCH.
+   A questo punto e' possibile caricare i previsti sul database con:
+
+     * ver_scrivi_prev.sh nome_progetto
+
+   Se si vuole effettuare una verifica con box fisse e' necessario avere
+   nella propria directory di lavoro un file grib che specifichi la maschera
+   delle osservazioni. Questo file, che si deve chiamare
+   obm_nomemodello.grib, viene generato dalla script
+
+     * ver_crea_obsmask.sh
+
+   gia' nella directory di lavoro, ma con il mome obsmask.grib.
+
+  Calcolo degli scores
+
+   Gli score vengono calcolati eseguendo:
+
+     * ver_scores.sh
+
+   per gli scores di un singolo run (o di ciascun membro di un ensemble)
+   oppure
+
+     * ver_scores_prob.sh
+
+   per gli scores di un ensemble.
+   Deve esistere nella directory di lavoro un file chiamato pesi.nml (a
+   carico dell'utente). I risultati si trovano nella directory di lavoro.
+
+   Per sapere il codice B della variabile che si intende verificare, si
+   guardi la tabella delle variabili in [36]DballeTabelle. Come gia' detto,
+   tale variabile deve trovarsi anche nel file griBlocale.txt, che si trova
+   nella propria directory di lavoro. Quando si fa la verifica per soglie, i
+   valori delle soglie devono essere espressi nell'unita' di misura della
+   variabile stessa, che e' quella specificata nella tabella
+   [37]DballeTabelle.
+
+                          Sistemare i file di appoggio
+
+Preparazione del file repinfo.csv
+
+   Ciascun oggetto che entra nel database appartiene ad un tipo report,
+   identificato da un codice report e da un mnemonico report (il vecchio
+   descrittore). In repinfo.csv devono comparire le descrizioni dei tipi
+   report che si intendono usare:
+
+   codice_report,mnemonico_report,descrizione
+   libera,priorità,categoria,tabella-A
+
+   Il codice_report deve restare univoco solo per ogni sessione, quando si
+   cancella e si ricrea il database (p.e. usando scrivi_oss.bash) si puo'
+   modificare tutto. Il mnemonico_report (fino a 20 caratteri) e' vincolato
+   dalle regole usate per costruire il descrittore:
+
+     * fino a 10 caratteri per la descrizione del modello ( il nome del
+       dataset utilizzato in [38]XgribArch )
+
+     * 5 caratteri per la descrizione del tipo di elaborazione
+
+     * 5 caratteri per l'ensemble
+
+   e si puo' ottenere lanciando la script:
+
+   ver_calcola_descrittore.sh
+
+   Categoria e tabella-A non sono utilizzati al momento.
+
+Come aggiungere un modello da verificare
+
+   Se si vuole aggiungere un modello da verificare (verificare un modello non
+   previsto in griBlocale.txt o per cui non esiste il file
+   profile_nomemodello) bisogna:
+
+     * creare il file profile_nomemodello con i codici grib del modello
+       (vedere quelli esistenti in $VERSHARE per avere un esempio) nella
+       propria directory di lavoro
+
+    ce=identificativo del centro di emissione (ksec1(2))
+    ct=numero della versione della tabella variabili (ksec1(1))
+    gp=processo generatore (ksec1(3))
+    if=fattore moltiplicativo delle precipitazioni se nel grib non sono gia' in millimetri (sparira')
+    iv$par=codice grib del parametro (ksec1(6), vedi versione $ct della tabella 2)
+
+     * aggiornare in locale il file griBlocale.txt, in cui e' scritta la
+       corrispondenza tra il codice grib di un parametro ed il codice della
+       Blocale del parametro all'interno di [39]DbAlle. Per conoscere il
+       codice Blocale si veda la tabella variabili in [40]DballeTabelle.
+
+    || codice variabile (tre numeri: ce,ct,iv$par) || Blocale || a || b || mnemonico libero ||
+
+ dove valore_in_database = a + b*valore_nel_grib. I valori di a e b devono quindi essere decisi in base all'unita' di misura che la variabile a nel grib ed a quello che ha in Blocale.
+
+                             Sviluppo del pacchetto
+
+   I codici sono sotto svn. Per apportare qualunque modifica è necessario
+   scaricare i codici in locale, modificarli e ricaricarli modificati. Per
+   fare ciò, basta seguire le istruzioni che si trovano in [41]SimSvn. Il
+   modulo si chiama verifica. Quindi, in breve:
+
+     * svn checkout verifica
+
+     * si modificano i codici così scaricati (directory trunk)
+
+     * si provano i codici (vedi sotto)
+
+     * si aggiorna la versione dei codici (editare il file configure.ac)
+
+     * svn update
+
+     * svn commit
+
+     * make dist (crea il pacchetto in locale, poi va distribuito -> vedi
+       [42]GestionePacchetti)
+
+Provare le modifiche
+
+   E' necessario installare da qualche parte il pacchetto così modificato
+   per fare le prove; nell'esempio lo installo nella directory $HOME/prova.
+
+   Prima è però necessario disinstallare quello di sistema (lo può fare
+   solo root della macchina) con:
+
+     * apt-get remove verifica
+
+   Poi, nella directory trunk dove si trova l'albero con le modifiche:
+
+     * autoreconf -i
+
+     * ./configure --prefix=$HOME/prova
+
+     * make install
+
+   Infine, andare nella directory dove si faranno le prove e scrivere:
+
+     * . $HOME/prova/etc/profile.d/verifica.sh
+
+     * export PATH=$HOME/prova/bin:$PATH
+
+   Ora l'utente può usare tutto quello che è in $HOME/prova e vedere se
+   funziona.
+   N.B. Non muoversi dalla finestra dove sono state lanciate le ultime due
+   istruzioni, dato che il lancio del profile e l'export sono locali alla
+   finestra!
