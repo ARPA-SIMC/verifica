@@ -721,23 +721,31 @@
         enddo
     enddo
     nocc=int(pout+pin)
-    if(nocc /= 0)then
-        outr=pout/(pout+pin)
+    IF(nocc /= 0)THEN
+      outr=pout/(pout+pin)
+      IF((poutn+pinn) > 0)THEN
         outrn=poutn/(poutn+pinn)
-        if(poutn > 0.)then
-            errn=errn/poutn
-        else
-            errn=rmdo
-        endif
+      ELSE
+        outrn=rmdo
+      ENDIF
+      IF(poutn > 0.)THEN
+        errn=errn/poutn
+      ELSE
+        errn=rmdo
+      ENDIF
+      IF((poutx+pinx) > 0)THEN
         outrx=poutx/(poutx+pinx)
-        if(poutn > 0.)then
-            errx=errx/poutx
-        else
-            errn=rmdo
-        endif
-    else
-        outr=rmdo
-    endif
+      ELSE
+        outrx=rmdo
+      ENDIF
+      IF(poutx > 0.)THEN
+        errx=errx/poutx
+      ELSE
+        errn=rmdo
+      ENDIF
+    ELSE
+      outr=rmdo
+    ENDIF
     write(15,'(1x,a9,f6.3,2x,2(a9,f6.3,1x,a9,f7.3,2x))') &
     'OUTRANGE=',outr, &
     'OUTRAmin=',outrn,'errmedio=',errn, &

@@ -1,7 +1,7 @@
 ### VERIFICA
 ### path per le procedure di verifica
 
-VERSHARE=@pkgdatadir@/
+VERSHARE=${VERSHARE:-@pkgdatadir@/}
 
 export VERSHARE
 

@@ -3,18 +3,24 @@
    mesei=09,
    annoi=2004,
    orai=00,
+   mini=00,
    giornof=21,
    mesef=09,
    annof=2004,
    oraf=12,
-   incora=3,
-   ncum=6,
+   minf=00
+   incr=30,
+   ncum=1440,
+   interval=60,
+   perc=0.65,
  $end
 
-giornoi,mesei,annoi,orai = istante di inizio del periodo su cui si 
-                           vogliono le cumulate
-giornof,mesef,annof,oraf = istante di fine del periodo su cui si 
-                           vogliono le cumulate
-incora = periodo in ore su cui sono cumulate le preci presenti in archivio, 
-         da usare per la attuale cumulazione
-ncum = periodo in ore su cui si vogliono cumulare le precipitazioni
+giornoi,mesei,annoi,orai,mini = istante di inizio del periodo su cui si 
+                                vogliono le cumulate
+giornof,mesef,annof,oraf,minf = istante di fine del periodo su cui si 
+                                vogliono le cumulate
+incr = periodo in minuti su cui sono cumulate le preci presenti in archivio, 
+       da usare per la attuale cumulazione
+ncum = periodo in minuti su cui si vogliono cumulare le precipitazioni
+interval = periodo in minuti che si vuole tra una cumulata e la successiva
+perc = percentuale (tra 0 e 1) di intervalli mancanti accettabili nella cumulata

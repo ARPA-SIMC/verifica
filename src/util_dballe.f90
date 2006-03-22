@@ -155,6 +155,48 @@
 
 !*****************************************************************************
 
+    SUBROUTINE leggiana_db_all(x,y,alt,anaid,rmdo,nstaz,handle)
+
+! c VERIFICA - util.f
+! c legge l'anagrafica stazioni dal database
+! c autore: Chiara Marsigli
+
+    integer :: handle,nstaz
+    character(20) :: namest
+
+    real :: x(nstaz),y(nstaz),alt(nstaz)
+    integer :: anaid(nstaz)
+
+! nizializzazione matrici
+    x = rmdo
+    y = rmdo
+    alt = rmdo
+    anaid = 0
+
+    print*,'stazioni ',nstaz
+    DO ist=1,nstaz
+
+        call idba_elencamele(handle)
+
+        call idba_enqi (handle,"ana_id",icodice)
+        call idba_enqr (handle,"lat",rlat)
+        call idba_enqr (handle,"lon",rlon)
+        call idba_enqr (handle,"height",h)
+        call idba_enqc (handle,"name",namest)
+
+        PRINT*,ist,icodice,rlat,rlon,h,namest
+        x(ist)=rlon
+        y(ist)=rlat
+        alt(ist)=h
+        anaid(ist)=icodice
+        
+    enddo
+
+    return
+    end subroutine leggiana_db_all
+
+!*****************************************************************************
+
     subroutine leggioss_db(handle,nd,no, &
     dataval,oraval,cvar,scad, &
     rxeq,ryeq,ruota,rmddb, &

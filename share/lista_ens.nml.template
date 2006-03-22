@@ -1,4 +1,5 @@
  $lista
+   cvar='B13011',
    iquota=-1,
    hlimite=500.,
    nsoglie=5,

@@ -210,13 +210,6 @@
     ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
         call idba_unsetall (handle)
 
-        call idba_seti (handle,"year",data(3))
-        call idba_seti (handle,"month",data(2))
-        call idba_seti (handle,"day",data(1))
-        call idba_seti (handle,"hour",ora(1))
-        call idba_seti (handle,"min",ora(2))
-        call idba_seti (handle,"sec",00)
-
     ! codice per le analisi
         call idba_seti (handle,"rep_cod",105)
 
@@ -224,14 +217,25 @@
         call idba_seti (handle,"l1",level(2))
         call idba_seti (handle,"l2",level(3))
 
-        if(scad(4) > 0)then
-            call converti_scadenze(4,scad,scaddb)
-            p1=0-(scaddb(3)-scaddb(2))
-            p2=0
-        else
-            p1=0
-            p2=0
-        endif
+        call JELADATA5(data(1),data(2),data(3),ora(1),ora(2),iminuti)
+        IF (scad(4) > 0) THEN
+          CALL converti_scadenze(4,scad,scaddb) ! converte in secondi
+          iminuti=iminuti+scaddb(3)/60
+          p1=0-(scaddb(3)-scaddb(2))
+          p2=0
+        ELSE
+          iminuti=iminuti+scaddb(2)/60
+          p1=0
+          p2=0
+        ENDIF
+        call JELADATA6(idayv,imonthv,iyearv,ihourv,iminv,iminuti)
+          
+        call idba_seti (handle,"year",iyearv)
+        call idba_seti (handle,"month",imonthv)
+        call idba_seti (handle,"day",idayv)
+        call idba_seti (handle,"hour",ihourv)
+        call idba_seti (handle,"min",iminv)
+        call idba_seti (handle,"sec",00)
 
         call idba_seti (handle,"pindicator",scad(4))
         call idba_seti (handle,"p1",p1)

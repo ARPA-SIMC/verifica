@@ -393,7 +393,7 @@
             if(npu > 0)ossmed=ossmed/real(npu)
             write(22,'(a,f8.3)')' ossmed= ',ossmed
             if(ossmed > 0.2)then
-                call terr(MNSTAZ,MNRM,osse,previ,nstaz,nrm, &
+                call terr(nstaz,nrm,osse,previ,nstaz,nrm, &
                 rmddb,rmdo,temp_wght,ipos)
                 distrib(ipos)=distrib(ipos)+1
                 ng=ng+1
@@ -424,21 +424,21 @@
     ! output degli scores
 
         if(prob)then
-            call brier_prob(MNSTAZ,MNGIO,MNRM,oss,prev, &
+            call brier_prob(nstaz,ngio,nrm,oss,prev, &
             ngio,nstaz,nrm, &
             rmddb,rmds,soglie(1),wght, &
             ntot,rnocc,bs,bss)
         else
-            call outrange(MNSTAZ,MNGIO,MNRM,oss,prev,ngio,nstaz, &
+            call outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz, &
             nrm,rmddb,rmds,wght,outr)
             do iso=1,nsoglie
 
-                call brier(MNSTAZ,MNGIO,MNRM,oss,prev,ngio,nstaz,nrm, &
+                CALL brier(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
                 rmddb,rmds,soglie(iso),wght, &
                 ntot,nocc,bs,rel,res,bss)
-                call roc(MNSTAZ,MNGIO,MNRM,oss,prev,ngio,nstaz,nrm, &
+                call roc(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
                 rmddb,rmds,soglie(iso),wght,ntot,nocc,roca)
-                call costloss(MNSTAZ,MNGIO,MNRM,oss,prev,ngio,nstaz, &
+                call costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz, &
                 nrm,rmddb,rmds,soglie(iso),wght,ntot,nocc,clarea)
                 print*,soglie(iso),ntot,nocc, &
                 bs,rel,res,bss, &

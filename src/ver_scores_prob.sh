@@ -31,9 +31,9 @@ fi
 $EDITOR odbc.nml
 
 if [ ! -f ./lista.nml ] ; then
-  cp $VERSHARE/lista_ens.nml.template ./lista.nml
+  cp $VERSHARE/lista_ens.nml.template ./lista_ens.nml
 fi
-$EDITOR lista.nml
+$EDITOR lista_ens.nml
 
 if [ $interpola = 'T' ] ; then
   itipo=1
