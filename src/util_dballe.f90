@@ -1139,26 +1139,25 @@
 
 !************************************************************************
 
-    FUNCTION giomax(nm,na)
+    FUNCTION ngiorni_mese(nm,na)
 
-    INTEGER giomax
-    INTEGER dgiomax(12)
+    INTEGER ngiorni_mese
+    INTEGER giomax(12)
     
-    DATA dgiomax/31,28,31,30,31,30,31,31,30,31,30,31/
+    DATA giomax/31,28,31,30,31,30,31,31,30,31,30,31/
 
-    giomax=dgiomax(nm)
+    ngiorni_mese=giomax(nm)
 
     IF(nm == 2)THEN
       IF(MOD(na,4) == 0)THEN
         IF(MOD(na,100) /= 0)THEN
-          giomax=29
+          ngiorni_mese=29
         ENDIF
       ENDIF
       IF(MOD(na,400) == 0)THEN
-        giomax=29
+        ngiorni_mese=29
       ENDIF
     ENDIF
 
     RETURN
-    END FUNCTION giomax
-    
+    END FUNCTION ngiorni_mese

@@ -1,0 +1,12 @@
+ $euro
+    path='/home/marsigli/dati_DWD/',
+    nme=1,
+    mese='01',
+    anno='2003',
+ $end
+
+### nre=numero di regioni
+### reg=regione scelta(character*2) tra: 'Co' (Ge+Sv), 'Sv', 'Ge'
+### anno=anno considerato (4 cifre)
+### nme=numero di mesi (al massimo 12)
+### mese=lista di mesi (ciascuno character*2)

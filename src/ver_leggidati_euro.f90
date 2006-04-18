@@ -29,9 +29,10 @@
     parameter (nstaz=6000,nmesi=100)
 
     real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
-    INTEGER :: idata(3)
-    integer :: giomax
-    character mese(nmesi)*2,anno(nmesi)*4
+    REAL :: preci(nstaz,31)
+    INTEGER :: data(3),ora(2)
+    INTEGER :: giomax,nme,ialt
+    CHARACTER mese(nmesi)*2,anno(nmesi)*4,canno*4,cmese*2
     character path*80
 
     character(19) :: database,user,password
@@ -49,8 +50,8 @@
     read(1,nml=odbc)
     close(1)
 
-    open(1,file='region.nml',status='old',readonly)
-    read(1,nml=regioni)
+    open(1,file='euro.nml',status='old',readonly)
+    read(1,nml=euro)
     close(1)
 
 ! PREPARAZIONE DELL' ARCHIVIO
@@ -91,14 +92,14 @@
         READ(canno,'(i4)')ianno
         giomax=ngiorni_mese(imese,ianno)
 
-        OPEN(1,file=path//'Co'//canno(3:4)//cmese//'.txt',
-        $        status='old',readonly)
+        OPEN(1,file=path(1:nlenvera(path))//'Co'//canno(3:4)//cmese// &
+        '.txt',status='old',readonly)
         READ(1,*)
 
         numestaz=0
         DO istaz=1,nstaz
-          READ(1,'(2(2x,f6.2),1x,i4,31(1x,f6.1)',END=111)lonoss(istaz),
-          $latoss(istaz),ialt,(preci(istaz,igio),igio=1,giomax)
+          READ(1,'(2(2x,f6.2),1x,i4,31(1x,f6.1)',END=111)lonoss(istaz), &
+          latoss(istaz),ialt,(preci(istaz,igio),igio=1,giomax)
           
           numestaz=numestaz+1
           
@@ -130,7 +131,7 @@
             
             CALL idba_unsetall (handle)
           
-          ! print*,'datatime ',idata(3),idata(2),idata(1),iora,imin,00
+          ! print*,'datatime ',data(3),data(2),data(1),ora(1),ora(2),00
             CALL idba_seti (handle,"year",data(3))
             CALL idba_seti (handle,"month",data(2))
             CALL idba_seti (handle,"day",data(1))
@@ -146,7 +147,7 @@
             CALL idba_seti (handle,"p2",0)
             
             ! codice per gli osservati delle regioni
-            CALL idba_seti (handle,"rep_cod",51)
+            CALL idba_seti (handle,"rep_cod",50)
             
             CALL idba_setr (handle,"lat",latoss(istaz))
             CALL idba_setr (handle,"lon",lonoss(istaz))
