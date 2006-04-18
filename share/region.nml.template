@@ -1,6 +1,6 @@
  $regioni
-    path='/automount/nfs/a_home/boccaner/verifica_oracle/FILE_DAT/',
-    pathana='/home/marsigli/ver_ope/dat/anagrafiche/',
+    path='/home/mstesini/VERIFICA_DATI_REGIONI/verifica_oracle/FILE_DAT/',
+    pathana='/home/mstesini/VERIFICA_DATI_REGIONI/LM_anagrafi/',
     nre=12,
     reg='EM','PI','LI','LF','TR','BZ','VE','FR','MA','AB','TF','SA',
     nme=1,

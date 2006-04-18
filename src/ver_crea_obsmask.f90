@@ -27,16 +27,16 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    parameter    (MNSTAZ=10000,MNBOX=80000)
+    parameter    (MNBOX=80000)
     parameter    (MIDIMG=200000,MIDIMV=MIDIMG*4)
     real ::         xgrid(MIDIMV)
     integer ::      kgrib(MIDIMG)
     character(80) :: rfile,ofile
     character(19) :: database,user,password
-    real ::         lms,obm,rmdo,alorot,alarot,slon1,slon2,slat1,slat2
+    REAL ::         obm,rmdo,dist,alorot,alarot,slon1,slon2,slat1,slat2
     integer ::      iana,nstaz,nbox
     logical ::      ruota,area
-    real ::         x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ)
+    real, ALLOCATABLE :: x(:),y(:),alt(:)
     real ::         xb(MNBOX),yb(MNBOX)
 ! grib fields
     integer ::      ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
@@ -50,11 +50,28 @@
     data ksec2/384*0/
     data ksec3/2*0/
     data ksec4/60*0/
+! ksec4(5)=0 per real data
     data kgrib/MIDIMG*0/
     data psec2/384*0./
     data psec3/2*0./
 
     data rmdo/-999.9/
+
+    open(1,file='odbc.nml',status='old',readonly)
+    read(1,nml=odbc,err=9001)
+    close(1)
+    open(1,file='obsmask.nml',status='old',readonly)
+    read(1,nml=obsmask,err=9002)
+    close(1)
+
+! gestione degli errori
+    call idba_error_set_callback(0,error_handle,debug,handle_err)
+
+! connessione con database
+    call idba_presentati(idbhandle,database,user,password)
+
+! apertura database in lettura
+    call idba_preparati(idbhandle,handle,"read","read","read")
 
     ofile='obsmask.grib'
 
@@ -63,7 +80,9 @@
     iug=0
     idimg=MIDIMG
     idimv=MIDIMV
+    psec3(2)=rmdo
 
+    PRINT*,'apro file ',rfile
     call pbopen(iug,rfile,'r',ier)
     if(ier /= 0)goto9100
     print*,'pbopen fatta ',ier
@@ -95,9 +114,16 @@
         enddo
     endif
 
+    call idba_quantesono(handle,nstaz)
+    print*,'massimo numero pseudo-stazioni ',nstaz
+
+! allocazione matrici
+    ALLOCATE(x(1:nstaz))
+    ALLOCATE(y(1:nstaz))
+    ALLOCATE(alt(1:nstaz))
+
 ! leggo tutte le stazioni disponibili in archivio
-    call leggiana_db(MNSTAZ,iana,x,y,alt,rmdo,nstaz, &
-    database,user,password)
+    call leggiana_db(iana,x,y,alt,rmdo,nstaz,handle)
     print*,'numero massimo stazioni ',nstaz
 
     idimv=ksec4(1)
@@ -128,6 +154,10 @@
     call pbclose(iug,ier)
     if(ier < 0)goto9990
 
+    stop
+    9001 print *,"Errore durante la lettura della namelist odbc "
+    stop
+    9002 print *,"Errore durante la lettura della namelist obsmask "
     stop
     9100 print *,'Errore durante la pbopen ',ier
     stop

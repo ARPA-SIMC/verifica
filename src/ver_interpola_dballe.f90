@@ -39,7 +39,7 @@
     parameter (MNSCAD=30,MNGIO=150,MNRM=102)
     integer ::   xgrib(MIDIMG)
     real ::      xgrid(MIDIMV),lsm(MIDIMV),oro(MIDIMV)
-    real ::      xgridu(MIDIMV,MNRM),xgridv(MIDIMV,MNRM)
+    real ::      xgridu(MIDIMV),xgridv(MIDIMV)
     integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
     integer ::   dataval(3),oraval(2),scaddb(4)
     integer ::   varv(3),ore(24)
@@ -49,7 +49,7 @@
     character vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
     character descr*20
 ! namelists
-    integer ::   kvar(3,2),lsvar
+    INTEGER ::   kvar(3,2),lsvar,nore
     integer ::   scadenze(4,MNSCAD),dum(2)
     integer ::   imet,imod,ls,itipo,iana,ivor
     logical ::   ruota,media,massimo,prob,distr,diffh
@@ -82,7 +82,7 @@
     data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
     scad/-1,-1,-1,-1/, data/-1,-1,-1/, ora/-1,-1/, &
     varv/-1,-1,-1/
-    data rmdo/-999.9/,rmddb/32767/
+    data rmdo/-999.9/
 
     print*,'program interpola'
 
@@ -112,8 +112,12 @@
 
 ! leggo tutte le stazioni disponibili
     call leggiana_db(iana,x,y,alt,rmdo,nstaz,handler)
-
-    call modello(model,ivlsm,ivor)
+    
+    nfound=0
+    if(ls >= 0)nfound=1
+    if(diffh)nfound=1
+    if(ls >= 0 .and. diffh)nfound=2
+    if(nfound > 0)CALL modello(model,ivlsm,ivor,nfound)
 
 ! il tipo di elaborazione e' fisso per questa routine (=1)
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &
@@ -128,7 +132,6 @@
     idimg=MIDIMG
     idimv=MIDIMV
     imd=-32768
-    rmd=-1.5E21
     igrid=0                    !sono griglie regolari
     vfile='estratti.grib'
     call pbopen(iug,vfile,'r',ier)
@@ -145,7 +148,7 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmd,lsm,idimv, &
+        call getdata(xgrib,idimg,imd,rmdo,lsm,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
@@ -160,7 +163,7 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmd,oro,idimv, &
+        call getdata(xgrib,idimg,imd,rmdo,oro,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
@@ -254,9 +257,35 @@
                         alat(1),alat(2),alon(1),alon(2), &
                         ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
                         if(ier /= 0)goto 9300
-                        call getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
+                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
                         ibm,ier)
                         if(ibm /= 0 .OR. ier /= 0)goto 9400
+                        IF(lsvar == -1)THEN
+                          lsvar=1
+                          DO ivec=1,idimv
+                            IF(xgrid(ivec) == rmdo)THEN
+                              lsm(ivec)=0
+                            ELSE
+                              lsm(ivec)=1
+                            ENDIF
+                          ENDDO
+                        ELSEIF(lsvar == 0)THEN
+                          DO ivec=1,idimv
+                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==1)THEN
+                              lsm(ivec)=1
+                            ELSE
+                              lsm(ivec)=0
+                            ENDIF
+                          ENDDO
+                        ELSEIF(lsvar == 1)then
+                          DO ivec=1,idimv
+                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==0)THEN
+                              lsm(ivec)=0
+                            ELSE
+                              lsm(ivec)=1
+                            ENDIF
+                          ENDDO
+                        ENDIF
 
                     ! Interpolation of predicted data on (lat,lon) station points
                         if(ruota == .TRUE. )then
@@ -439,11 +468,37 @@
                         ny,nx,dy,dx,idrt,alarot,alorot,rot, &
                         ija,ier)
                         if(ier /= 0)goto 9300
-                        call getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
+                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
                         ibm,ier)
                         if(ibm /= 0 .OR. ier /= 0)goto 9400
+                        IF(lsvar == -1)THEN
+                          lsvar=1
+                          DO ivec=1,idimv
+                            IF(xgrid(ivec) == rmdo)THEN
+                              lsm(ivec)=0
+                            ELSE
+                              lsm(ivec)=1
+                            ENDIF
+                          ENDDO
+                        ELSEIF(lsvar == 0)THEN
+                          DO ivec=1,idimv
+                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==1)THEN
+                              lsm(ivec)=1
+                            ELSE
+                              lsm(ivec)=0
+                            ENDIF
+                          ENDDO
+                        ELSEIF(lsvar == 1)then
+                          DO ivec=1,idimv
+                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==0)THEN
+                              lsm(ivec)=0
+                            ELSE
+                              lsm(ivec)=1
+                            ENDIF
+                          ENDDO
+                        ENDIF
                         do iv=1,idimv
-                            xgridu(iv,irm)=xgrid(iv)
+                            xgridu(iv)=xgrid(iv)
                         enddo
                     enddo
                 ! v component
@@ -466,11 +521,11 @@
                         elseif(ier /= 0)then
                             goto 9200
                         endif
-                        call getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
+                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
                         ibm,ier)
                         if(ibm /= 0 .OR. ier /= 0)goto 9400
                         do iv=1,idimv
-                            xgridv(iv,irm)=xgrid(iv)
+                            xgridv(iv)=xgrid(iv)
                         enddo
                     enddo
 
@@ -484,7 +539,7 @@
                             if(abs(x(ist)-rmdo) > 0.1 .AND. &
                             abs(y(ist)-rmdo) > 0.1)then
                                 call ngetpoint(x(ist),y(ist), &
-                                xgridu(1,irm),xgridv(1,irm), &
+                                xgridu,xgridv, &
                                 lsm, &
                                 idimv,nx,ny,alon(1),alat(1), &
                                 dx,dy,igrid, &

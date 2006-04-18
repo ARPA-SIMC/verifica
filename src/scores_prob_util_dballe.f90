@@ -462,7 +462,7 @@
     real ::    me,mecli,mep
     real ::    val(0:N,0:NCL),enve(0:NCL)
 
-    print*,'subroutine cost-loss ',nfc
+!    print*,'subroutine cost-loss ',nfc
 
 ! mi riconduco comunque ad un super-ensemble completo (102 elementi)
 ! tranne quando uso un EPS

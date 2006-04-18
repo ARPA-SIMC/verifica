@@ -306,7 +306,7 @@
     real ::    me,mecli,mep
     real ::    enve(0:NCL)
 
-    print*,'subroutine cost-loss_det '
+!    print*,'subroutine cost-loss_det '
 
 ! initialisation
     do kclass=1,2

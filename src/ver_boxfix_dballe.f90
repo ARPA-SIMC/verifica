@@ -48,13 +48,13 @@
     integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
     integer ::   dataval(3),oraval(2),p1,p2
     real ::      a,b
-    integer ::   iscaddb,scaddb(4)
+    INTEGER ::   iscaddb,scaddb(4)
     real ::      alat(4),alon(4)
     character vfile*60,obmfile*60
     character cvar*6,cel*3,descrfisso*20
     character descr*20
 ! namelists
-    integer ::   kvar(3,2)
+    INTEGER ::   kvar(3,2),nore,ore(24)
     integer ::   scadenze(4,MNSCAD)
     integer ::   imod,ls,itipo,iana,imet
     logical ::   ruota,media,massimo,prob,distr,diffh
@@ -70,7 +70,7 @@
     external error_handle
 
     namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-    nvar,nrm
+    nvar,nrm,nore,ore
     namelist  /date/data
     namelist  /scadenza/scadenze
     namelist  /parametro/kvar
@@ -119,7 +119,12 @@
     call idba_preparati &
     (idbhandle,handle,"reuse","rewrite","rewrite")
 
-    call modello(model,ivlsm,ivor)
+    nfound=0
+    if(ls >= 0 .or. lobm == 1)nfound=1
+    if(diffh)nfound=1
+    if((ls >= 0 .or. lobm == 1) .and. diffh)nfound=2
+    if(nfound > 0)CALL modello(model,ivlsm,ivor,nfound)
+    PRINT*,'ivlsm ',ivlsm
 
 ! il tipo di elaborazione e' fisso per questa routine (=2)
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &

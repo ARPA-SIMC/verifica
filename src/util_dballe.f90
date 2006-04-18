@@ -398,7 +398,7 @@
 
 !**************************************************************************
 
-    subroutine modello(model,ivlsm,ivor)
+    SUBROUTINE modello(model,ivlsm,ivor,nfound)
 
     integer :: ivlsm,ivor,ifound
     character model*10,profile*20
@@ -416,20 +416,21 @@
         if(cdum(4:5) == 'or')then
             civor=cdum(7:9)
             ifound=ifound+1
+            READ(civor,'(i3.3)')ivor
         endif
         if(cdum(4:6) == 'lsm')then
             civlsm=cdum(8:10)
             ifound=ifound+1
+            READ(civlsm,'(i3.3)')ivlsm
         endif
-        if(ifound == 2)goto111
+        if(ifound == nfound)goto111
     enddo
     111 continue
-    read(civor,'(i3.3)')ivor
-    read(civlsm,'(i3.3)')ivlsm
     close(44)
 
     return
     222 print*,'mancano ivor e ivlsm in profile_nomemodello!'
+    call exit(1)
     return
     end subroutine modello
 
@@ -1135,3 +1136,29 @@
     goto1
 
     end function selip
+
+!************************************************************************
+
+    FUNCTION giomax(nm,na)
+
+    INTEGER giomax
+    INTEGER dgiomax(12)
+    
+    DATA dgiomax/31,28,31,30,31,30,31,31,30,31,30,31/
+
+    giomax=dgiomax(nm)
+
+    IF(nm == 2)THEN
+      IF(MOD(na,4) == 0)THEN
+        IF(MOD(na,100) /= 0)THEN
+          giomax=29
+        ENDIF
+      ENDIF
+      IF(MOD(na,400) == 0)THEN
+        giomax=29
+      ENDIF
+    ENDIF
+
+    RETURN
+    END FUNCTION giomax
+    

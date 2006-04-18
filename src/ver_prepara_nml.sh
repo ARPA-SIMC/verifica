@@ -7,21 +7,34 @@
 ### autore: Chiara Marsigli
 # ----------------------------------------------------------------------------------
 
-if [ -z $EDITOR ] ; then
-  echo "Errore"
-  echo "Devi exportare la variabile EDITOR"
+if [ "$1" = -h ] ; then
+  echo "uso: $0 [-b]"
+  echo "prepara le namelist per i programmi succesivi"
+  echo " -b  lancia in modalita' batch"
   exit 1
+fi
+
+BATCH=0
+if [ "$1" = -b ] ; then
+  BATCH=1
+fi
+
+if [ $BATCH -eq 0 ] ; then
+  if [ -z $EDITOR ] ; then
+    echo "ERRORE! Devi exportare la variabile EDITOR" 1>&2
+    exit 1
+  fi
 fi
 
 if [ ! -f ./profilestra ] ; then
   cp $VERSHARE/profilestra.template ./profilestra
 fi
-$EDITOR profilestra
+[ $BATCH -eq 0 ] && $EDITOR profilestra
 
 . profilestra
 
 if [ $a2$m2$g2 -lt $a1$m1$g1 ] ; then
-  echo "data finale minore data iniziale!"
+  echo "ERRORE! Data finale minore data iniziale!" 1>&2
   exit
 fi
 

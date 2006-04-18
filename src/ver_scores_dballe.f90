@@ -207,6 +207,24 @@
     endif
     print*,'numero di elementi dei vettori ',nv
 
+    OPEN(1,file='date.nml',status='old',readonly)
+    DO igio=1,ngio
+      READ(1,nml=date,err=9004)
+      IF(igio == 1)THEN
+        igioi=data(1)
+        imesei=data(2)
+        iannoi=data(3)
+      ENDIF
+      IF(igio == ngio)THEN
+        igiof=data(1)
+        imesef=data(2)
+        iannof=data(3)
+      ENDIF
+      iorai=nora/100.
+      imini=MOD(nora,100)
+    ENDDO
+    CLOSE(1)
+      
     open(66,file='bias_error_day.dat',status='unknown')
     open(11,file='bias_error.dat',status='unknown')
     open(10,file='cont_table.dat',status='unknown')
@@ -216,12 +234,32 @@
     open(1,file='scadenze.nml',status='old',readonly)
     read(2,nml=lista,err=9003)
     read(1,nml=scadenza,err=9003)
+    write(11,*)' descrittore= ',descrfisso
+    write(66,*)' descrittore= ',descrfisso
+    write(10,*)' descrittore= ',descrfisso
+    write(20,*)' descrittore= ',descrfisso
+    write(13,*)' descrittore= ',descrfisso
+
+    WRITE(11,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
+     &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
+    WRITE(66,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
+     &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
+    WRITE(10,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
+     &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
+    WRITE(20,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
+     &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
+    WRITE(13,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
+     &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
+
     write(11,*)' variabile= ',cvar
+    write(66,*)' variabile= ',cvar
+    write(10,*)' variabile= ',cvar
     write(20,*)' variabile= ',cvar
+    write(13,*)' variabile= ',cvar
     write(13,'(2a)')' o ',' p '
     print*,'variabile ',cvar
 
-! llocazione matrici
+! allocazione matrici
     ALLOCATE(oss(1:nv))
     ALLOCATE(prev(1:nv, 1:nrm))
     ALLOCATE(previ(1:nv))
@@ -242,8 +280,8 @@
         write(11,'(4x,a3,6x,a5,6x,a5,5x,a6,7x,a4)') &
         'npo','maerr','mserr','rmserr','bias'
         write(66,'(a,i3)')' scadenza= ',iscaddb
-        write(66,'(1x,a3,2(6x,a5),5x,a6,7x,a4)') &
-        'gio','maerr','mserr','rmserr','bias'
+        write(66,'(3(1x,a3),2(6x,a5),5x,a6,7x,a4)') &
+        'gio','ora','npo','maerr','mserr','rmserr','bias'
         print*,'scadenza ',iscaddb
 
         open(1,file='date.nml',status='old',readonly)
@@ -346,7 +384,7 @@
                         enddo
 
                         if(iquota == 0)then !pianura
-                            if(h >= hlimite)goto20
+                            IF(h >= hlimite .OR. h == -999.9)goto20
                         elseif(iquota == 1)then !montagna
                             if(h < hlimite)goto20
                         elseif(iquota > 1)then
@@ -472,8 +510,8 @@
                         rmddb,rmdo,npo,mserr,rmserr)
                         call bias(nstaz,oss(1+lag),previ,nstaz, &
                         rmddb,rmdo,npo,bi)
-                        write(66,'(1x,i3,1x,i2,4(1x,f10.3))') &
-                        igio,iore,maerr,mserr,rmserr,b
+                        WRITE(66,'(1x,i3,1x,i2,1x,i6,4(1x,f10.3))') &
+                        igio,iore,npo,maerr,mserr,rmserr,bi
                         write(20,'(a8,i3)')' giorno= ',igio
                         if(lthr /= 0)then
                             call score_con_table(nstaz, &

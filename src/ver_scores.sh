@@ -6,21 +6,34 @@
 ### autore: Chiara Marsigli
 # ----------------------------------------------------------------------------------
 
-if [ -z $EDITOR ] ; then
-  echo "Errore"
-  echo "Devi exportare la variabile EDITOR"
+if [ "$1" = -h ] ; then
+  echo "uso: $0 [-b]"
+  echo "calcola gli scores deterministici"
+  echo " -b  lancia in modalita' batch"
   exit 1
 fi
 
+BATCH=0
+if [ "$1" = -b ] ; then
+  BATCH=1
+fi
+
+if [ $BATCH -eq 0 ] ; then
+  if [ -z $EDITOR ] ; then
+    echo "ERRORE! Devi exportare la variabile EDITOR" 1>&2
+    exit 1
+  fi
+fi
+
 if [ ! -f ./profilestra ] ; then
-  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 
+  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 1>&2
   exit 1
 fi
 
 if [ ! -f ./profilever ] ; then
   cp $VERSHARE/profilever.template ./profilever
 fi
-$EDITOR profilever
+[ $BATCH -eq 0 ] && $EDITOR profilever
 
 . profilestra
 . profilever
@@ -28,19 +41,19 @@ $EDITOR profilever
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi
-$EDITOR odbc.nml
+[ $BATCH -eq 0 ] && $EDITOR odbc.nml
 
 if [ $deterministico = 'T' ] ; then
   if [ ! -f ./lista.nml ] ; then
     cp $VERSHARE/lista.nml.template ./lista.nml
   fi
-  $EDITOR lista.nml
+  [ $BATCH -eq 0 ] && $EDITOR lista.nml
 fi
 if [ $probabilistico = 'T' ] ; then
   if [ ! -f ./lista_ens.nml ] ; then
     cp $VERSHARE/lista_ens.nml.template ./lista_ens.nml
   fi
-  $EDITOR lista_ens.nml
+  [ $BATCH -eq 0 ] && $EDITOR lista_ens.nml
 fi
 
 if [ $interpola = 'T' ] ; then
@@ -73,6 +86,12 @@ echo ' $end' >> stat.nml
 if [ $deterministico = 'T' ] ; then
 
   ver_scores_dballe
+
+  STATUS=$?
+  if [ $STATUS -ne 0 ] ; then
+    echo ' ver_scores_dballe terminato con errore= ',$STATUS 1>&2
+  fi
+
   mv fort.55 scatter_plot.dat
   mv fort.23 costloss_det.dat
 
@@ -81,6 +100,12 @@ fi
 if [ $probabilistico = 'T' ] ; then
 
   ver_scores_prob_dballe
+
+  STATUS=$?
+  if [ $STATUS -ne 0 ] ; then
+    echo ' ver_scores_prob_dballe terminato con errore= ',$STATUS 1>&2
+  fi
+
   mv fort.14 brier.dat
   mv fort.12 roc.dat
   mv fort.23 costloss.dat

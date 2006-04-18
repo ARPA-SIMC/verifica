@@ -6,21 +6,34 @@
 ### autore: Chiara Marsigli
 # ----------------------------------------------------------------------------------
 
-if [ -z $EDITOR ] ; then
-  echo "Errore"
-  echo "Devi exportare la variabile EDITOR"
+if [ "$1" = -h ] ; then
+  echo "uso: $0 [-b]"
+  echo "calcola gli scores probabilistici"
+  echo " -b  lancia in modalita' batch"
   exit 1
 fi
 
+BATCH=0
+if [ "$1" = -b ] ; then
+  BATCH=1
+fi
+
+if [ $BATCH -eq 0 ] ; then
+  if [ -z $EDITOR ] ; then
+    echo "ERRORE! Devi exportare la variabile EDITOR" 1>&2
+    exit 1
+  fi
+fi
+
 if [ ! -f ./profilestra ] ; then
-  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 
+  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 1>&2
   exit 1
 fi
 
 if [ ! -f ./profilever ] ; then
   cp $VERSHARE/profilever.template ./profilever
 fi
-$EDITOR profilever
+[ $BATCH -eq 0 ] && $EDITOR profilever
 
 . profilestra
 . profilever
@@ -28,12 +41,12 @@ $EDITOR profilever
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi
-$EDITOR odbc.nml
+[ $BATCH -eq 0 ] && $EDITOR odbc.nml
 
 if [ ! -f ./lista.nml ] ; then
   cp $VERSHARE/lista_ens.nml.template ./lista_ens.nml
 fi
-$EDITOR lista_ens.nml
+[ $BATCH -eq 0 ] && $EDITOR lista_ens.nml
 
 if [ $interpola = 'T' ] ; then
   itipo=1
@@ -63,6 +76,11 @@ echo '   perc='$perc',' >> stat.nml
 echo ' $end' >> stat.nml
 
 ver_scores_prob_dballe
+
+STATUS=$?
+if [ $STATUS -ne 0 ] ; then
+  echo ' ver_scores_prob_dballe terminato con errore= ',$STATUS 1>&2
+fi
 
 mv fort.14 brier.dat
 mv fort.12 roc.dat

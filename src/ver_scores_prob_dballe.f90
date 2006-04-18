@@ -74,6 +74,8 @@
     namelist  /pesirm/pesi
     namelist  /odbc/database,user,password
 
+    OPEN(55,file='ctrl_output.dat',status='unknown')
+
     print*,'program scores_prob'
 
     open(1,file='odbc.nml',status='old',readonly)
@@ -185,6 +187,9 @@
             dataval(3)=iyear
             oraval(1)=ihour
             oraval(2)=imin
+
+            WRITE(55,*)'data validita'' ',dataval,oraval
+            call flush(55)
 
         ! lettura previsioni da database
 
@@ -458,6 +463,8 @@
 ! chiusura database
     call idba_fatto(handle)
     call idba_arrivederci(idbhandle)
+
+    close(55)
 
     stop
     9001 print*,'errore nella lettura della namelist parameters'

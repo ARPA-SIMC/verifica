@@ -1,7 +1,7 @@
  $obsmask
    rfile='/home/marsigli/ver_ope/dat_dballe/lsm_lmsmr2031.grib',
    iana=0,
-   ruota='T',
+   ruota=.T.,
    dist=0.15,
  $end
 

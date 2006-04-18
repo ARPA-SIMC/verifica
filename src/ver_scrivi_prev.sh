@@ -9,28 +9,50 @@
 ### autore: Chiara Marsigli
 # ----------------------------------------------------------------------------------
 
-PROJ=$1
-if [ $# -lt 1 ] ; then
-  echo "uso: ver_scrivi_prev.sh nome_progetto"
+if [ $# -eq 0 ] ; then
+  echo "uso: $0 -p nome_progetto [-b]"
+  echo "carica campi in formato GRIB sul database dopo"
+  echo "averli riferiti spazialmente ai campi di riferimento"
+  echo " -p nome_progetto  directory di $SCRATCH dove si trova il grib"
+  echo " -b                lancia in modalita' batch"
   exit 1
 fi
 
-if [ -z $EDITOR ] ; then
-  echo "Errore"
-  echo "Devi exportare la variabile EDITOR"
-  exit 1
+BATCH=0
+while :; do
+  case "$1" in
+    -p) shift
+        if test "$#" -eq 0; then
+          echo "manca il nome del progetto!" 1>&2
+          exit 1
+        fi
+        if [ "$1" = -b ] ; then
+	  echo "manca il nome del progetto!" 1>&2
+	  exit 1
+	fi
+	PROJ=$1; shift;;
+    -b) BATCH=1; shift;;
+    *) break;;
+  esac
+done
+
+if [ $BATCH -eq 0 ] ; then
+  if [ -z $EDITOR ] ; then
+    echo "ERRORE! Devi exportare la variabile EDITOR" 1>&2
+    exit 1
+  fi
 fi
 
 if [ ! -f ./parametro.nml ] ; then
-  echo "file parametro.nml mancante, lanciare ver_prepara_naml.sh" 
+  echo "file parametro.nml mancante, lanciare ver_prepara_naml.sh" 1>&2
   exit 1
 fi
-$EDITOR parametro.nml
+[ $BATCH -eq 0 ] && $EDITOR parametro.nml
 
 if [ ! -f ./profilever ] ; then
   cp $VERSHARE/profilever.template ./profilever
 fi
-$EDITOR profilever
+[ $BATCH -eq 0 ] && $EDITOR profilever
 
 if [ ! -f ./anag.nml ] ; then
   cp $VERSHARE/anag.nml.template ./anag.nml
@@ -43,7 +65,7 @@ fi
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi
-$EDITOR odbc.nml
+[ $BATCH -eq 0 ] && $EDITOR odbc.nml
 
 . profilestra
 . profilever
@@ -51,7 +73,7 @@ $EDITOR odbc.nml
 . profile_"$mod"
 
 if [ ! -f $SCRATCH/$PROJ/$mod'.grib' ] ; then
-  echo "ERRORE: $SCRATCH/$PROJ/$mod.grib non esiste" >&2
+  echo "ERRORE! $SCRATCH/$PROJ/$mod.grib non esiste" 1>&2
   exit 1 
 fi
 ln -fs $SCRATCH/$PROJ/$mod'.grib' estratti.grib
@@ -81,10 +103,15 @@ if [ $interpola = 'T' ] ; then
 
   ver_interpola_dballe
 
+  STATUS=$?
+  if [ $STATUS -ne 0 ] ; then
+    echo ' ver_interpola_dballe terminato con errore= ',$STATUS 1>&2
+  fi
+
 # box adiacenti (fisse)
 elif [ $boxfix = 'T' ] ; then
  
-  $EDITOR areabox.nml
+  [ $BATCH -eq 0 ] && $EDITOR areabox.nml
 
   echo ' $stat' > stat.nml
   echo '   model="'$mod'",' >> stat.nml
@@ -108,5 +135,10 @@ elif [ $boxfix = 'T' ] ; then
   echo ' $end' >> stat.nml
 
   ver_boxfix_dballe
+
+  STATUS=$?
+  if [ $STATUS -ne 0 ] ; then
+    echo ' ver_boxfix_dballe terminato con errore= ',$STATUS 1>&2
+  fi
 
 fi

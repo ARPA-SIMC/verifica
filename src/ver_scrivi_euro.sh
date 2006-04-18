@@ -1,14 +1,14 @@
 #!/bin/bash
 
-### VERIFICA - ver_scrivi_ana.sh
-### script per la lettura da file grib e scrittura su database
-### di campi analizzati
+### VERIFICA - ver_scrivi_euro.sh
+### script per la lettura da file (formato fissato) e scrittura su database 
+### delle osservazioni fornite dai membri di COSMO
 ### autore: Chiara Marsigli
 # ----------------------------------------------------------------------------------
 
 if [ "$1" = -h ] ; then
   echo "uso: $0 [-b]"
-  echo "carica campi in formato GRIB sul database"
+  echo "carica osservati COSMO sul database"
   echo " -b  lancia in modalita' batch"
   exit 1
 fi
@@ -34,24 +34,19 @@ if [ ! -f ./repinfo.csv ] ; then
 fi
 [ $BATCH -eq 0 ] && $EDITOR repinfo.csv
 
-if [ ! -f ./analisi.nml ] ; then
-  cp $VERSHARE/analisi.nml.template ./analisi.nml
+if [ ! -f ./euro.nml ] ; then
+  cp $VERSHARE/euro.nml.template ./euro.nml
 fi
-[ $BATCH -eq 0 ] && $EDITOR analisi.nml
-
-if [ ! -f ./areaoss.nml ] ; then
-  cp $VERSHARE/areaoss.nml.template ./areaoss.nml
-fi
-[ $BATCH -eq 0 ] && $EDITOR areaoss.nml
+[ $BATCH -eq 0 ] && $EDITOR euro.nml
 
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi
 [ $BATCH -eq 0 ] && $EDITOR odbc.nml
 
-ver_leggidati_ana
+ver_leggidati_euro
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_leggidati_ana terminato con errore= ',$STATUS 1>&2
+  echo ' ver_leggidati_euro terminato con errore= ',$STATUS 1>&2
 fi

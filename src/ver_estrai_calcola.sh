@@ -10,20 +10,41 @@
 # attenzione! Si usa la variabile d'ambiente $GRB_EXE
 # ----------------------------------------------------------------------------------
 
-PROJ=$1
-if [ $# -lt 1 ] ; then
-  echo "uso: ver_estrai_calcola.sh nome_progetto"
+if [ $# -eq 0 ] ; then
+  echo "uso: $0 -p nome_progetto [-b]"
+  echo "estrae campi in formato GRIB da GRIB_ARCH"
+  echo " -p nome_progetto  directory di $SCRATCH dove mette il grib"
+  echo " -b                lancia in modalita' batch"
   exit 1
 fi
 
-if [ -z $EDITOR ] ; then
-  echo "Errore"
-  echo "Devi exportare la variabile EDITOR"
-  exit 1
+BATCH=0
+while :; do
+  case "$1" in
+    -p) shift
+        if test "$#" -eq 0; then
+          echo "manca il nome del progetto!" 1>&2
+          exit 1
+        fi
+        if [ "$1" = -b ] ; then
+	  echo "manca il nome del progetto!" 1>&2
+	  exit 1
+	fi
+	PROJ=$1; shift;;
+    -b) BATCH=1; shift;;
+    *) break;;
+  esac
+done
+
+if [ $BATCH -eq 0 ] ; then
+  if [ -z $EDITOR ] ; then
+    echo "ERRORE! Devi exportare la variabile EDITOR" 1>&2
+    exit 1
+  fi
 fi
 
 if [ ! -f profilestra ] ; then
-  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 
+  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 1>&2
   exit 1
 fi
 
@@ -216,12 +237,20 @@ done
 ### fine ciclo sui parametri derivati
 
 # attacco in fondo al file grib land-sea mask e orografia del modello scelto
-# (devono esistere in $VERSHARE)
-if [ -f $VERSHARE/lsm_"$mod".grib ] ; then
-  cat $VERSHARE/lsm_"$mod".grib >> $tot_grib
+# (devono esistere in locale o in $VERSHARE)
+if [ ! -f lsm_"$mod".grib ] ; then
+  if [ -f $VERSHARE/lsm_"$mod".grib ] ; then
+    cat $VERSHARE/lsm_"$mod".grib >> $tot_grib
+  fi
+else
+  cat lsm_"$mod".grib >> $tot_grib
 fi
-if [ -f $VERSHARE/orog_"$mod".grib ] ; then
-  cat $VERSHARE/orog_"$mod".grib >> $tot_grib
+if [ ! -f orog_"$mod".grib ] ; then
+  if [ -f $VERSHARE/orog_"$mod".grib ] ; then
+    cat $VERSHARE/orog_"$mod".grib >> $tot_grib
+  fi
+else
+  cat orog_"$mod".grib >> $tot_grib
 fi
 
 # cancello tutti i files temporanei utilizzati

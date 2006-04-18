@@ -116,6 +116,11 @@
 
       CALL idba_seti (handler,"ana_id",anaid(ist))
 
+      dataval(3)=annoi
+      dataval(2)=mesei
+      dataval(1)=giornoi
+      oraval(1)=orai
+      oraval(2)=mini
       CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2), &
        iminuti)
       ! INIZIO CICLO SUI GIORNI
