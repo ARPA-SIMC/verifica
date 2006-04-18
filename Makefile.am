@@ -31,8 +31,12 @@ share/getgribdat_ver \
 share/griBlocale.txt \
 share/lista_ens.nml.template \
 share/lista.nml.template \
-share/obm_cleps_2004_015.grib \
-share/obm_epsrm_2004_015.grib \
+share/lsm_cleps.grib \
+share/orog_cleps.grib \
+share/lsm_lmdet.grib \
+share/orog_lmdet.grib \
+share/lsm_lmsmr2031.grib \
+share/orog_lmsmr2031.grib \
 share/obsmask.nml.template \
 share/odbc.nml.template \
 share/param.nml.template \
