@@ -2,7 +2,7 @@ bin_PROGRAMS =  ver_calcola_descrittore  ver_interpola_dballe  ver_lettura \
                 ver_crea_obsmask         ver_leggidati_ana     ver_scores_dballe \
                 ver_cumula_preci         ver_leggidati_mare    ver_scores_prob_dballe \
                 ver_boxfix_dballe        ver_ffdd              ver_leggidati_regio \
-                ver_pulisci
+                ver_pulisci              ver_leggidati_euro
 
 
 ver_calcola_descrittore_SOURCES =  ver_calcola_descrittore.f90 util_dballe.f90
@@ -17,6 +17,7 @@ ver_scores_prob_dballe_SOURCES = ver_scores_prob_dballe.f90 util_dballe.f90 scor
 ver_boxfix_dballe_SOURCES = ver_boxfix_dballe.f90 util_dballe.f90
 ver_ffdd_SOURCES = ver_ffdd.f90
 ver_leggidati_regio_SOURCES = ver_leggidati_regio.f90 util_dballe.f90
+ver_leggidati_euro_SOURCES = ver_leggidati_euro.f90 util_dballe.f90
 ver_pulisci_SOURCES = ver_pulisci.f90 util_dballe.f90
 
 
@@ -29,5 +30,6 @@ dist_bin_SCRIPTS = ver_calcola_descrittore.sh \
  ver_scores.sh \
  ver_scrivi_ana.sh \
  ver_scrivi_oss.sh \
+ ver_scrivi_euro.sh \
  ver_scrivi_prev.sh \
  ver_pulisci.sh
