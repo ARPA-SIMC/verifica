@@ -196,9 +196,9 @@
 
             call idba_setc (handle,"name",nomest(nsts))
 
-            read(code(nsts),'(a2,i2.2,i3.3)')cdum,block,station
-            call idba_seti (handle,"block",block)
-            call idba_seti (handle,"station",station)
+!            read(code(nsts),'(a2,i2.2,i3.3)')cdum,block,station
+!            call idba_seti (handle,"block",block)
+!            call idba_seti (handle,"station",station)
 
             call idba_setr (handle,"lat",latoss(nsts))
             call idba_setr (handle,"lon",lonoss(nsts))
