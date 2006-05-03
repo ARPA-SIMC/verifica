@@ -48,5 +48,5 @@ ver_leggidati_euro
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_leggidati_euro terminato con errore= ',$STATUS 1>&2
+  echo ' ver_leggidati_euro terminato con errore= '$STATUS 1>&2
 fi

@@ -53,5 +53,5 @@ ver_leggidati_ana
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_leggidati_ana terminato con errore= ',$STATUS 1>&2
+  echo ' ver_leggidati_ana terminato con errore= '$STATUS 1>&2
 fi

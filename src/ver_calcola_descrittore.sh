@@ -48,5 +48,5 @@ ver_calcola_descrittore
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_calcola_descrittore terminato con errore= ',$STATUS 1>&2
+  echo ' ver_calcola_descrittore terminato con errore= '$STATUS 1>&2
 fi

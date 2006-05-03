@@ -38,5 +38,5 @@ ver_pulisci
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_pulisci terminato con errore= ',$STATUS 1>&2
+  echo ' ver_pulisci terminato con errore= '$STATUS 1>&2
 fi

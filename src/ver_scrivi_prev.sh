@@ -105,7 +105,7 @@ if [ $interpola = 'T' ] ; then
 
   STATUS=$?
   if [ $STATUS -ne 0 ] ; then
-    echo ' ver_interpola_dballe terminato con errore= ',$STATUS 1>&2
+    echo ' ver_interpola_dballe terminato con errore= '$STATUS 1>&2
   fi
 
 # box adiacenti (fisse)
@@ -138,7 +138,7 @@ elif [ $boxfix = 'T' ] ; then
 
   STATUS=$?
   if [ $STATUS -ne 0 ] ; then
-    echo ' ver_boxfix_dballe terminato con errore= ',$STATUS 1>&2
+    echo ' ver_boxfix_dballe terminato con errore= '$STATUS 1>&2
   fi
 
 fi

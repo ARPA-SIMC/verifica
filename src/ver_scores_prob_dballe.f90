@@ -196,6 +196,8 @@
         ! ricominciamo perche' ho gia' fatto una query nella subroutine
             call idba_unsetall(handle)
 
+            CALL idba_setc('query','bigana')
+
             call idba_seti (handle,"year",dataval(3))
             call idba_seti (handle,"month",dataval(2))
             call idba_seti (handle,"day",dataval(1))
@@ -293,6 +295,8 @@
                 call idba_setc (handle,"rep_memo",descr)
             endif
 
+            CALL idba_setc('query','bigana')
+                
             call idba_seti (handle,"year",dataval(3))
             call idba_seti (handle,"month",dataval(2))
             call idba_seti (handle,"day",dataval(1))

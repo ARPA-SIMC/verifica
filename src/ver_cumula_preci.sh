@@ -39,5 +39,5 @@ ver_cumula_preci
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_cumula_preci terminato con errore= ',$STATUS 1>&2
+  echo ' ver_cumula_preci terminato con errore= '$STATUS 1>&2
 fi

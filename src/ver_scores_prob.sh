@@ -79,7 +79,7 @@ ver_scores_prob_dballe
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_scores_prob_dballe terminato con errore= ',$STATUS 1>&2
+  echo ' ver_scores_prob_dballe terminato con errore= '$STATUS 1>&2
 fi
 
 mv fort.14 brier.dat

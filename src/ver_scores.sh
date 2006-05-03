@@ -89,7 +89,7 @@ if [ $deterministico = 'T' ] ; then
 
   STATUS=$?
   if [ $STATUS -ne 0 ] ; then
-    echo ' ver_scores_dballe terminato con errore= ',$STATUS 1>&2
+    echo ' ver_scores_dballe terminato con errore= '$STATUS 1>&2
   fi
 
   mv fort.55 scatter_plot.dat
@@ -103,7 +103,7 @@ if [ $probabilistico = 'T' ] ; then
 
   STATUS=$?
   if [ $STATUS -ne 0 ] ; then
-    echo ' ver_scores_prob_dballe terminato con errore= ',$STATUS 1>&2
+    echo ' ver_scores_prob_dballe terminato con errore= '$STATUS 1>&2
   fi
 
   mv fort.14 brier.dat

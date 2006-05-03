@@ -38,5 +38,5 @@ ver_crea_obsmask
 
 STATUS=$?
 if [ $STATUS -ne 0 ] ; then
-  echo ' ver_crea_obsmask terminato con errore= ',$STATUS 1>&2
+  echo ' ver_crea_obsmask terminato con errore= '$STATUS 1>&2
 fi
