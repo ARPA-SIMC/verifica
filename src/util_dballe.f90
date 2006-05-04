@@ -239,7 +239,7 @@
 
     call idba_seti (handle,"priomin",0)
     call idba_unset (handle,"priomax")
-    call idba_setc (handle,"querybest",'t')
+    call idba_setc (handle,"query","best")
 
     call idba_seti (handle,"year",dataval(3))
     call idba_seti (handle,"month",dataval(2))

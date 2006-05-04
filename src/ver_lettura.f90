@@ -38,9 +38,9 @@
     call idba_unsetall (handle)
 
 ! Only return values with best priority
-! call idba_setc (handle,"querybest","t")
+! call idba_setc (handle,"query","best")
 
-    call idba_setc (handle,"var",'B12001')
+! call idba_setc (handle,"var",'B12001')
 ! call idba_seti (handle,"rep_cod",1)
 ! call idba_seti (handle,"station",1)
 ! call idba_seti (handle,"year",2004)

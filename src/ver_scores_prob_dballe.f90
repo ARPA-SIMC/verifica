@@ -282,15 +282,15 @@
             if(itipost < 0)then
                 call idba_seti (handle,"priomin",0)
                 call idba_unset (handle,"priomax")
-                call idba_seti (handle,"querybest",1)
+                call idba_seti (handle,"query","best")
                 descr="oss"
             elseif(itipost == 80)then
-                call idba_unset (handle,"querybest")
+                call idba_unset (handle,"query")
                 nlm=nlenvera(model)
                 descr='oss'//descrfisso((nlm+1):(nlm+5))
                 call idba_setc (handle,"rep_memo",descr)
             elseif(itipost == 90)then
-                call idba_unset (handle,"querybest")
+                call idba_unset (handle,"query")
                 descr="ana"
                 call idba_setc (handle,"rep_memo",descr)
             endif
