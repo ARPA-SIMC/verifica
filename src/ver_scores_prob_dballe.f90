@@ -282,7 +282,7 @@
             if(itipost < 0)then
                 call idba_seti (handle,"priomin",0)
                 call idba_unset (handle,"priomax")
-                call idba_seti (handle,"query","best")
+                call idba_setc (handle,"query","best")
                 descr="oss"
             elseif(itipost == 80)then
                 call idba_unset (handle,"query")

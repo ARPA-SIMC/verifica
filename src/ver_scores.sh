@@ -111,7 +111,7 @@ if [ $probabilistico = 'T' ] ; then
   mv fort.23 costloss.dat
   mv fort.15 outliers.dat
   mv fort.16 outliers_isto.dat
-  mv fort.19 detscores.dat
+  mv fort.22 detscores.dat
   mv fort.24 reldiag.dat
 
 fi

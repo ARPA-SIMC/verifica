@@ -43,7 +43,7 @@ if [ ! -f ./odbc.nml ] ; then
 fi
 [ $BATCH -eq 0 ] && $EDITOR odbc.nml
 
-if [ ! -f ./lista.nml ] ; then
+if [ ! -f ./lista_ens.nml ] ; then
   cp $VERSHARE/lista_ens.nml.template ./lista_ens.nml
 fi
 [ $BATCH -eq 0 ] && $EDITOR lista_ens.nml
@@ -87,5 +87,5 @@ mv fort.12 roc.dat
 mv fort.23 costloss.dat
 mv fort.15 outliers.dat
 mv fort.16 outliers_isto.dat
-mv fort.19 detscores.dat
+mv fort.22 detscores.dat
 mv fort.24 reldiag.dat
