@@ -398,38 +398,50 @@
 
 !**************************************************************************
 
-    SUBROUTINE modello(model,ivlsm,ivor,nfound)
+    SUBROUTINE modello(model,ivlsm,ivor,ls,diffh)
 
-    integer :: ivlsm,ivor,ifound
+    INTEGER :: ivlsm,ivor,ls
     character model*10,profile*20
     character cdum*10,civor*3,civlsm*3
+    logical diffh
 
 ! c VERIFICA - util.f
 ! c assegna i valori dei parametri orografia e lsm
 ! c autore: Chiara Marsigli
 
     profile='profile_'//model(1:nlenvera(model))
-    open(44,file=profile,status='old')
-    ifound=0
-    do while (.true.)
-        read(44,'(a10)',end=222)cdum
-        if(cdum(4:5) == 'or')then
-            civor=cdum(7:9)
-            ifound=ifound+1
-            READ(civor,'(i3.3)')ivor
-        endif
-        if(cdum(4:6) == 'lsm')then
-            civlsm=cdum(8:10)
-            ifound=ifound+1
-            READ(civlsm,'(i3.3)')ivlsm
-        endif
-        if(ifound == nfound)goto111
-    enddo
-    111 continue
-    close(44)
+    IF(diffh)THEN
+      OPEN(44,file=profile,status='old')
+      DO WHILE (.TRUE.)
+        READ(44,'(a10)',END=222)cdum
+        IF(cdum(4:5) == 'or')THEN
+          civor=cdum(7:9)
+          READ(civor,'(i3.3)')ivor
+          CLOSE(44)
+          goto111
+        ENDIF
+      ENDDO
+    ENDIF
+111 CONTINUE
+    IF(ls >= 0)THEN
+      OPEN(44,file=profile,status='old')
+      DO WHILE (.TRUE.)
+        READ(44,'(a10)',END=333)cdum
+        IF(cdum(4:6) == 'lsm')THEN
+          civlsm=cdum(8:10)
+          READ(civlsm,'(i3.3)')ivlsm
+          CLOSE(44)
+          goto444
+        ENDIF
+      ENDDO
+    ENDIF
+444 CONTINUE
 
     return
-    222 print*,'mancano ivor e ivlsm in profile_nomemodello!'
+    222 print*,'manca ivor in profile_nomemodello!'
+    call exit(1)
+    return
+    333 print*,'manca ivlsm in profile_nomemodello!'
     call exit(1)
     return
     end subroutine modello

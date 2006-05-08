@@ -113,11 +113,10 @@
 ! leggo tutte le stazioni disponibili
     call leggiana_db(iana,x,y,alt,rmdo,nstaz,handler)
     
-    nfound=0
-    if(ls >= 0)nfound=1
-    if(diffh)nfound=1
-    if(ls >= 0 .and. diffh)nfound=2
-    if(nfound > 0)CALL modello(model,ivlsm,ivor,nfound)
+    IF(diffh .OR. (ls >= 0))THEN
+      CALL modello(model,ivlsm,ivor,ls,diffh)
+      PRINT*,' ivlsm ',ivlsm,' ivor ',ivor
+    ENDIF
 
 ! il tipo di elaborazione e' fisso per questa routine (=1)
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &
@@ -140,6 +139,7 @@
 ! leggo la land-sea mask
     if (ls >= 0) then
         var(3)=ivlsm
+        PRINT*,DATA,ora,scad,level,var,est
         call findgribest(iug,xgrib,idimg,data,ora, &
         scad,level,var,est,ier)
         if(ier == -1)then
