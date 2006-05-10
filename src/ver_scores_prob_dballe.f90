@@ -229,7 +229,7 @@
                     print*,dataval,oraval
                     goto 66
                 else
-                ! print*,"pre - numero di dati trovati",N
+            !      PRINT*,"pre - numero di dati trovati ",N
                 endif
 
                 do idati=1,N
@@ -279,7 +279,7 @@
 
             call idba_unsetall(handle)
 
-            if(itipost < 0)then
+            if(itipost == 0)then
                 call idba_seti (handle,"priomin",0)
                 call idba_unset (handle,"priomax")
                 call idba_setc (handle,"query","best")
@@ -321,11 +321,12 @@
         ! print*,'oss ',descr,dataval,oraval
 
             call idba_voglioquesto (handle,N)
-        ! print*,"numero di dati trovati",N
             if(N == 0)then
                 print*,'non ci sono dati'
                 print*,dataval,oraval
                 goto 66
+              ELSE
+          !      PRINT*,"oss - numero di dati trovati ",N
             endif
 
             do idati=1,N
