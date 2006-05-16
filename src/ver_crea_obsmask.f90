@@ -27,8 +27,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    parameter    (MNBOX=80000)
-    parameter    (MIDIMG=200000,MIDIMV=MIDIMG*4)
+    parameter    (MNBOX=150000)
+    parameter    (MIDIMG=100000,MIDIMV=MIDIMG*4)
     real ::         xgrid(MIDIMV)
     integer ::      kgrib(MIDIMG)
     character(80) :: rfile,ofile
@@ -79,14 +79,18 @@
 
     iug=0
     idimg=MIDIMG
-    idimv=MIDIMV
     psec3(2)=rmdo
 
     PRINT*,'apro file ',rfile
     call pbopen(iug,rfile,'r',ier)
     if(ier /= 0)goto9100
-    print*,'pbopen fatta ',ier
-    call pbgrib(iug,kgrib,idimg,idimv,ier)
+    PRINT*,'pbopen fatta ',ier
+
+    KPR=0     !DEBUG PRINT SWITCH
+    CALL SETPAR (KBIT,KNEG,KPR) !number of bit in computer word    
+    kinlen=idimg*kbit/8
+
+    call pbgrib(iug,kgrib,kinlen,koutlen,ier)
     if(ier == -1)goto9200
     if(ier /= 0)goto9300
     print*,'pbgrib fatta ',ier
@@ -147,7 +151,7 @@
     call pbopen(iug,ofile,'w',ier)
     if(ier /= 0)goto9700
     call gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
-    xgrid,idimv,kgrib,idimg,kword,'C',ier)
+    xgrid,MIDIMV,kgrib,MIDIMG,kword,'C',ier)
     if(ier /= 0)goto9800
     call pbwrite(iug,kgrib,ksec0(1),ier)
     if(ier < 0)goto9900

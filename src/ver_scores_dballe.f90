@@ -181,7 +181,7 @@
 
 ! leggo tutte le stazioni presenti in archivio
     call idba_quantesono(handle,nstaz)
-    print*,'massimo numero pseudo-stazioni ',nstaz
+    print*,'massimo numero stazioni e pseudo-stazioni ',nstaz
     if(nstaz > MNSTAZ)then
         print*,'SONO TANTE ',nstaz,' STAZIONI!! SEI SICURO/A?'
     endif
@@ -357,7 +357,7 @@
                         print*,dataval,oraval
                         goto 66
                     else
-                    ! print*,'pre - numero di dati trovati ',N
+                      PRINT*,'pre - numero di dati trovati ',N
                     endif
 
                     do idati=1,N
@@ -455,9 +455,8 @@
                     print*,dataval,oraval
                     goto 66
                 else
-                ! print*,'oss - numero di dati trovati ',N
+                  PRINT*,'oss - numero di dati trovati ',N
                 endif
-
 
                 do idati=1,N
 
@@ -536,6 +535,7 @@
 
     ! output degli scores
 
+        PRINT*,'nstaz ',nstaz
         nv=nstaz*ngio*nore
         print*,'nv ',nv
 

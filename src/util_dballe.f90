@@ -125,8 +125,8 @@
                     alt(i)=h
                     anaid(i)=icodice
                 endif
-            elseif(itipost == 100)then
-            ! voglio solo le box (itipostaz=80)
+            elseif(itipost == 80)then
+            ! voglio solo le box (itipost=80)
                 if(itipostaz == 80)then
                     i=i+1
                     print*,ist,icodice,rlat,rlon,h,itipostaz
@@ -148,6 +148,8 @@
             endif
         endif
     enddo
+
+    nstaz=i
 
     return
     end subroutine leggiana_db_scores

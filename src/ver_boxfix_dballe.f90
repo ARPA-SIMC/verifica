@@ -28,9 +28,9 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
+    parameter (MIDIMG=100000,MIDIMV=MIDIMG*4)
     parameter (MNSTAZ=5000,MNSCAD=72,MNGIO=150,MNRM=102)
-    parameter (MNBOX=80000)
+    parameter (MNBOX=150000)
     integer ::   xgrib(MIDIMG)
     real ::      xgrid(MIDIMV),lsm(MIDIMV),obm(MIDIMV),oro(MIDIMV)
     real ::      rmgrid(MIDIMV,MNRM)
@@ -112,6 +112,7 @@
 
 ! connessione con database
     call idba_presentati(idbhandle,database,user,password)
+    PRINT*,'aperto database ',database
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handler,"read","read","read")
@@ -119,12 +120,12 @@
     call idba_preparati &
     (idbhandle,handle,"reuse","rewrite","rewrite")
 
-    nfound=0
-    if(ls >= 0 .or. lobm == 1)nfound=1
-    if(diffh)nfound=1
-    if((ls >= 0 .or. lobm == 1) .and. diffh)nfound=2
-    if(nfound > 0)CALL modello(model,ivlsm,ivor,nfound)
-    PRINT*,'ivlsm ',ivlsm
+    CALL modello(model,ivlsm,ivor,0,.false.)
+    PRINT*,'ivlsm per obm ',ivlsm
+    IF(diffh .OR. (ls >= 0))THEN
+      CALL modello(model,ivlsm,ivor,ls,diffh)
+      PRINT*,'ivlsm ',ivlsm,' ivor ',ivor
+    ENDIF
 
 ! il tipo di elaborazione e' fisso per questa routine (=2)
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &
@@ -140,6 +141,7 @@
     igrid=0                     !sono griglie regolari
     vfile='estratti.grib'
     obmfile='obm_'//model(1:nlenvera(model))//'.grib'
+    PRINT*,'obmfile= ',obmfile
 
 ! queste sono le box sulle quali fare i conti
     blat=pblat
@@ -185,6 +187,7 @@
         scad,level,var,est,ier)
         if(ier == -1)then
             print*,'non trovo la observation mask! '
+            PRINT*,data,ora,scad,level,var,est
             call exit(1)
         elseif(ier /= 0)then
             goto 9200
