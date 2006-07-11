@@ -13,17 +13,20 @@
     close(1)
 
 ! PREPARAZIONE DELL' ARCHIVIO
-    print*,"database=",database
+    print*,"cancello database=",database
 
     call idba_error_set_callback(0,error_handle,debug,handle_err)
 
     call idba_presentati(idbhandle,database,user,password)
 
 ! richiesta completa cancellazione iniziale
-    call idba_preparati(idhandle,handle, &
+    call idba_preparati(idbhandle,handle, &
     "write","write","write")
     call idba_scopa(handle,"repinfo.csv")
     call idba_fatto(handle)
+
+    call idba_arrivederci(idbhandle)
+
 
     stop
     end program

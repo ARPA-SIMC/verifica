@@ -30,7 +30,7 @@
 ! QUESTO PROGRAMMA DEVE LEGGERE I DATI DELLE BOE
 ! E CARICARLI NEL DATABASE
 
-    parameter (nstaz=20,nmesi=100,nanni=100)
+    parameter (nstaz=20)
 
     real :: hmo,tm,tp,dmo,tma
 
@@ -44,12 +44,13 @@
 
 ! ------
 
-    data rmd/99.9/
+    data rmd/-999./
 
-    character nomboe(nstaz)*2,mese(nmesi)*2,anno(nanni)*4
-    character path*80,pathana*80
+    character nome(nstaz)*20,stringa*80
+    real :: block(nstaz),station(nstaz),rlat(nstaz),rlon(nstaz),hstaz(nstaz)
+    character path*80
 
-    namelist  /boe/path,pathana,nboe,nomboe,nme,mese,anno
+    namelist  /boe/path,nboe,nome,block,station,rlat,rlon,hstaz
 
 ! --------
 
@@ -68,12 +69,14 @@
     read(1,nml=odbc)
     close(1)
 
+
     open(1,file='boe.nml',status='old',readonly)
     read(1,nml=boe)
     close(1)
 
+    print*,"nboe",nboe," nome ",nome
+
 ! PREPARAZIONE DELL' ARCHIVIO
-    print*,"database=",database
 
     call idba_error_set_callback(0,error_handle,debug,handle_err)
 
@@ -84,7 +87,7 @@
     ! o è la prima volta che si inseriscono i dati
 
         call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
+        "write","write","write")
         call idba_scopa(handle,"repinfo.csv")
         call idba_fatto(handle)
         rmmiss = .false.
@@ -92,87 +95,78 @@
 
     if (rmmiss) then
         call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
+        "write","write","write")
     else
         call idba_preparati(idhandle,handle, &
-        "reuse","add","add")
+        "write","add","add")
     endif
 
 ! INIZIO CICLO SUL NUMERO DI BOE
     do ns=1,nboe
 
         print*,'----------------------------'
-        print*,'nome boa ',nomboe(ns)
+        print*,'nome boa ',nome(ns)
         print*,' '
-
-    ! APERTURA FILE DI ANAGRAFICA ED ASSEGNAZIONE PARAMETRI DELLA STAZIONE
-
-        open(1,file=pathana(1:istr_lunghezza(pathana))//nomboe(ns)// &
-        '_ANAG.dat',status='old')
-        numestaz=0
-        read(1,*)
-        read(1,*)
-        read(1,'(9x,f6.3,4x,f6.3,4x,i1)')wlat,wlon,ialt
-        close(1)
-
 
     ! print*,"setto i parametri"
 
+!anagrafica
+
         call idba_unsetall (handle)
 
-        call idba_seti (handle,"rep_cod",1)
+        call idba_setcontextana (handle)
 
-        call idba_setc (handle,"name",nomboe(ns))
-        call idba_seti (handle,"block",1)
-        call idba_seti (handle,"station",ns)
+        call idba_setc (handle,"name",nome(ns))
+        call idba_seti (handle,"block",block(ns))
+        call idba_seti (handle,"station",station(ns))
 
-        call idba_setr (handle,"lat",wlat)
-        call idba_setr (handle,"lon",wlon)
-        call idba_seti (handle,"height",ialt)
-
-        call idba_seti (handle,"leveltype",1)
-        call idba_seti (handle,"l1",0)
-        call idba_seti (handle,"l2",0)
-
-        call idba_seti (handle,"pindicator",0)
-        call idba_seti (handle,"p1",0)
-        call idba_seti (handle,"p2",0)
+        call idba_setr (handle,"lat",rlat(ns))
+        call idba_setr (handle,"lon",rlon(ns))
+        call idba_seti (handle,"height",hstaz(ns))
 
         call idba_seti (handle,"mobile",0)
 
-    ! INIZIO CICLO SUI MESI
+        call idba_prendilo (handle)
 
-        do nm=1,nme
-
-            print*,'MESE: ',mese(nm)," ANNO: ",anno(nm)
-            print*,' '
-
-        ! ora leggo i dati
-
-            open(1,file=path(1:istr_lunghezza(path)) &
-            //nomboe(ns)//anno(nm)// &
-            mese(nm)//'.dat.new',status='old',form='formatted')
+        call idba_enqi (handle,"ana_id",ana_id)
 
 
-            743 read(1,*,end=223) &
-            idata(1),idata(2),idata(3),iora,imin,isec, &
-            hmo,tm,tp,dmo,tma
+! dati
+        call idba_unsetall (handle)
+
+        call idba_seti (handle,"ana_id",ana_id)
+
+        call idba_setc (handle,"rep_memo","boe")
+        call idba_setlevel (handle,1,0,0)
+        call idba_settimerange (handle,0,0,0)
+        
+
+        print *,"apro file", path(1:istr_lunghezza(path))//"/" &
+            //nome(ns)(1:istr_lunghezza(nome(ns)))//'.txt'
+            open(1,file=path(1:istr_lunghezza(path))//"/" &
+            //nome(ns)(1:istr_lunghezza(nome(ns)))//'.txt',&
+            status='old',form='formatted')
+
+743         read(1,'(a)',end=223)stringa
+
+            read(stringa,'(i4,1x,4(i2,1x))')idata(3),idata(2),idata(1),iora,imin
+!            print*,idata(3),idata(2),idata(1),iora,imin
+
+            stringa = stringa(17:)
+
+            read(stringa,*)hmo,tm,tp,dmo
+!            print*,hmo,tm,tp,dmo
 
             if (hmo /= rmd) hmo=hmo*1.
             if (tm /= rmd) tm=tm*1.
             if (tp /= rmd) tp=tp*1.
             if (dmo /= rmd) dmo=dmo*1.
-            if (tma /= rmd) tma=tma*1.+273.15
+!            if (tma /= rmd) tma=tma*1.+273.15
+            tma=rmd
 
         ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
 
-            call idba_seti (handle,"year",idata(3))
-            call idba_seti (handle,"month",idata(2))
-            call idba_seti (handle,"day",idata(1))
-            call idba_seti (handle,"hour",iora)
-            call idba_seti (handle,"min",imin)
-            call idba_seti (handle,"sec",isec)
-
+            call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,isec)
 
             if ( .NOT. rmmiss)then
 
@@ -182,6 +176,7 @@
                 call idba_unset (handle,"B22001") !DIRECTION OF WAVES [DEGREE TRUE, 3 digits]
                 call idba_unset (handle,"B22071") !SPECTRAL PEAK WAVE PERIOD [S, ##.#]
                 call idba_unset (handle,"B22042") !SEA/WATER TEMPERATURE [K, ###.#]
+
 
                 if (hmo /= rmd) call idba_setr(handle,"B22070",hmo)
                 if (tm /= rmd)  call idba_setr(handle,"B22074",tm)
@@ -196,7 +191,7 @@
                     call idba_setr (handle,   "B22070",hmo)
                 else
                     call idba_unset (handle,  "B22070")
-                    print *,"cancello i dati   B22070",idata,iora
+!                    print *,"cancello i dati   B22070",idata,iora
                     call idba_setc(handle,"var","B22070")
                     call idba_dimenticami(handle)
                 end if
@@ -205,7 +200,7 @@
                     call idba_setr(handle,    "B22074",tm)
                 else
                     call idba_unset (handle,  "B22074")
-                    print *,"cancello i dati   B22074",idata,iora
+!                    print *,"cancello i dati   B22074",idata,iora
                     call idba_setc(handle,"var","B22074")
                     call idba_dimenticami(handle)
                 end if
@@ -214,7 +209,7 @@
                     call idba_setr(handle,    "B22071",tp)
                 else
                     call idba_unset (handle,  "B22071")
-                    print *,"cancello i dati   B22071",idata,iora
+!                    print *,"cancello i dati   B22071",idata,iora
                     call idba_setc(handle,"var","B22071")
                     call idba_dimenticami(handle)
                 end if
@@ -223,7 +218,7 @@
                     call idba_setr(handle,    "B22001",dmo)
                 else
                     call idba_unset (handle,  "B22001")
-                    print *,"cancello i dati   B22001",idata,iora
+!                    print *,"cancello i dati   B22001",idata,iora
                     call idba_setc(handle,"var","B22001")
                     call idba_dimenticami(handle)
                 end if
@@ -232,14 +227,15 @@
                     call idba_setr(handle,    "B22042",tma)
                 else
                     call idba_unset (handle,  "B22042")
-                    print *,"cancello i dati   B22042",idata,iora
+!                    print *,"cancello i dati   B22042",idata,iora
                     call idba_setc(handle,"var","B22042")
                     call idba_dimenticami(handle)
                 end if
 
             end if
 
-            call idba_prendilo (handle)
+                if (hmo /= rmd .or. tm /= rmd .or. tp /= rmd .or.dmo /= rmd.or.tma /= rmd) &
+                     call idba_prendilo (handle)
 
         ! aggiungo altre info
         ! if (hmo.ne.rmd) then
@@ -252,7 +248,6 @@
             223 continue
             close(1)
 
-        enddo                  !mese
     enddo                     !boa
 
     call idba_fatto(handle)
