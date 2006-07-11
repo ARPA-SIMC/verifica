@@ -37,8 +37,8 @@
 
     character(19) :: database,user,password
     integer :: handle
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.false.,.true.,.false./
+    logical :: debug
+    data debug/.true./
     external error_handle
 
     namelist  /regioni/path,pathana,nre,reg,nme,mese,anno
@@ -61,23 +61,8 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    if (init)then
-    ! solo se richiesta completa cancellazione iniziale
-    ! o è la prima volta che si inseriscono i dati
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-        call idba_scopa(handle,"repinfo.csv")
-        call idba_fatto(handle)
-        rmmiss = .false.
-    end if
-
-    if (rmmiss) then
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-    else
-        call idba_preparati(idhandle,handle, &
-        "reuse","add","add")
-    endif
+    CALL idba_preparati(idhandle,handle, &
+     "write","write","write")
 
 ! INIZIO CICLO SUI MESI
 
@@ -136,7 +121,6 @@
             do nstana=1,numestaz
                 if (scode == code(nstana))then
                     nsts=nstana
-                ! print*,'stazione ',nsts,scode
                     goto 198
                 endif
             enddo
@@ -180,34 +164,40 @@
 
         ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
 
-
             call idba_unsetall (handle)
 
+! anagrafica
+            CALL idba_setcontextana (handle)
+            ! obbligatori
+            CALL idba_setr (handle,"lat",latoss(nsts))
+            CALL idba_setr (handle,"lon",lonoss(nsts))
+            CALL idba_seti (handle,"mobile",0)
+
+            CALL idba_setc (handle,"name",nomest(nsts))
+            CALL idba_seti (handle,"block",69)
+            CALL idba_setr (handle,"height",alte(nsts))
+        
+            PRINT*,alte(nsts),nomest(nsts)
+
+            CALL idba_prendilo (handle)
+            CALL idba_enqi(handle,"ana_id",id_ana)
+! dati
+            call idba_unsetall (handle)
+
+            ! obbligatori
+!            CALL idba_setr (handle,"lat",latoss(nsts))
+!            CALL idba_setr (handle,"lon",lonoss(nsts))
+!            CALL idba_seti (handle,"mobile",0)
+
+            CALL idba_seti(handle,"ana_id",id_ana)
+
         ! print*,'datatime ',idata(3),idata(2),idata(1),iora,imin,00
-            call idba_seti (handle,"year",idata(3))
-            call idba_seti (handle,"month",idata(2))
-            call idba_seti (handle,"day",idata(1))
-            call idba_seti (handle,"hour",iora)
-            call idba_seti (handle,"min",imin)
-            call idba_seti (handle,"sec",00)
+            call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
 
         ! codice per gli osservati delle regioni
             call idba_seti (handle,"rep_cod",50)
 
-            call idba_setc (handle,"name",nomest(nsts))
-
-!            read(code(nsts),'(a2,i2.2,i3.3)')cdum,block,station
-!            call idba_seti (handle,"block",block)
-!            call idba_seti (handle,"station",station)
-
-            call idba_setr (handle,"lat",latoss(nsts))
-            call idba_setr (handle,"lon",lonoss(nsts))
-            call idba_setr (handle,"height",alte(nsts))
-
-            call idba_seti (handle,"mobile",0)
-
         ! inserimento dati
-
             if (preci /= rmdo) then
                 call idba_seti (handle,"leveltype",1)
                 call idba_seti (handle,"l1",0)

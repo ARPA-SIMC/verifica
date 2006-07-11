@@ -56,6 +56,14 @@
         call idba_enqr (handle,"height",h)
         call idba_enqc (handle,"name",namest)
 
+        IF (nstaz.LT.icodice) THEN
+          PRINT*,"ATTENTION !!!!"
+          PRINT*,"FATAL ERROR"
+          PRINT*,"sono state cancellate alcune stazioni"
+          PRINT*,"opzione non prevista: ",nstaz,"<",icodice
+          CALL EXIT(1)
+        END IF
+
         if(iana == 0)then
         ! voglio solo le stazioni vere (nome stazione non inizia per '_')
             if(namest(1:1) /= '_')then
@@ -82,7 +90,7 @@
 
 !*****************************************************************************
 
-    subroutine leggiana_db_scores(iana,x,y,alt,anaid, &
+    subroutine leggiana_db_scores(iana,anaid, &
     itipost,rmdo,nstaz,handle)
 
 ! c VERIFICA - util.f
@@ -99,7 +107,7 @@
     real :: x(nstaz),y(nstaz),alt(nstaz)
     integer :: anaid(nstaz)
 
-! nizializzazione matrici
+! inizializzazione matrici
     x = rmdo
     y = rmdo
     alt = rmdo
@@ -109,46 +117,39 @@
         call idba_elencamele(handle)
 
         call idba_enqi (handle,"ana_id",icodice)
-        call idba_enqr (handle,"lat",rlat)
-        call idba_enqr (handle,"lon",rlon)
-        call idba_enqr (handle,"height",h)
         call idba_enqi (handle,"block",itipostaz)
 
-        if(iana == 0)then
-            if(itipost == 0)then
-            ! voglio solo le stazioni vere (itipostaz<70)
-                if(itipostaz < 70)then
-                    i=i+1
-                    print*,ist,icodice,rlat,rlon,h,itipostaz
-                    x(i)=rlon
-                    y(i)=rlat
-                    alt(i)=h
-                    anaid(i)=icodice
-                endif
-            elseif(itipost == 80)then
-            ! voglio solo le box (itipost=80)
-                if(itipostaz == 80)then
-                    i=i+1
-                    print*,ist,icodice,rlat,rlon,h,itipostaz
-                    x(i)=rlon
-                    y(i)=rlat
-                    alt(i)=h
-                    anaid(i)=icodice
-                endif
-            endif
-        elseif(iana == 1)then
-        ! voglio solo le analisi (itipostaz=200)
-            if(itipostaz == 90)then
-                i=i+1
-                write(33,*)ist,icodice,rlat,rlon,h,itipostaz
-                x(i)=rlon
-                y(i)=rlat
-                alt(i)=h
-                anaid(i)=icodice
-            endif
-        endif
-    enddo
 
+        IF(iana == 0)THEN
+          IF(itipost == 0)THEN
+            ! voglio solo le stazioni vere (itipostaz<70)
+            IF(itipostaz < 70)THEN
+              i=i+1
+              PRINT*,ist,icodice,itipostaz
+              anaid(i)=icodice
+            ENDIF
+          ELSEIF(itipost == 80)THEN
+            ! voglio solo le box (itipost=80)
+            IF(itipostaz == 80)THEN
+              i=i+1
+              PRINT*,ist,icodice,itipostaz
+              anaid(i)=icodice
+            ENDIF
+          ENDIF
+          ELSEIF(iana == 1)THEN
+            ! voglio solo le analisi (itipostaz=200)
+            IF(itipostaz == 90)THEN
+              i=i+1
+              WRITE(33,*)ist,icodice,itipostaz
+              anaid(i)=icodice
+            ENDIF
+          ELSE
+            PRINT*,"ERRORE"
+            PRINT*,"iana, opzione non gestita"
+
+          ENDIF
+    enddo
+    
     nstaz=i
 
     return
@@ -157,7 +158,7 @@
 
 !*****************************************************************************
 
-    SUBROUTINE leggiana_db_all(x,y,alt,anaid,rmdo,nstaz,handle)
+    SUBROUTINE leggiana_db_all(anaid,rmdo,nstaz,handle)
 
 ! c VERIFICA - util.f
 ! c legge l'anagrafica stazioni dal database
@@ -166,13 +167,9 @@
     integer :: handle,nstaz
     character(20) :: namest
 
-    real :: x(nstaz),y(nstaz),alt(nstaz)
     integer :: anaid(nstaz)
 
-! nizializzazione matrici
-    x = rmdo
-    y = rmdo
-    alt = rmdo
+! inizializzazione matrici
     anaid = 0
 
     print*,'stazioni ',nstaz
@@ -183,13 +180,9 @@
         call idba_enqi (handle,"ana_id",icodice)
         call idba_enqr (handle,"lat",rlat)
         call idba_enqr (handle,"lon",rlon)
-        call idba_enqr (handle,"height",h)
         call idba_enqc (handle,"name",namest)
 
-        PRINT*,ist,icodice,rlat,rlon,h,namest
-        x(ist)=rlon
-        y(ist)=rlat
-        alt(ist)=h
+        PRINT*,ist,icodice,rlat,rlon,namest
         anaid(ist)=icodice
         
     enddo
@@ -199,7 +192,7 @@
 
 !*****************************************************************************
 
-    subroutine leggioss_db(handle,nd,no, &
+    SUBROUTINE leggioss_db(handle,handleana,nd,no, &
     dataval,oraval,cvar,scad, &
     rxeq,ryeq,ruota,rmddb, &
     MNSTAZ,x,y,alt,nstdispo,obs)
@@ -241,7 +234,7 @@
 
     call idba_seti (handle,"priomin",0)
     call idba_unset (handle,"priomax")
-    call idba_setc (handle,"query","best")
+    CALL idba_setc (handle,"query","best")
 
     call idba_seti (handle,"year",dataval(3))
     call idba_seti (handle,"month",dataval(2))
@@ -283,14 +276,26 @@
         call idba_enqi (handle,"l1",level(2))
         call idba_enqi (handle,"l2",level(3))
 
-        call idba_enqr (handle,"lat",rlat)
-        call idba_enqr (handle,"lon",rlon)
-        call idba_enqr (handle,"height",h)
-
         call idba_enqi (handle,"rep_cod",repcod)
         call idba_enqi (handle,"ana_id",icodice)
 
         if(repcod >= 100)goto30
+
+! per chiedere i dati dell'anagrafica
+     
+        call idba_seti (handleana,"ana_id",icodice)
+        CALL idba_quantesono (handleana,N)
+        IF (N.NE.1) THEN
+          PRINT "ERRORE !!!"
+          PRINT "ERRORE !!!"
+          PRINT "qualche cosa non quadra",N," <> 1"
+          call exit (1)
+        END IF
+
+        call idba_elencamele (handleana)
+        call idba_enqr (handleana,"lat",rlat)
+        call idba_enqr (handleana,"lon",rlon)
+        call idba_enqr (handleana,"height",h)
 
         nv=nv+1
         call idba_enqr (handle,btable,dato)

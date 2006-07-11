@@ -52,8 +52,8 @@
 
 ! database
     integer :: handler,handle
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.false.,.true.,.false./
+    logical :: debug
+    data debug/.true./
 
     external error_handle
 
@@ -169,23 +169,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    if (init)then
-    ! solo se richiesta completa cancellazione iniziale
-    ! o è la prima volta che si inseriscono i dati
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-        call idba_scopa(handle,"repinfo.csv")
-        call idba_fatto(handle)
-        rmmiss = .false.
-    end if
-
-    if (rmmiss) then
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-    else
-        call idba_preparati(idhandle,handle, &
-        "reuse","add","add")
-    endif
+    CALL idba_preparati(idhandle,handle,"write","write","write")
 
     iug=0
     idimg=MIDIMG
@@ -207,17 +191,9 @@
         call getdata(xgrib,idimg,imd,rmd,xgrid,idimv,ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
 
-    ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
-        call idba_unsetall (handle)
-
-    ! codice per le analisi
-        call idba_seti (handle,"rep_cod",105)
-
-        call idba_seti (handle,"leveltype",level(1))
-        call idba_seti (handle,"l1",level(2))
-        call idba_seti (handle,"l2",level(3))
-
-        call JELADATA5(data(1),data(2),data(3),ora(1),ora(2),iminuti)
+        CALL variabile(3,var,cvar,a,b,.TRUE.)
+            
+        CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2),iminuti)
         IF (scad(4) > 0) THEN
           CALL converti_scadenze(4,scad,scaddb) ! converte in secondi
           iminuti=iminuti+scaddb(3)/60
@@ -228,48 +204,63 @@
           p1=0
           p2=0
         ENDIF
-        call JELADATA6(idayv,imonthv,iyearv,ihourv,iminv,iminuti)
-          
-        call idba_seti (handle,"year",iyearv)
-        call idba_seti (handle,"month",imonthv)
-        call idba_seti (handle,"day",idayv)
-        call idba_seti (handle,"hour",ihourv)
-        call idba_seti (handle,"min",iminv)
-        call idba_seti (handle,"sec",00)
-
-        call idba_seti (handle,"pindicator",scad(4))
-        call idba_seti (handle,"p1",p1)
-        call idba_seti (handle,"p2",p2)
-
-        call variabile(3,var,cvar,a,b,.true.)
+        CALL JELADATA6(idayv,imonthv,iyearv,ihourv,iminv,iminuti)
+        
+    ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
+        call idba_unsetall (handle)
 
         do ib=1,nbox
+
+! anagrafica
+            CALL idba_setcontextana (handle)
 
             rlon=xb(ib)
             rlat=yb(ib)
             h=alte(ib)
-            write(cb,'(i5.5)')ib
+            WRITE(cb,'(i5.5)')ib
             name='_gp'//cb
             station=ib
 
-        ! prima faccio unset di ana_id senno' ricopre sempre!!!
-            call idba_unset (handle,"ana_id")
+            call idba_setr (handle,"lon",rlon)
+            call idba_setr (handle,"lat",rlat)
+            call idba_seti (handle,"mobile",0)
 
             call idba_setc (handle,"name",name)
             call idba_seti (handle,"block",block)
             call idba_seti (handle,"station",station)
-
-            call idba_setr (handle,"lon",rlon)
-            call idba_setr (handle,"lat",rlat)
             call idba_setr (handle,"height",h)
 
-            call idba_seti (handle,"mobile",0)
+            CALL idba_prendilo (handle)
+            CALL idba_enqi(handle,"ana_id",id_ana)
+! dati
 
-        ! if(xgrid(pos(ib)).le.0.)xgrid(pos(ib))=0.
+            call idba_unsetall (handle)
+
+            CALL idba_seti(handle,"ana_id",id_ana)
+
+            ! codice per le analisi
+            CALL idba_seti (handle,"rep_cod",105)
+            
+            CALL idba_seti (handle,"leveltype",level(1))
+            CALL idba_seti (handle,"l1",level(2))
+            CALL idba_seti (handle,"l2",level(3))
+            
+            CALL idba_seti (handle,"year",iyearv)
+            CALL idba_seti (handle,"month",imonthv)
+            CALL idba_seti (handle,"day",idayv)
+            CALL idba_seti (handle,"hour",ihourv)
+            CALL idba_seti (handle,"min",iminv)
+            CALL idba_seti (handle,"sec",00)
+          
+            CALL idba_seti (handle,"pindicator",scad(4))
+            CALL idba_seti (handle,"p1",p1)
+            CALL idba_seti (handle,"p2",p2)
+            
+            ! if(xgrid(pos(ib)).le.0.)xgrid(pos(ib))=0.
             dato=xgrid(pos(ib))
-
-            call idba_setr(handle,cvar,dato)
-            call idba_prendilo (handle)
+            
+            CALL idba_setr(handle,cvar,dato)
+            CALL idba_prendilo (handle)
 
         enddo                  !nbox
 

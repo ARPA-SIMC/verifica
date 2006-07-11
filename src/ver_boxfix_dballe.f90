@@ -63,7 +63,7 @@
     character model*10
     character(19) :: database,user,password
 ! database
-    integer :: handler,handle
+    INTEGER :: handler,handle,handleana,handleanaw,id_ana
     logical :: init,debug,rmmiss
     data init,debug,rmmiss/.true.,.true.,.false./
 
@@ -116,9 +116,12 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handler,"read","read","read")
+! apertura database in lettura anagrafica
+    call idba_preparati(idbhandle,handleana,"read","read","read")
 ! apertura database in scrittura
-    call idba_preparati &
-    (idbhandle,handle,"reuse","rewrite","rewrite")
+    call idba_preparati(idbhandle,handle,"write","write","write")
+! apertura database in scrittura anagrafica
+    call idba_preparati(idbhandle,handleanaw,"write","write","write")
 
     CALL modello(model,ivlsm,ivor,0,.false.)
     PRINT*,'ivlsm per obm ',ivlsm
@@ -328,7 +331,7 @@
                 enddo
 
             ! le box sono gia' antiruotate e le stazioni le leggo dal db normali
-                call leggioss_db(handler,3,2, &
+                CALL leggioss_db(handler,handleana,3,2, &
                 dataval,oraval,cvar,scad, &
                 rxeq,ryeq,.false.,rmddb, &
                 MNSTAZ,x,y,alt,nstdispo,obsst)
@@ -368,13 +371,15 @@
 
             ! scrittura su database
             ! scrivo i previsti
-                do irm=1,nrm
-                    if(nrm > 1)then
-                        write(cel,'(i3.3)')irm
-                        descr=descrfisso(1:nlenvera(descrfisso)) &
-                        //'el'//cel
-                    endif
-                    print*,'descr ',descr
+                DO irm=1,nrm
+                  IF(nrm > 1)THEN
+                    WRITE(cel,'(i3.3)')irm
+                    descr=descrfisso(1:nlenvera(descrfisso)) &
+                     //'el'//cel
+                  ELSE
+                    descr=descrfisso
+                  ENDIF
+                    PRINT*,'descr ',descr
                     do ib=1,nb
                         if(pred(ib,irm) /= rmddb .AND. &
                         pred(ib,irm) /= rmdo)then
@@ -388,25 +393,28 @@
                         ! imposto tutta l'anagrafica
 
                         ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                            call idba_unset (handle,"ana_id")
+                        !    call idba_unset (handle,"ana_id")
                         ! prima faccio unset di ana_id senno' non riesce a fissare rep_memo!!!
-                            call idba_unset (handle,"rep_cod")
+                        !    call idba_unset (handle,"rep_cod")
 
-                            call idba_setc (handle,"name",name)
-                            call idba_seti (handle,"block",block)
-                            call idba_seti (handle,"station",station)
+                            call idba_setcontextana(handleanaw)
+!!                            call idba_seti (handleanaw,"!ana","scrivo anagrafica")
+                            call idba_setc (handleanaw,"name",name)
+                            call idba_seti (handleanaw,"block",block)
+                            call idba_seti (handleanaw,"station",station)
+                            call idba_setr (handleanaw,"height",h)
+                            call idba_setr (handleanaw,"lat",rlat)
+                            call idba_setr (handleanaw,"lon",rlon)
+                            call idba_seti (handleanaw,"mobile",0)
+                            call idba_setr (handleanaw,cvar,dato)
+                            call idba_prendilo (handleanaw)
+                            call idba_enqi (handleanaw, "ana_id", id_ana)
 
-                            call idba_setr (handle,"height",h)
-                            call idba_setr (handle,"lat",rlat)
-                            call idba_setr (handle,"lon",rlon)
-
+                            call idba_seti (handle, "ana_id", id_ana)
                             call idba_seti (handle,"leveltype", &
                             level(1))
                             call idba_seti (handle,"l1",level(2))
                             call idba_seti (handle,"l2",level(3))
-
-                            call idba_seti (handle,"mobile",0)
-
                             call idba_setc (handle,"rep_memo",descr)
 
                             if(imet == 0)then ! scalare
@@ -457,33 +465,39 @@
                             p1=0
                             p2=0
                         endif
-                        call idba_seti (handle,"pindicator",scaddb(4))
-                        call idba_seti (handle,"p1",p1)
-                        call idba_seti (handle,"p2",p2)
 
                     ! imposto tutta l'anagrafica
 
                     ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                        call idba_unset (handle,"ana_id")
+                    !    call idba_unset (handle,"ana_id")
                     ! prima faccio unset di rep_cod senno' non riesce a fissare rep_memo!!!
-                        call idba_unset (handle,"rep_cod")
+                    !    call idba_unset (handle,"rep_cod")
 
-                        call idba_setc (handle,"name",name)
-                        call idba_seti (handle,"block",block)
-                        call idba_seti (handle,"station",station)
-                        call idba_seti (handle,"heightbaro", &
+                        CALL idba_setcontextana (handleanaw)
+!!                        CALL idba_seti (handleanaw,"!ana","scrivo anagrafica")
+                        call idba_setc (handleanaw,"name",name)
+                        call idba_seti (handleanaw,"block",block)
+                        call idba_seti (handleanaw,"station",station)
+                        call idba_seti (handleanaw,"heightbaro", &
                         heightbaro)
 
-                        call idba_setr (handle,"height",h)
-                        call idba_setr (handle,"lat",rlat)
-                        call idba_setr (handle,"lon",rlon)
+                        call idba_setr (handleanaw,"height",h)
+                        call idba_setr (handleanaw,"lat",rlat)
+                        call idba_setr (handleanaw,"lon",rlon)
+                        call idba_seti (handleanaw,"mobile",0)
+                        CALL idba_prendilo (handleanaw)
+                        CALL idba_enqi (handleanaw, "ana_id", id_ana)
+
+                        CALL idba_seti (handle, "ana_id", id_ana)
+                        call idba_seti (handle,"pindicator",scaddb(4))
+                        call idba_seti (handle,"p1",p1)
+                        call idba_seti (handle,"p2",p2)
 
                         call idba_seti (handle,"leveltype", &
                         level(1))
                         call idba_seti (handle,"l1",level(2))
                         call idba_seti (handle,"l2",level(3))
 
-                        call idba_seti (handle,"mobile",0)
 
                         call idba_setc (handle,"rep_memo",descr)
 

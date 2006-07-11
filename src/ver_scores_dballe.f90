@@ -68,9 +68,6 @@
 ! nella codifica grib la variabile da verificare
 ! oss    rea vettore (MNV) degli osservati
 ! prev   rea vettore (MNV) dei previsti
-! lat    rea vettore (MNSTAZ) di latitudini di tutte le (pseudo)stazioni presenti in archivio
-! lon    rea vettore (MNSTAZ) di longitudini di tutte le (pseudo)stazioni presenti in archivio
-! alt    rea vettore (MNSTAZ) di quote di tutte le (pseudo)stazioni presenti in archivio
 ! dataval int (3) data di validita' del valore da estrarre
 ! oraval int (2) ora  di validita' del valore da estrarre
 ! icodice int posizione (univoca) della (pseudo)stazione richiesta nel database odbc
@@ -113,12 +110,11 @@
     integer ::   data(3),ora(2),var(3),scad(4),level(3)
     integer ::   dataval(3),oraval(2),scaddb(4),p1,p2
     integer ::   icodice,itipost,ntot
-    real ::      rlat,rlon,h,dato
+    real ::      dato
     character descr*20,descrfisso*20,model*10,cvar*6,cel*3
     real ::      maerr,mserr,rmserr,bi
 
     real, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
-    real, ALLOCATABLE :: lon(:),lat(:),alt(:)
     integer, ALLOCATABLE :: anaid(:)
 
     CHARACTER(LEN=19) :: database,user,password
@@ -185,13 +181,10 @@
     if(nstaz > MNSTAZ)then
         print*,'SONO TANTE ',nstaz,' STAZIONI!! SEI SICURO/A?'
     endif
-! llocazione matrici
-    ALLOCATE(lon(1:nstaz))
-    ALLOCATE(lat(1:nstaz))
-    ALLOCATE(alt(1:nstaz))
+! allocazione matrici
     ALLOCATE(anaid(1:nstaz))
 
-    call leggiana_db_scores(iana,lon,lat,alt,anaid, &
+    call leggiana_db_scores(iana,anaid, &
     itipost,rmdo,nstaz,handle)
     print*,'numero massimo stazioni ',nstaz
     nv=nstaz*ngio*nore
@@ -362,19 +355,12 @@
 
                     do idati=1,N
 
-                    ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                        call idba_unset (handle,"ana_id")
-
                         call idba_dammelo (handle,btable)
                     ! sara' da impostare mentre per ora e' solo richiesto
                         call idba_enqi (handle,"leveltype", &
                         level(1))
                         call idba_enqi (handle,"l1",level(2))
                         call idba_enqi (handle,"l2",level(3))
-
-                        call idba_enqr (handle,"lat",rlat)
-                        call idba_enqr (handle,"lon",rlon)
-                        call idba_enqr (handle,"height",h)
 
                     ! call idba_enqi (handle,"mobile",mobile)
 
@@ -466,10 +452,6 @@
                     level(1))
                     call idba_enqi (handle,"l1",level(2))
                     call idba_enqi (handle,"l2",level(3))
-
-                    call idba_enqr (handle,"lat",rlat)
-                    call idba_enqr (handle,"lon",rlon)
-                    call idba_enqr (handle,"height",h)
 
                     call idba_enqi (handle,"ana_id",icodice)
 

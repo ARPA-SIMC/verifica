@@ -40,7 +40,7 @@
     integer ::   data(3),ora(2),var(3),scad(4),level(3)
     integer ::   dataval(3),oraval(2),scaddb(4),p1,p2
     integer ::   icodice,itipost,ntot
-    real ::      rlat,rlon,h,dato
+    real ::      dato
     character descr*20,descrfisso*20,model*10
     character cvar*6,cel*3
     real ::      bs,bss,roca,clarea,outr
@@ -49,7 +49,6 @@
     integer ::   temp_wght(MNRM),distrib(MNRM)
 
     real, ALLOCATABLE :: oss(:,:),prev(:,:,:),osse(:),previ(:,:)
-    real, ALLOCATABLE :: lon(:),lat(:),alt(:)
     integer, ALLOCATABLE :: anaid(:)
     integer, ALLOCATABLE :: wght(:,:)
 
@@ -129,12 +128,9 @@
         print*,'SONO TANTE ',nstaz,' STAZIONI!! SEI SICURO/A?'
     endif
 ! llocazione matrici anagrafica
-    ALLOCATE(lon(1:nstaz))
-    ALLOCATE(lat(1:nstaz))
-    ALLOCATE(alt(1:nstaz))
     ALLOCATE(anaid(1:nstaz))
 
-    call leggiana_db_scores(iana,lon,lat,alt,anaid, &
+    call leggiana_db_scores(iana,anaid, &
     itipost,rmdo,nstaz,handle)
     print*,'numero massimo stazioni ',nstaz
 
@@ -225,7 +221,7 @@
                 call idba_voglioquesto (handle,N)
             ! print*,'numero dati trovati= ',N
                 if(N == 0)then
-                    print*,'non ci sono dati'
+                    PRINT*,'pre - non ci sono dati'
                     print*,dataval,oraval
                     goto 66
                 else
@@ -234,19 +230,12 @@
 
                 do idati=1,N
 
-                ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                    call idba_unset (handle,"ana_id")
-
                     call idba_dammelo (handle,btable)
                 ! sara' da impostare mentre per ora e' solo richiesto
                     call idba_enqi (handle,"leveltype", &
                     level(1))
                     call idba_enqi (handle,"l1",level(2))
                     call idba_enqi (handle,"l2",level(3))
-
-                    call idba_enqr (handle,"lat",rlat)
-                    call idba_enqr (handle,"lon",rlon)
-                    call idba_enqi (handle,"height",h)
 
                 ! call idba_enqi (handle,"mobile",mobile)
 
@@ -322,7 +311,7 @@
 
             call idba_voglioquesto (handle,N)
             if(N == 0)then
-                print*,'non ci sono dati'
+                PRINT*,'oss - non ci sono dati'
                 print*,dataval,oraval
                 goto 66
               ELSE
@@ -337,10 +326,6 @@
                 level(1))
                 call idba_enqi (handle,"l1",level(2))
                 call idba_enqi (handle,"l2",level(3))
-
-                call idba_enqr (handle,"lat",rlat)
-                call idba_enqr (handle,"lon",rlon)
-                call idba_enqi (handle,"height",h)
 
                 call idba_enqi (handle,"ana_id",icodice)
 

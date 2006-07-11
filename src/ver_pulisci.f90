@@ -21,7 +21,7 @@
 
 ! richiesta completa cancellazione iniziale
     call idba_preparati(idhandle,handle, &
-    "reuse","rewrite","rewrite")
+    "write","write","write")
     call idba_scopa(handle,"repinfo.csv")
     call idba_fatto(handle)
 

@@ -37,8 +37,8 @@
 
     character(19) :: database,user,password
     integer :: handle
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.false.,.true.,.false./
+    logical :: debug
+    data debug/.true./
     external error_handle
 
     namelist  /euro/path,nme,mese,anno
@@ -61,23 +61,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    if (init)then
-    ! solo se richiesta completa cancellazione iniziale
-    ! o è la prima volta che si inseriscono i dati
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-        call idba_scopa(handle,"repinfo.csv")
-        call idba_fatto(handle)
-        rmmiss = .false.
-    end if
-
-    if (rmmiss) then
-        call idba_preparati(idhandle,handle, &
-        "reuse","rewrite","rewrite")
-    else
-        call idba_preparati(idhandle,handle, &
-        "reuse","add","add")
-    endif
+    CALL idba_preparati(idhandle,handle,"write","write","write")
 
 ! INIZIO CICLO SUI MESI
 
@@ -131,7 +115,24 @@
             
             CALL idba_unsetall (handle)
           
-          ! print*,'datatime ',data(3),data(2),data(1),ora(1),ora(2),00
+! anagrafica
+            CALL idba_setcontextana (handle)
+            ! obbligatori
+            CALL idba_setr (handle,"lat",latoss(nsts))
+            CALL idba_setr (handle,"lon",lonoss(nsts))
+            CALL idba_seti (handle,"mobile",0)
+
+            CALL idba_setr (handle,"height",alte(nsts))
+        
+            CALL idba_prendilo (handle)
+            CALL idba_enqi(handle,"ana_id",id_ana)
+
+! dati
+            call idba_unsetall (handle)
+
+            CALL idba_seti(handle,"ana_id",id_ana)
+            
+            ! print*,'datatime ',data(3),data(2),data(1),ora(1),ora(2),00
             CALL idba_seti (handle,"year",data(3))
             CALL idba_seti (handle,"month",data(2))
             CALL idba_seti (handle,"day",data(1))
@@ -149,12 +150,6 @@
             ! codice per gli osservati delle regioni
             CALL idba_seti (handle,"rep_cod",50)
             
-            CALL idba_setr (handle,"lat",latoss(istaz))
-            CALL idba_setr (handle,"lon",lonoss(istaz))
-            CALL idba_setr (handle,"height",alte(istaz))
-            
-            CALL idba_seti (handle,"mobile",0)
-          
           ! inserimento dati
             IF(preci(istaz,igio) >= 0.)THEN
               CALL idba_setr(handle,"B13011",preci(istaz,igio))

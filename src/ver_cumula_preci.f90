@@ -38,7 +38,6 @@
     character cvar*6
     character btable*10
 
-    real, ALLOCATABLE :: x(:),y(:),alt(:)
     integer, ALLOCATABLE :: anaid(:)
 
     character(19) :: database,user,password
@@ -99,16 +98,13 @@
 ! apertura database in lettura
     call idba_preparati(idbhandle,handler,"read","read","read")
 ! apertura database in scrittura
-    call idba_preparati(idhandle,handle,"reuse","rewrite","rewrite")
+    call idba_preparati(idbhandle,handle,"write","write","write")
 
     call idba_quantesono(handler,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
 ! allocazione matrici
-    ALLOCATE(x(1:nstaz))
-    ALLOCATE(y(1:nstaz))
-    ALLOCATE(alt(1:nstaz))
     ALLOCATE(anaid(1:nstaz))
-    call leggiana_db_all(x,y,alt,anaid,rmdo,nstaz,handler)
+    call leggiana_db_all(anaid,rmdo,nstaz,handler)
 
     NSTAZ: DO ist=1,nstaz
 
@@ -213,9 +209,6 @@
         
         CALL idba_seti (handle,"rep_cod",repcod)
         
-        CALL idba_setr (handle,"lat",rlat)
-        CALL idba_setr (handle,"lon",rlon)
-        CALL idba_setr (handle,"height",h)
         CALL idba_seti (handle,"ana_id",icodice)
         
         CALL idba_seti (handle,"mobile",0)

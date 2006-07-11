@@ -10,7 +10,7 @@
 ! --------
 
     character(19) :: database,user,password
-    integer :: handle,handle_err
+    INTEGER :: handle,handleana,handle_err
     character(1000) :: messaggio
     logical :: debug
     data debug/.true./
@@ -19,7 +19,7 @@
 
     character(20) :: name
     real :: lat,lon
-    integer :: height,rep_cod,mobile
+    INTEGER :: height,rep_cod,mobile,BLOCK,ana_id
     integer :: leveltype,l1,l2,pindicator,p1,p2
     integer :: year,month,day,hour,min,sec
 
@@ -34,8 +34,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
     call idba_preparati(idbhandle,handle,"read","read","read")
-
-    call idba_unsetall (handle)
+    call idba_preparati(idbhandle,handleana,"read","read","read")
 
 ! Only return values with best priority
 ! call idba_setc (handle,"query","best")
@@ -83,10 +82,8 @@
 
         call idba_dammelo (handle,btable)
 
-        call idba_enqc (handle,"name",name)
         call idba_enqr (handle,"lat",lat)
         call idba_enqr (handle,"lon",lon)
-        call idba_enqi (handle,"height",height)
 
         call idba_enqi (handle,"leveltype",leveltype)
         call idba_enqi (handle,"l1",l1)
@@ -107,6 +104,16 @@
 
         call idba_enqi (handle,"rep_cod",rep_cod)
         call idba_enqr (handle,btable,dato)
+
+        CALL idba_enqi (handle,"ana_id",ana_id)
+       
+! chiedo l'anagrafica 
+        CALL idba_seti (handleana,"ana_id",ana_id)
+        CALL idba_quantesono (handleana,NN)
+        CALL idba_elencamele (handleana)
+        CALL idba_enqc (handleana,"name",name)
+        CALL idba_enqi (handleana,"height",height)
+        CALL idba_enqi (handleana,"block",BLOCK)
 
     ! call idba_voglioancora (handle,NN)
 

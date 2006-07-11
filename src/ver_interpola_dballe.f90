@@ -125,7 +125,7 @@
     descrfisso=descr
 
 ! apertura database in scrittura
-    call idba_preparati(idbhandle,handle,"reuse","rewrite","rewrite")
+    call idba_preparati(idbhandle,handle,"write","write","write")
 
     iug=0
     idimg=MIDIMG
@@ -329,12 +329,7 @@
                     call idba_seti (handle,"p2",scaddb(3))
                     call idba_seti (handle,"pindicator",scaddb(4))
 
-                    call idba_seti (handle,"year",dataval(3))
-                    call idba_seti (handle,"month",dataval(2))
-                    call idba_seti (handle,"day",dataval(1))
-                    call idba_seti (handle,"hour",oraval(1))
-                    call idba_seti (handle,"min",oraval(2))
-                    call idba_seti (handle,"sec",0)
+                    call idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
 
                 ! scrittura su database
                     do irm=1,nrm
@@ -358,18 +353,16 @@
                             ! imposto tutta l'anagrafica
 
                             ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                                call idba_unset (handle,"ana_id")
+!!                                call idba_unset (handle,"ana_id")
 
-                                call idba_seti (handle,"height",h)
                                 call idba_setr (handle,"lat",rlat)
                                 call idba_setr (handle,"lon",rlon)
+                                call idba_seti (handle,"mobile",0)
 
                                 call idba_seti (handle,"leveltype", &
                                 level(1))
                                 call idba_seti (handle,"l1",level(2))
                                 call idba_seti (handle,"l2",level(3))
-
-                                call idba_seti (handle,"mobile",0)
 
                                 if(imet == 0)then ! scalare
 
@@ -578,21 +571,18 @@
                             ! imposto tutta l'anagrafica
 
                             ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                                call idba_unset (handle,"ana_id")
+!!                                call idba_unset (handle,"ana_id")
 
-                                call idba_seti (handle,"height",h)
                                 call idba_setr (handle,"lat",rlat)
                                 call idba_setr (handle,"lon",rlon)
+                                call idba_seti (handle,"mobile",0)
+
                                 call idba_setc (handle,"rep_memo",descr)
 
                                 call idba_seti (handle,"leveltype", &
                                 level(1))
                                 call idba_seti (handle,"l1",level(2))
                                 call idba_seti (handle,"l2",level(3))
-
-                                call idba_seti (handle,"mobile",0)
-
-                                call idba_setc (handle,"rep_memo",descr)
 
                                 dato=a+xstaz(ist,irm)*b
                                 call idba_seti (handle,cvar,dato)
