@@ -22,11 +22,13 @@ dist_pkgdata_DATA = share/anag.nml.template \
 share/analisi.nml.template \
 share/areabox.nml.template \
 share/areaoss.nml.template \
+share/boe.nml.template \
 share/caldescr.template \
 share/corrispondenze_parametri.txt \
 share/cumula.nml.template \
 share/dballe.txt \
 share/expansion_ver.template \
+share/euro.nml.template \
 share/getgribdat_ver \
 share/griBlocale.txt \
 share/lista_ens.nml.template \

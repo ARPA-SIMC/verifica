@@ -169,7 +169,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    CALL idba_preparati(idhandle,handle,"write","write","write")
+    CALL idba_preparati(idbhandle,handle,"write","write","write")
 
     iug=0
     idimg=MIDIMG

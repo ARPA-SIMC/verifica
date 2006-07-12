@@ -1,0 +1,14 @@
+
+$boe
+	rmmiss=.false.,
+	path="/media/cdrom",
+	nomefile="catania.txt","catania2.txt",
+	versione=1,2,
+	nboe=2,
+	nome="Catania","Catania",
+	block=61,61,
+	station=207,207,
+	rlat=37.44,37.44,
+	rlon=15.146666,15.146666,
+	hstaz=-70,-70
+$end

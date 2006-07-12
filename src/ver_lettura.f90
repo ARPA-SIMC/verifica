@@ -125,7 +125,7 @@ program leggi
         end do
         
         print*,'----------------------------------------'
-        print *,name,lat,lon,height,rep_cod
+        PRINT *,name,lat,lon,height,rep_cod,block
         print *,leveltype,l1,l2
         print *,pindicator,p1,p2
         print *,year,month,day,hour,min,sec

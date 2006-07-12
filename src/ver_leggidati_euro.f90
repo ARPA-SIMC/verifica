@@ -33,7 +33,7 @@
     INTEGER :: data(3),ora(2)
     INTEGER :: giomax,nme,ialt
     CHARACTER mese(nmesi)*2,anno(nmesi)*4,canno*4,cmese*2
-    character path*80
+    CHARACTER path*80
 
     character(19) :: database,user,password
     integer :: handle
@@ -61,7 +61,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    CALL idba_preparati(idhandle,handle,"write","write","write")
+    CALL idba_preparati(idbhandle,handle,"write","write","write")
 
 ! INIZIO CICLO SUI MESI
 
@@ -82,15 +82,16 @@
 
         numestaz=0
         DO istaz=1,nstaz
-          READ(1,'(2(2x,f6.2),1x,i4,31(1x,f6.1)',END=111)lonoss(istaz), &
-          latoss(istaz),ialt,(preci(istaz,igio),igio=1,giomax)
+          READ(1,'(2(2x,f6.2),1x,i4,31(1x,f6.1))',END=111) &
+           lonoss(istaz),latoss(istaz),ialt, &
+           (preci(istaz,igio),igio=1,giomax)
           
           numestaz=numestaz+1
           
           IF(ialt == 9999)THEN
-            alte(istan)=-999.9
+            alte(istaz)=-999.9
           ELSE
-            alte(istan)=REAL(ialt)
+            alte(istaz)=REAL(ialt)
           ENDIF
 
         ENDDO
@@ -118,11 +119,12 @@
 ! anagrafica
             CALL idba_setcontextana (handle)
             ! obbligatori
-            CALL idba_setr (handle,"lat",latoss(nsts))
-            CALL idba_setr (handle,"lon",lonoss(nsts))
+            CALL idba_setr (handle,"lat",latoss(istaz))
+            CALL idba_setr (handle,"lon",lonoss(istaz))
             CALL idba_seti (handle,"mobile",0)
 
-            CALL idba_setr (handle,"height",alte(nsts))
+            CALL idba_setr (handle,"height",alte(istaz))
+            CALL idba_seti (handle,"block",69)
         
             CALL idba_prendilo (handle)
             CALL idba_enqi(handle,"ana_id",id_ana)

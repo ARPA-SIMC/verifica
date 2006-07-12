@@ -61,7 +61,7 @@
 
     call idba_presentati(idbhandle,database,user,password)
 
-    CALL idba_preparati(idhandle,handle, &
+    CALL idba_preparati(idbhandle,handle, &
      "write","write","write")
 
 ! INIZIO CICLO SUI MESI
@@ -177,8 +177,6 @@
             CALL idba_seti (handle,"block",69)
             CALL idba_setr (handle,"height",alte(nsts))
         
-            PRINT*,alte(nsts),nomest(nsts)
-
             CALL idba_prendilo (handle)
             CALL idba_enqi(handle,"ana_id",id_ana)
 ! dati
