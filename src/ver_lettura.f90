@@ -1,4 +1,4 @@
-    program leggi
+program leggi
 
     character(LEN=10) :: btable,starbtable(12)
     character(LEN=10) :: dati(12)
@@ -26,9 +26,11 @@
 ! --------
 
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
+
+    open(11,file='lettura.out',status='unknown')
 
     call idba_error_set_callback(0,error_handle,debug,handle_err)
 
@@ -115,35 +117,36 @@
         CALL idba_enqi (handleana,"height",height)
         CALL idba_enqi (handleana,"block",BLOCK)
 
-    ! call idba_voglioancora (handle,NN)
+        call idba_voglioancora (handle,NN)
 
-    ! do ii=1,NN
-    ! call idba_ancora (handle,starbtable(ii))
-    ! call idba_enqc(handle,starbtable(ii),dati(ii))
-    ! end do
-
-    ! print*,'----------------------------------------'
-    ! print *,name,lat,lon,height,rep_cod
-    ! print *,leveltype,l1,l2
-    ! print *,pindicator,p1,p2
-    ! print *,year,month,day,hour,min,sec
-    ! print *,btable,dato,(starbtable(j),dati(j),j=1,nn)
-
+        do ii=1,NN
+           call idba_ancora (handle,starbtable(ii))
+           call idba_enqc(handle,starbtable(ii),dati(ii))
+        end do
+        
+        print*,'----------------------------------------'
+        print *,name,lat,lon,height,rep_cod
+        print *,leveltype,l1,l2
+        print *,pindicator,p1,p2
+        print *,year,month,day,hour,min,sec
+        print *,btable,dato,(starbtable(j),dati(j),j=1,nn)
+        
         write(11,12) &
-        name,lat,lon,height,rep_cod,year,month,day,hour, &
-        min,sec,pindicator,p1,p2,leveltype,l1,l2,btable,dato
+             name,lat,lon,height,rep_cod,year,month,day,hour, &
+             min,sec,pindicator,p1,p2,leveltype,l1,l2,btable,dato
+        
+     enddo
+     call idba_fatto(handle)
+     call idba_arrivederci(idbhandle)
+     close(11)
 
-    enddo
-    call idba_fatto(handle)
-    call idba_arrivederci(idbhandle)
-
-    stop
-
-    12 FORMAT(a,2(1x,f9.2),1x,i4,1x,i3,1x,i4,5(1x,i2), &
-    1x,i3,2(1x,i10),3(1x,i3),1x,a,1x,f7.1)
-
-    9001 print *,"Errore durante la lettura della namelist odbc"
-    call exit (1)
-    end program
+     stop
+     
+12   FORMAT(a,2(1x,f9.2),1x,i4,1x,i3,1x,i4,5(1x,i2), &
+          1x,i3,2(1x,i10),3(1x,i3),1x,a,1x,f7.1)
+     
+9001 print *,"Errore durante la lettura della namelist odbc"
+     call exit (1)
+end program leggi
 
 
