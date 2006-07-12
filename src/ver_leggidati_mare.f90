@@ -56,19 +56,20 @@ program leggidati_mare
   real :: block(nstaz),station(nstaz),rlat(nstaz),rlon(nstaz),hstaz(nstaz)
   character path*80,var(5)*6
     
-  namelist  /boe/path,nomefile,versione,nboe,nome,block,station,rlat,rlon,hstaz,rmmiss
+  namelist  /boe/path,nomefile,versione,nboe,nome,block,station,rlat,rlon,hstaz, &
+       rwdata
 
   ! --------
   
   character(19) :: database,user,password
   integer :: handle,rewrite
-  logical :: init,debug,rmmiss
+  logical :: init,debug,rwdata
   character(1000) :: messaggio
   data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
   data fact/ 1.,1.,1.,1.,1./
   data const/ 0.,0.,0.,0.,273.15/
   
-  data init,debug,rmmiss/.false.,.true.,.false./
+  data init,debug,rwdata/.false.,.true.,.false./
   external error_handle
   
   namelist  /odbc/database,user,password
@@ -100,16 +101,20 @@ program leggidati_mare
           "write","write","write")
      call idba_scopa(handle,"repinfo.csv")
      call idba_fatto(handle)
-     rmmiss = .false.
+     rwdata = .false.
   end if
 
-  if (rmmiss) then
+  if (rwdata) then
      call idba_preparati(idbhandle,handle, &
           "write","write","write")
   else
      call idba_preparati(idbhandle,handle, &
           "write","add","add")
   endif
+
+     call idba_preparati(idbhandle,handle_ana, &
+          "write","write","write")
+
   
   ! INIZIO CICLO SUL NUMERO DI BOE
   do ns=1,nboe
@@ -123,21 +128,22 @@ program leggidati_mare
      !anagrafica
      
      call idba_unsetall (handle)
+     call idba_unsetall (handle_ana)
      
-     call idba_setcontextana (handle)
+     call idba_setcontextana (handle_ana)
+
+     call idba_setr (handle_ana,"lat",rlat(ns))
+     call idba_setr (handle_ana,"lon",rlon(ns))
+     call idba_seti (handle_ana,"mobile",0)
+
+
+     call idba_setc (handle_ana,"name",nome(ns))
+     call idba_seti (handle_ana,"block",block(ns))
+     call idba_seti (handle_ana,"station",station(ns))
+     call idba_setr (handle_ana,"height",hstaz(ns))
      
-     call idba_setc (handle,"name",nome(ns))
-     call idba_seti (handle,"block",block(ns))
-     call idba_seti (handle,"station",station(ns))
-     
-     call idba_setr (handle,"lat",rlat(ns))
-     call idba_setr (handle,"lon",rlon(ns))
-     call idba_setr (handle,"height",hstaz(ns))
-     call idba_seti (handle,"mobile",0)
-     
-     call idba_prendilo (handle)
-     
-     call idba_enqi (handle,"ana_id",ana_id)
+     call idba_prendilo (handle_ana)
+     call idba_enqi (handle_ana,"ana_id",ana_id)
      
 
      ! dati (la temperatira non c'è)
@@ -179,7 +185,7 @@ program leggidati_mare
         read(stringa,'(5x,i4,1x,5(i2,1x))')idata(3),idata(2),idata(1),iora,imin
         !            print*,idata(3),idata(2),idata(1),iora,imin,isec
         
-        stringa = stringa(22:)
+        stringa = stringa(24:)
         
         read(stringa,*)field(:4)
         !            print*,field
@@ -207,7 +213,7 @@ program leggidati_mare
      do i=1,5
         
         ! inserimento dati con cancellazione dati segnati mancanti
-        if (field(i) == rmd .and. rmmiss )then
+        if (field(i) == rmd .and. rwdata )then
            !                    print *,"cancello i dati",var(i),idata,iora
            call idba_setc(handle,"var",var(i))
            call idba_dimenticami(handle)
@@ -231,6 +237,7 @@ program leggidati_mare
   enddo                     !boa
   
   call idba_fatto(handle)
+  call idba_fatto(handle_ana)
   call idba_arrivederci(idbhandle)
   
   stop
