@@ -1,5 +1,6 @@
  $euro
     path='/home/marsigli/dati_DWD/',
+    reg='Co',
     nme=1,
     mese='01',
     anno='2003',

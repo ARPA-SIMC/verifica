@@ -23,4 +23,4 @@ incr = periodo in minuti su cui sono cumulate le preci presenti in archivio,
        da usare per la attuale cumulazione
 ncum = periodo in minuti su cui si vogliono cumulare le precipitazioni
 interval = periodo in minuti che si vuole tra una cumulata e la successiva
-perc = percentuale (tra 0 e 1) di intervalli mancanti accettabili nella cumulata
+perc = percentuale minima (tra 0 e 1) di intervalli che devono essere presenti nella cumulata

@@ -33,7 +33,7 @@
     INTEGER :: data(3),ora(2)
     INTEGER :: giomax,nme,ialt
     CHARACTER mese(nmesi)*2,anno(nmesi)*4,canno*4,cmese*2
-    CHARACTER path*80
+    CHARACTER path*80,reg*2
 
     character(19) :: database,user,password
     integer :: handle
@@ -41,7 +41,7 @@
     data debug/.true./
     external error_handle
 
-    namelist  /euro/path,nme,mese,anno
+    NAMELIST  /euro/path,reg,nme,mese,anno
     namelist  /odbc/database,user,password
 
     data rmd/9999/,rmdo/-999.9/
@@ -76,7 +76,7 @@
         READ(canno,'(i4)')ianno
         giomax=ngiorni_mese(imese,ianno)
 
-        OPEN(1,file=path(1:nlenvera(path))//'Co'//canno(3:4)//cmese// &
+        OPEN(1,file=path(1:nlenvera(path))//reg//canno(3:4)//cmese// &
         '.txt',status='old',readonly)
         READ(1,*)
 
@@ -127,6 +127,7 @@
             CALL idba_seti (handle,"block",69)
         
             CALL idba_prendilo (handle)
+
             CALL idba_enqi(handle,"ana_id",id_ana)
 
 ! dati

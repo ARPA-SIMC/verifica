@@ -276,11 +276,13 @@
         do igio=1,ngio
             read(3,nml=date,err=9004)
             print*,'data ',data
+            WRITE(88,*)data
             do iscad=1,nscad
                 do is=1,4
                     scad(is)=scadenze(is,iscad)
                 enddo
                 print*,'scadenza ',scad
+                WRITE(88,*)scad
             ! fisso la scadenza cui chiedere le osservazioni (data e ora di validita')
             ! la scadenza puo' essere al secondo o al terzo posto, nell'altro
             ! o c'e' 0 o c'e' l'estremo inferiore dell'intervallo di cumulazione

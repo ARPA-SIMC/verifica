@@ -1,5 +1,5 @@
  $odbc
-   database='verifica',
-   user='ugo',
-   password='ope'
+   database='',
+   user='',
+   password=''
  $end
