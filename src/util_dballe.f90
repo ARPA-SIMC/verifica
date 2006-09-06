@@ -37,6 +37,7 @@
 
     integer :: handle,nstaz,iana
     character(20) :: namest
+    logical :: c_e_c
 
     real :: x(nstaz),y(nstaz),alt(nstaz)
 
@@ -55,6 +56,8 @@
         call idba_enqr (handle,"lon",rlon)
         call idba_enqr (handle,"height",h)
         call idba_enqc (handle,"name",namest)
+
+        if(.not. c_e_c(namest))namest=''
 
         IF (nstaz.LT.icodice) THEN
           PRINT*,"ATTENTION !!!!"
@@ -106,6 +109,7 @@
 
     real :: x(nstaz),y(nstaz),alt(nstaz)
     integer :: anaid(nstaz)
+    logical :: c_e_i
 
 ! inizializzazione matrici
     x = rmdo
@@ -114,11 +118,13 @@
 
     i=0
     do ist=1,nstaz
+
         call idba_elencamele(handle)
 
         call idba_enqi (handle,"ana_id",icodice)
         call idba_enqi (handle,"block",itipostaz)
 
+        if(.not. c_e_i(itipostaz))itipostaz=0
 
         IF(iana == 0)THEN
           IF(itipost == 0)THEN
@@ -1180,3 +1186,44 @@
 
     RETURN
     END FUNCTION ngiorni_mese
+
+!************************************************************************
+
+    logical function c_e_i(var)
+
+!       Verifica la condizione di presenza o assenza del dato secondo
+!       le specifiche dballe restituendo una variabile logical .true.
+!       se c'e` il dato (ossia esso e` diverso da 32767)
+!
+!       INPUT:
+!       VAR     Integer dato di cui verificare la presenza
+!       OUTPUT:
+!       C_E_i   LOGICAL .TRUE.se il dato e` presente
+
+    integer  var
+
+    c_e_i=.true.
+    if (var == Z"7fffffff")c_e_i= .FALSE. 
+    return
+    end function c_e_i
+
+!************************************************************************
+
+    logical function c_e_c(var)
+
+!       Verifica la condizione di presenza o assenza del dato secondo
+!       le specifiche meteodata restituendo una variabile logical .true.
+!       se c'e` il dato (ossia esso e` diverso da stringa nulla)
+
+!       INPUT:
+!       VAR     CHAR*(*)        dato di cui verificare la presenza
+!       OUTPUT:
+!       C_E_c   LOGICAL         .TRUE.se il dato e` presente
+
+      character (len=*) var
+
+      c_e_c=.false.
+      if (var /= "")c_e_c=.true.
+      return
+
+    end function c_e_c

@@ -25,7 +25,7 @@ if [ $BATCH -eq 0 ] ; then
 fi
 
 if [ ! -f ./repinfo.csv ] ; then
-  cp /etc/dballe/repinfo.csv ./repinfo.csv
+  cp /usr/share/dballe/repinfo.csv ./repinfo.csv
 fi
 [ $BATCH -eq 0 ] && $EDITOR repinfo.csv
 

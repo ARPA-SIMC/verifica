@@ -29,11 +29,6 @@ if [ ! -f ./griBlocale.txt ] ; then
   cp $VERSHARE/griBlocale.txt .
 fi
 
-if [ ! -f ./repinfo.csv ] ; then
-  cp /etc/dballe/repinfo.csv ./repinfo.csv
-fi
-[ $BATCH -eq 0 ] && $EDITOR repinfo.csv
-
 if [ ! -f ./boe.nml ] ; then
   cp $VERSHARE/boe.nml.template ./boe.nml
 fi

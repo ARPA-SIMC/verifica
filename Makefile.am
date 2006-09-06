@@ -65,7 +65,6 @@ share/profile_wamad002 \
 share/profile_wamad003 \
 share/profile_wammed \
 share/region.nml.template \
-share/repinfo.csv.template \
 share/ricopia_ged.template \
 share/spiega_GRIBARCH.txt \
 share/spiegapar.txt \
