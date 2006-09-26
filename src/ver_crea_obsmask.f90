@@ -27,6 +27,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter    (MNBOX=150000)
     parameter    (MIDIMG=100000,MIDIMV=MIDIMG*4)
     real ::         xgrid(MIDIMV)
@@ -41,6 +43,9 @@
 ! grib fields
     integer ::      ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
     real ::         psec2(384),psec3(2)
+
+    integer :: debug = 1
+    INTEGER :: handle,handle_err
 
     namelist  /obsmask/rfile,iana,ruota,dist
     namelist  /odbc/database,user,password
@@ -65,7 +70,7 @@
     close(1)
 
 ! gestione degli errori
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
 ! connessione con database
     call idba_presentati(idbhandle,database,user,password)

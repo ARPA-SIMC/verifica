@@ -30,6 +30,8 @@ program leggidati_mare
 ! QUESTO PROGRAMMA  LEGGE I DATI DELLE BOE
 ! E LI CARICA NEL DATABASE DB-all.e
 
+  INCLUDE "dballe/dballef.h"
+
   parameter (nstaz=20)
   
   real :: field(5),fact(5),const(5)
@@ -62,15 +64,16 @@ program leggidati_mare
   ! --------
   
   character(19) :: database,user,password
-  integer :: handle,rewrite
-  logical :: init,debug,rwdata
+  INTEGER :: handle,handle_ana,rewrite
+  logical :: init,rwdata
   character(1000) :: messaggio
+  integer :: debug = 1
+  integer :: handle_err
   data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
   data fact/ 1.,1.,1.,1.,1./
   data const/ 0.,0.,0.,0.,273.15/
   
-  data init,debug,rwdata/.false.,.true.,.false./
-  external error_handle
+  data init,rwdata/.false.,.false./
   
   namelist  /odbc/database,user,password
   
@@ -89,7 +92,7 @@ program leggidati_mare
 
   ! PREPARAZIONE DELL' ARCHIVIO
   
-  call idba_error_set_callback(0,error_handle,debug,handle_err)
+  call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
   
   call idba_presentati(idbhandle,database,user,password)
   
@@ -132,27 +135,27 @@ program leggidati_mare
      
      call idba_setcontextana (handle_ana)
 
-     call idba_setr (handle_ana,"lat",rlat(ns))
-     call idba_setr (handle_ana,"lon",rlon(ns))
-     call idba_seti (handle_ana,"mobile",0)
+     call idba_set (handle_ana,"lat",rlat(ns))
+     call idba_set (handle_ana,"lon",rlon(ns))
+     call idba_set (handle_ana,"mobile",0)
 
 
-     call idba_setc (handle_ana,"name",nome(ns))
-     call idba_seti (handle_ana,"block",block(ns))
-     call idba_seti (handle_ana,"station",station(ns))
-     call idba_setr (handle_ana,"height",hstaz(ns))
+     call idba_set (handle_ana,"name",nome(ns))
+     call idba_set (handle_ana,"block",block(ns))
+     call idba_set (handle_ana,"station",station(ns))
+     call idba_set (handle_ana,"height",hstaz(ns))
      
      call idba_prendilo (handle_ana)
-     call idba_enqi (handle_ana,"ana_id",ana_id)
+     call idba_enq (handle_ana,"ana_id",ana_id)
      
 
      ! dati (la temperatira non c'è)
 
      call idba_unsetall (handle)
      
-     call idba_seti (handle,"ana_id",ana_id)
+     call idba_set (handle,"ana_id",ana_id)
      
-     call idba_setc (handle,"rep_memo","boe")
+     call idba_set (handle,"rep_memo","boe")
      call idba_setlevel (handle,1,0,0)
      call idba_settimerange (handle,0,0,0)
      
@@ -215,12 +218,12 @@ program leggidati_mare
         ! inserimento dati con cancellazione dati segnati mancanti
         if (field(i) == rmd .and. rwdata )then
            !                    print *,"cancello i dati",var(i),idata,iora
-           call idba_setc(handle,"var",var(i))
+           call idba_set(handle,"var",var(i))
            call idba_dimenticami(handle)
         else if (field(i) /= rmd ) then
-           call idba_setr(handle,var(i),field(i))
+           call idba_set(handle,var(i),field(i))
            call idba_prendilo (handle)
-           call idba_seti(handle,"*B33007",iconf)
+           call idba_set(handle,"*B33007",iconf)
            call idba_critica(handle)
            call idba_unset (handle,"*B33007")
            call idba_unset (handle,var(i))

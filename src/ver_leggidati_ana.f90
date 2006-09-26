@@ -26,6 +26,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (MNBOX=80000)
     parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
 
@@ -52,10 +54,8 @@
 
 ! database
     integer :: handler,handle
-    logical :: debug
-    data debug/.true./
-
-    external error_handle
+    integer :: debug = 1
+    integer :: handle_err
 
     namelist  /analisi/fileorog,vfile,ruota
     namelist  /areaoss/area,slon1,slon2,slat1,slat2
@@ -165,7 +165,7 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
     call idba_presentati(idbhandle,database,user,password)
 
@@ -221,45 +221,45 @@
             name='_gp'//cb
             station=ib
 
-            call idba_setr (handle,"lon",rlon)
-            call idba_setr (handle,"lat",rlat)
-            call idba_seti (handle,"mobile",0)
+            call idba_set (handle,"lon",rlon)
+            call idba_set (handle,"lat",rlat)
+            call idba_set (handle,"mobile",0)
 
-            call idba_setc (handle,"name",name)
-            call idba_seti (handle,"block",block)
-            call idba_seti (handle,"station",station)
-            call idba_setr (handle,"height",h)
+            call idba_set (handle,"name",name)
+            call idba_set (handle,"block",block)
+            call idba_set (handle,"station",station)
+            call idba_set (handle,"height",h)
 
             CALL idba_prendilo (handle)
-            CALL idba_enqi(handle,"ana_id",id_ana)
+            CALL idba_enq(handle,"ana_id",id_ana)
 ! dati
 
             call idba_unsetall (handle)
 
-            CALL idba_seti(handle,"ana_id",id_ana)
+            CALL idba_set(handle,"ana_id",id_ana)
 
             ! codice per le analisi
-            CALL idba_seti (handle,"rep_cod",105)
+            CALL idba_set (handle,"rep_cod",105)
             
-            CALL idba_seti (handle,"leveltype",level(1))
-            CALL idba_seti (handle,"l1",level(2))
-            CALL idba_seti (handle,"l2",level(3))
+            CALL idba_set (handle,"leveltype",level(1))
+            CALL idba_set (handle,"l1",level(2))
+            CALL idba_set (handle,"l2",level(3))
             
-            CALL idba_seti (handle,"year",iyearv)
-            CALL idba_seti (handle,"month",imonthv)
-            CALL idba_seti (handle,"day",idayv)
-            CALL idba_seti (handle,"hour",ihourv)
-            CALL idba_seti (handle,"min",iminv)
-            CALL idba_seti (handle,"sec",00)
+            CALL idba_set (handle,"year",iyearv)
+            CALL idba_set (handle,"month",imonthv)
+            CALL idba_set (handle,"day",idayv)
+            CALL idba_set (handle,"hour",ihourv)
+            CALL idba_set (handle,"min",iminv)
+            CALL idba_set (handle,"sec",00)
           
-            CALL idba_seti (handle,"pindicator",scad(4))
-            CALL idba_seti (handle,"p1",p1)
-            CALL idba_seti (handle,"p2",p2)
+            CALL idba_set (handle,"pindicator",scad(4))
+            CALL idba_set (handle,"p1",p1)
+            CALL idba_set (handle,"p2",p2)
             
             ! if(xgrid(pos(ib)).le.0.)xgrid(pos(ib))=0.
             dato=xgrid(pos(ib))
             
-            CALL idba_setr(handle,cvar,dato)
+            CALL idba_set(handle,cvar,dato)
             CALL idba_prendilo (handle)
 
         enddo                  !nbox

@@ -26,6 +26,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (nstaz=2000,nmesi=100,MNRE=12)
 
     real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
@@ -37,9 +39,8 @@
 
     character(19) :: database,user,password
     integer :: handle
-    logical :: debug
-    data debug/.true./
-    external error_handle
+    integer :: debug = 1
+    integer :: handle_err
 
     namelist  /regioni/path,pathana,nre,reg,nme,mese,anno
     namelist  /odbc/database,user,password
@@ -57,7 +58,7 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
     call idba_presentati(idbhandle,database,user,password)
 
@@ -169,16 +170,16 @@
 ! anagrafica
             CALL idba_setcontextana (handle)
             ! obbligatori
-            CALL idba_setr (handle,"lat",latoss(nsts))
-            CALL idba_setr (handle,"lon",lonoss(nsts))
-            CALL idba_seti (handle,"mobile",0)
+            CALL idba_set (handle,"lat",latoss(nsts))
+            CALL idba_set (handle,"lon",lonoss(nsts))
+            CALL idba_set (handle,"mobile",0)
 
-            CALL idba_setc (handle,"name",nomest(nsts))
-            CALL idba_seti (handle,"block",69)
-            CALL idba_setr (handle,"height",alte(nsts))
+            CALL idba_set (handle,"name",nomest(nsts))
+            CALL idba_set (handle,"block",69)
+            CALL idba_set (handle,"height",alte(nsts))
         
             CALL idba_prendilo (handle)
-            CALL idba_enqi(handle,"ana_id",id_ana)
+            CALL idba_enq(handle,"ana_id",id_ana)
 ! dati
             call idba_unsetall (handle)
 
@@ -187,23 +188,23 @@
 !            CALL idba_setr (handle,"lon",lonoss(nsts))
 !            CALL idba_seti (handle,"mobile",0)
 
-            CALL idba_seti(handle,"ana_id",id_ana)
+            CALL idba_set(handle,"ana_id",id_ana)
 
         ! print*,'datatime ',idata(3),idata(2),idata(1),iora,imin,00
             call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
 
         ! codice per gli osservati delle regioni
-            call idba_seti (handle,"rep_cod",50)
+            call idba_set (handle,"rep_cod",50)
 
         ! inserimento dati
             if (preci /= rmdo) then
-                call idba_seti (handle,"leveltype",1)
-                call idba_seti (handle,"l1",0)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",4)
-                call idba_seti (handle,"p1",-10800)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B13011",preci)
+                call idba_set (handle,"leveltype",1)
+                call idba_set (handle,"l1",0)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",4)
+                call idba_set (handle,"p1",-10800)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B13011",preci)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B13011")
             ! aggiungo altre info
@@ -216,61 +217,61 @@
             endif
 
             if (temp /= rmdo) then
-                call idba_seti (handle,"leveltype",105)
-                call idba_seti (handle,"l1",2)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",0)
-                call idba_seti (handle,"p1",0)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B12001",temp)
+                call idba_set (handle,"leveltype",105)
+                call idba_set (handle,"l1",2)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",0)
+                call idba_set (handle,"p1",0)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B12001",temp)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B12001")
             endif
 
             if (dirv /= rmdo) then
-                call idba_seti (handle,"leveltype",105)
-                call idba_seti (handle,"l1",10)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",0)
-                call idba_seti (handle,"p1",0)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B11001",dirv)
+                call idba_set (handle,"leveltype",105)
+                call idba_set (handle,"l1",10)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",0)
+                call idba_set (handle,"p1",0)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B11001",dirv)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B11001")
             endif
 
             if (velv /= rmdo) then
-                call idba_seti (handle,"leveltype",105)
-                call idba_seti (handle,"l1",10)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",0)
-                call idba_seti (handle,"p1",0)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B11002",velv)
+                call idba_set (handle,"leveltype",105)
+                call idba_set (handle,"l1",10)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",0)
+                call idba_set (handle,"p1",0)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B11002",velv)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B11002")
             endif
 
             if (umrel /= rmdo) then
-                call idba_seti (handle,"leveltype",105)
-                call idba_seti (handle,"l1",2)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",0)
-                call idba_seti (handle,"p1",0)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B13003",umrel)
+                call idba_set (handle,"leveltype",105)
+                call idba_set (handle,"l1",2)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",0)
+                call idba_set (handle,"p1",0)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B13003",umrel)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B13003")
             endif
 
             if (td /= rmdo) then
-                call idba_seti (handle,"leveltype",105)
-                call idba_seti (handle,"l1",2)
-                call idba_seti (handle,"l2",0)
-                call idba_seti (handle,"pindicator",0)
-                call idba_seti (handle,"p1",0)
-                call idba_seti (handle,"p2",0)
-                call idba_setr(handle,"B12003",td)
+                call idba_set (handle,"leveltype",105)
+                call idba_set (handle,"l1",2)
+                call idba_set (handle,"l2",0)
+                call idba_set (handle,"pindicator",0)
+                call idba_set (handle,"p1",0)
+                call idba_set (handle,"p2",0)
+                call idba_set(handle,"B12003",td)
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B12003")
             endif

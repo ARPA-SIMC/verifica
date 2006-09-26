@@ -26,6 +26,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (MNSTAZ=5000,MNSCAD=24,MNGIO=190,MNORE=1)
     parameter (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE,MNRM=102)
 ! attenzione!!! Non sono usate, servono solo per dare
@@ -55,11 +57,8 @@
     character(LEN=19) :: database,user,password
 
     character btable*10
-    integer :: handle
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.true.,.true.,.false./
-
-    external error_handle
+    INTEGER :: handle,handle_err
+    integer :: debug = 1
 
     data      rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
     namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
@@ -113,7 +112,7 @@
     endif
 
 ! gestione degli errori
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
 ! connessione con database
     call idba_presentati(idbhandle,database,user,password)
@@ -192,29 +191,29 @@
         ! ricominciamo perche' ho gia' fatto una query nella subroutine
             call idba_unsetall(handle)
 
-            CALL idba_setc (handle,'query','bigana')
+            CALL idba_set (handle,'query','bigana')
 
-            call idba_seti (handle,"year",dataval(3))
-            call idba_seti (handle,"month",dataval(2))
-            call idba_seti (handle,"day",dataval(1))
-            call idba_seti (handle,"hour",oraval(1))
-            call idba_seti (handle,"min",oraval(2))
-            call idba_seti (handle,"sec",0)
+            call idba_set (handle,"year",dataval(3))
+            call idba_set (handle,"month",dataval(2))
+            call idba_set (handle,"day",dataval(1))
+            call idba_set (handle,"hour",oraval(1))
+            call idba_set (handle,"min",oraval(2))
+            call idba_set (handle,"sec",0)
 
         ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
             call converti_scadenze(4,scad,scaddb)
-            call idba_seti (handle,"p1",scaddb(2))
-            call idba_seti (handle,"p2",scaddb(3))
-            call idba_seti (handle,"pindicator",scaddb(4))
+            call idba_set (handle,"p1",scaddb(2))
+            call idba_set (handle,"p2",scaddb(3))
+            call idba_set (handle,"pindicator",scaddb(4))
 
-            call idba_setc (handle,"var",cvar)
+            call idba_set (handle,"var",cvar)
 
             do irm=1,nrm
                 write(cel,'(i3.3)')irm
                 descr=descrfisso(1:nlenvera(descrfisso)) &
                 //'el'//cel
 
-                call idba_setc (handle,"rep_memo",descr)
+                call idba_set (handle,"rep_memo",descr)
 
             ! print*,'prev ',descr,dataval,oraval,iscaddb
 
@@ -232,14 +231,14 @@
 
                     call idba_dammelo (handle,btable)
                 ! sara' da impostare mentre per ora e' solo richiesto
-                    call idba_enqi (handle,"leveltype", &
+                    call idba_enq (handle,"leveltype", &
                     level(1))
-                    call idba_enqi (handle,"l1",level(2))
-                    call idba_enqi (handle,"l2",level(3))
+                    call idba_enq (handle,"l1",level(2))
+                    call idba_enq (handle,"l2",level(3))
 
                 ! call idba_enqi (handle,"mobile",mobile)
 
-                    call idba_enqi (handle,"ana_id",icodice)
+                    call idba_enq (handle,"ana_id",icodice)
 
                     do i=1,nstaz
                         if(icodice == anaid(i))then
@@ -255,7 +254,7 @@
                         print*,'iquota non gestito ',iquota
                     endif
 
-                    call idba_enqr (handle,btable,dato)
+                    call idba_enq (handle,btable,dato)
                     prev(ipos,igio,irm)=dato
                     previ(ipos,irm)=dato
 
@@ -269,29 +268,29 @@
             call idba_unsetall(handle)
 
             if(itipost == 0)then
-                call idba_seti (handle,"priomin",0)
+                call idba_set (handle,"priomin",0)
                 call idba_unset (handle,"priomax")
-                call idba_setc (handle,"query","best")
+                call idba_set (handle,"query","best")
                 descr="oss"
             elseif(itipost == 80)then
                 call idba_unset (handle,"query")
                 nlm=nlenvera(model)
                 descr='oss'//descrfisso((nlm+1):(nlm+5))
-                call idba_setc (handle,"rep_memo",descr)
+                call idba_set (handle,"rep_memo",descr)
             elseif(itipost == 90)then
                 call idba_unset (handle,"query")
                 descr="ana"
-                call idba_setc (handle,"rep_memo",descr)
+                call idba_set (handle,"rep_memo",descr)
             endif
 
-            CALL idba_setc (handle,'query','bigana')
+            CALL idba_set (handle,'query','bigana')
                 
-            call idba_seti (handle,"year",dataval(3))
-            call idba_seti (handle,"month",dataval(2))
-            call idba_seti (handle,"day",dataval(1))
-            call idba_seti (handle,"hour",oraval(1))
-            call idba_seti (handle,"min",oraval(2))
-            call idba_seti (handle,"sec",0)
+            call idba_set (handle,"year",dataval(3))
+            call idba_set (handle,"month",dataval(2))
+            call idba_set (handle,"day",dataval(1))
+            call idba_set (handle,"hour",oraval(1))
+            call idba_set (handle,"min",oraval(2))
+            call idba_set (handle,"sec",0)
 
             if(scaddb(4) > 0)then
                 p1=0-(scaddb(3)-scaddb(2))
@@ -301,11 +300,11 @@
                 p2=0
             endif
 
-            call idba_seti (handle,"p1",p1)
-            call idba_seti (handle,"p2",p2)
-            call idba_seti (handle,"pindicator",scaddb(4))
+            call idba_set (handle,"p1",p1)
+            call idba_set (handle,"p2",p2)
+            call idba_set (handle,"pindicator",scaddb(4))
 
-            call idba_setc (handle,"var",cvar)
+            call idba_set (handle,"var",cvar)
 
         ! print*,'oss ',descr,dataval,oraval
 
@@ -322,12 +321,12 @@
 
                 call idba_dammelo (handle,btable)
             ! sara' da impostare mentre per ora e' solo richiesto
-                call idba_enqi (handle,"leveltype", &
+                call idba_enq (handle,"leveltype", &
                 level(1))
-                call idba_enqi (handle,"l1",level(2))
-                call idba_enqi (handle,"l2",level(3))
+                call idba_enq (handle,"l1",level(2))
+                call idba_enq (handle,"l2",level(3))
 
-                call idba_enqi (handle,"ana_id",icodice)
+                call idba_enq (handle,"ana_id",icodice)
 
                 do i=1,nstaz
                     if(icodice == anaid(i))then
@@ -335,7 +334,7 @@
                     endif
                 enddo
 
-                call idba_enqr (handle,btable,dato)
+                call idba_enq (handle,btable,dato)
 
                 if(iquota == 0)then !pianura
                     if(h >= hlimite .OR. h < -900.)goto30

@@ -28,6 +28,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (MIDIMG=100000,MIDIMV=MIDIMG*4)
     parameter (MNSTAZ=5000,MNSCAD=72,MNGIO=150,MNRM=102)
     parameter (MNBOX=150000)
@@ -38,7 +40,7 @@
     real ::      xb(MNBOX),yb(MNBOX)
     real ::      xbox(MNSTAZ),ybox(MNSTAZ),altbox(MNSTAZ)
 ! ATTENZIONE!!!! da sistemare!!!!!
-    integer ::   block,station,heightbaro
+    integer ::   block,station
     character(20) :: name
     character(5) :: cb
     real ::      xpmod(MNBOX),ypmod(MNBOX)
@@ -64,10 +66,8 @@
     character(19) :: database,user,password
 ! database
     INTEGER :: handler,handle,handleana,handleanaw,id_ana
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.true.,.true.,.false./
-
-    external error_handle
+    integer :: debug = 1
+    integer :: handle_err
 
     namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
     nvar,nrm,nore,ore
@@ -108,7 +108,7 @@
     enddo
 
 ! gestione degli errori
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
 ! connessione con database
     call idba_presentati(idbhandle,database,user,password)
@@ -360,16 +360,16 @@
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                 call converti_scadenze(4,scad,scaddb)
 
-                call idba_seti (handle,"p1",scaddb(2))
-                call idba_seti (handle,"p2",scaddb(3))
-                call idba_seti (handle,"pindicator",scaddb(4))
+                call idba_set (handle,"p1",scaddb(2))
+                call idba_set (handle,"p2",scaddb(3))
+                call idba_set (handle,"pindicator",scaddb(4))
 
-                call idba_seti (handle,"year",dataval(3))
-                call idba_seti (handle,"month",dataval(2))
-                call idba_seti (handle,"day",dataval(1))
-                call idba_seti (handle,"hour",oraval(1))
-                call idba_seti (handle,"min",oraval(2))
-                call idba_seti (handle,"sec",0)
+                call idba_set (handle,"year",dataval(3))
+                call idba_set (handle,"month",dataval(2))
+                call idba_set (handle,"day",dataval(1))
+                call idba_set (handle,"hour",oraval(1))
+                call idba_set (handle,"min",oraval(2))
+                call idba_set (handle,"sec",0)
 
             ! scrittura su database
             ! scrivo i previsti
@@ -401,23 +401,22 @@
 
                             call idba_setcontextana(handleanaw)
 !!                            call idba_seti (handleanaw,"!ana","scrivo anagrafica")
-                            call idba_setc (handleanaw,"name",name)
-                            call idba_seti (handleanaw,"block",block)
-                            call idba_seti (handleanaw,"station",station)
-                            call idba_setr (handleanaw,"height",h)
-                            call idba_setr (handleanaw,"lat",rlat)
-                            call idba_setr (handleanaw,"lon",rlon)
-                            call idba_seti (handleanaw,"mobile",0)
-                            call idba_setr (handleanaw,cvar,dato)
+                            call idba_set (handleanaw,"name",name)
+                            call idba_set (handleanaw,"block",block)
+                            call idba_set (handleanaw,"station",station)
+                            call idba_set (handleanaw,"height",h)
+                            call idba_set (handleanaw,"lat",rlat)
+                            call idba_set (handleanaw,"lon",rlon)
+                            call idba_set (handleanaw,"mobile",0)
                             call idba_prendilo (handleanaw)
-                            call idba_enqi (handleanaw, "ana_id", id_ana)
+                            call idba_enq (handleanaw, "ana_id", id_ana)
 
-                            call idba_seti (handle, "ana_id", id_ana)
-                            call idba_seti (handle,"leveltype", &
+                            call idba_set (handle, "ana_id", id_ana)
+                            call idba_set (handle,"leveltype", &
                             level(1))
-                            call idba_seti (handle,"l1",level(2))
-                            call idba_seti (handle,"l2",level(3))
-                            call idba_setc (handle,"rep_memo",descr)
+                            call idba_set (handle,"l1",level(2))
+                            call idba_set (handle,"l2",level(3))
+                            call idba_set (handle,"rep_memo",descr)
 
                             if(imet == 0)then ! scalare
 
@@ -436,7 +435,7 @@
 
                             endif
 
-                            call idba_setr (handle,cvar,dato)
+                            call idba_set (handle,cvar,dato)
                             call idba_prendilo (handle)
 
                         endif      !previsti
@@ -457,7 +456,6 @@
                         write(cb,'(i5.5)')ib
                         name='_box'//cb
                         station=ib
-                        heightbaro=rmdo
 
                     ! cambio scadenza!!!
                         if(scaddb(4) > 0)then
@@ -476,32 +474,30 @@
                     !    call idba_unset (handle,"rep_cod")
 
                         CALL idba_setcontextana (handleanaw)
-!!                        CALL idba_seti (handleanaw,"!ana","scrivo anagrafica")
-                        call idba_setc (handleanaw,"name",name)
-                        call idba_seti (handleanaw,"block",block)
-                        call idba_seti (handleanaw,"station",station)
-                        call idba_seti (handleanaw,"heightbaro", &
-                        heightbaro)
+!!                        CALL idba_set (handleanaw,"!ana","scrivo anagrafica")
+                        call idba_set (handleanaw,"name",name)
+                        call idba_set (handleanaw,"block",block)
+                        call idba_set (handleanaw,"station",station)
 
-                        call idba_setr (handleanaw,"height",h)
-                        call idba_setr (handleanaw,"lat",rlat)
-                        call idba_setr (handleanaw,"lon",rlon)
-                        call idba_seti (handleanaw,"mobile",0)
+                        call idba_set (handleanaw,"height",h)
+                        call idba_set (handleanaw,"lat",rlat)
+                        call idba_set (handleanaw,"lon",rlon)
+                        call idba_set (handleanaw,"mobile",0)
                         CALL idba_prendilo (handleanaw)
-                        CALL idba_enqi (handleanaw, "ana_id", id_ana)
+                        CALL idba_enq (handleanaw, "ana_id", id_ana)
 
-                        CALL idba_seti (handle, "ana_id", id_ana)
-                        call idba_seti (handle,"pindicator",scaddb(4))
-                        call idba_seti (handle,"p1",p1)
-                        call idba_seti (handle,"p2",p2)
+                        CALL idba_set (handle, "ana_id", id_ana)
+                        call idba_set (handle,"pindicator",scaddb(4))
+                        call idba_set (handle,"p1",p1)
+                        call idba_set (handle,"p2",p2)
 
-                        call idba_seti (handle,"leveltype", &
+                        call idba_set (handle,"leveltype", &
                         level(1))
-                        call idba_seti (handle,"l1",level(2))
-                        call idba_seti (handle,"l2",level(3))
+                        call idba_set (handle,"l1",level(2))
+                        call idba_set (handle,"l2",level(3))
 
 
-                        call idba_setc (handle,"rep_memo",descr)
+                        call idba_set (handle,"rep_memo",descr)
 
                         if(imet == 0)then ! scalare
 
@@ -520,7 +516,7 @@
 
                         endif
 
-                        call idba_setr (handle,cvar,dato)
+                        call idba_set (handle,cvar,dato)
                         call idba_prendilo (handle)
 
                     endif         !osservati

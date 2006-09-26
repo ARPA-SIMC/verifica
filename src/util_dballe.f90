@@ -596,32 +596,6 @@
 
 !**************************************************************************
 
-    subroutine error_handle (debug)
-
-    logical :: debug
-    integer :: idba_error_code
-    CHARACTER messaggio*1000
-    ier=idba_error_code ()
-    if (ier /= 0)then
-        if (debug)then
-            print *,ier
-            call idba_error_message(messaggio)
-            print *,messaggio(:istr_lunghezza(messaggio))
-            call idba_error_context(messaggio)
-            print *,messaggio(:istr_lunghezza(messaggio))
-            call idba_error_details(messaggio)
-            print *,messaggio(:istr_lunghezza(messaggio))
-        end if
-
-        call exit (1)
-
-    end if
-
-    return
-    end subroutine error_handle
-
-!**************************************************************************
-
     integer function istr_lunghezza (stringa )
 
     character stringa*(*)

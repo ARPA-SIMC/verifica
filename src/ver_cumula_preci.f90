@@ -27,6 +27,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (MNSTAZ=10000)
 
     real :: rlon,rlat,h
@@ -41,10 +43,9 @@
     integer, ALLOCATABLE :: anaid(:)
 
     character(19) :: database,user,password
-    integer :: handle,rewrite
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.false.,.true.,.false./
-    external error_handle
+    INTEGER :: handle,handler,rewrite
+    integer :: debug = 1
+    integer :: handle_err
 
     namelist  /odbc/database,user,password
     NAMELIST  /cumula/giornoi,mesei,annoi,orai,mini, &
@@ -89,7 +90,7 @@
 ! PREPARAZIONE DELL' ARCHIVIO
 
 ! gestione degli errori
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
 ! connessione con database
     print*,"database=",database
@@ -110,7 +111,7 @@
 
       CALL idba_unsetall (handler)
 
-      CALL idba_seti (handler,"ana_id",anaid(ist))
+      CALL idba_set (handler,"ana_id",anaid(ist))
 
       dataval(3)=annoi
       dataval(2)=mesei
@@ -122,12 +123,12 @@
       ! INIZIO CICLO SUI GIORNI
       IMINUTI: DO WHILE (iminuti.LE.iminmax)
 
-        CALL idba_seti (handler,"year",dataval(3))
-        CALL idba_seti (handler,"month",dataval(2))
-        CALL idba_seti (handler,"day",dataval(1))
-        CALL idba_seti (handler,"hour",oraval(1))
-        CALL idba_seti (handler,"min",oraval(2))
-        CALL idba_seti (handler,"sec",00)
+        CALL idba_set (handler,"year",dataval(3))
+        CALL idba_set (handler,"month",dataval(2))
+        CALL idba_set (handler,"day",dataval(1))
+        CALL idba_set (handler,"hour",oraval(1))
+        CALL idba_set (handler,"min",oraval(2))
+        CALL idba_set (handler,"sec",00)
 
         iminutiw=iminuti
         ndati=0
@@ -135,23 +136,23 @@
         NSTEP: DO i=1,nstep
           CALL JELADATA6(idayw,imonthw,iyearw,ihourw,iminw, &
            iminutiw)
-          CALL idba_seti (handler,"year",iyearw)
-          CALL idba_seti (handler,"month",imonthw)
-          CALL idba_seti (handler,"day",idayw)
-          CALL idba_seti (handler,"hour",ihourw)
-          CALL idba_seti (handler,"min",iminw)
-          CALL idba_seti (handler,"sec",00)
+          CALL idba_set (handler,"year",iyearw)
+          CALL idba_set (handler,"month",imonthw)
+          CALL idba_set (handler,"day",idayw)
+          CALL idba_set (handler,"hour",ihourw)
+          CALL idba_set (handler,"min",iminw)
+          CALL idba_set (handler,"sec",00)
           
           p1=-(incr*60) !lo trasformo in secondi
           p2=0
-          CALL idba_seti (handler,"pindicator",4)
-          CALL idba_seti (handler,"p1",p1)
-          CALL idba_seti (handler,"p2",p2)
+          CALL idba_set (handler,"pindicator",4)
+          CALL idba_set (handler,"p1",p1)
+          CALL idba_set (handler,"p2",p2)
 
-          CALL idba_seti (handler,"leveltype",1)
-          CALL idba_seti (handler,"l1",0)
-          CALL idba_seti (handler,"l2",0)
-          CALL idba_setc (handler,"var",cvar)
+          CALL idba_set (handler,"leveltype",1)
+          CALL idba_set (handler,"l1",0)
+          CALL idba_set (handler,"l2",0)
+          CALL idba_set (handler,"var",cvar)
 
 !          PRINT*,'estraggo ',idayw,imonthw,iyearw,ihourw,iminw,p1,p2,cvar,icodice
 
@@ -162,13 +163,13 @@
           ELSEIF (N == 1) THEN
             CALL idba_dammelo (handler,btable)
 
-            CALL idba_enqr (handler,"lat",rlat)
-            CALL idba_enqr (handler,"lon",rlon)
-            CALL idba_enqr (handler,"height",h)
-            CALL idba_enqi (handler,"ana_id",icodice)
-            CALL idba_enqi (handler,"rep_cod",repcod)
+            CALL idba_enq (handler,"lat",rlat)
+            CALL idba_enq (handler,"lon",rlon)
+            CALL idba_enq (handler,"height",h)
+            CALL idba_enq (handler,"ana_id",icodice)
+            CALL idba_enq (handler,"rep_cod",repcod)
             
-            CALL idba_enqr (handler,btable,dato)
+            CALL idba_enq (handler,btable,dato)
             
             ndati=ndati+1
             prec=prec+dato
@@ -193,35 +194,35 @@
 
         CALL idba_unsetall (handle)
         
-        CALL idba_seti (handle,"year",dataval(3))
-        CALL idba_seti (handle,"month",dataval(2))
-        CALL idba_seti (handle,"day",dataval(1))
-        CALL idba_seti (handle,"hour",oraval(1))
-        CALL idba_seti (handle,"min",oraval(2))
-        CALL idba_seti (handle,"sec",00)
+        CALL idba_set (handle,"year",dataval(3))
+        CALL idba_set (handle,"month",dataval(2))
+        CALL idba_set (handle,"day",dataval(1))
+        CALL idba_set (handle,"hour",oraval(1))
+        CALL idba_set (handle,"min",oraval(2))
+        CALL idba_set (handle,"sec",00)
         
         p1=-(ncum*60) !lo trasformo in secondi
         p2=0
         
-        CALL idba_seti (handle,"pindicator",4)
-        CALL idba_seti (handle,"p1",p1)
-        CALL idba_seti (handle,"p2",p2)
+        CALL idba_set (handle,"pindicator",4)
+        CALL idba_set (handle,"p1",p1)
+        CALL idba_set (handle,"p2",p2)
         
-        CALL idba_seti (handle,"rep_cod",repcod)
+        CALL idba_set (handle,"rep_cod",repcod)
         
-        CALL idba_seti (handle,"ana_id",icodice)
+        CALL idba_set (handle,"ana_id",icodice)
         
-        CALL idba_seti (handle,"mobile",0)
+        CALL idba_set (handle,"mobile",0)
         
-        CALL idba_seti (handle,"leveltype",1)
-        CALL idba_seti (handle,"l1",0)
-        CALL idba_seti (handle,"l2",0)
+        CALL idba_set (handle,"leveltype",1)
+        CALL idba_set (handle,"l1",0)
+        CALL idba_set (handle,"l2",0)
         
         PRINT*,'scrivo ',dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),p1,p2,prec,icodice,repcod
         
         CALL idba_unset (handle,"B13011") !TOTAL PRECIPITATION [KG/M2]
         
-        IF (prec /= rmdo) CALL idba_setr(handle,"B13011",prec)
+        IF (prec /= rmdo) CALL idba_set(handle,"B13011",prec)
 
         CALL idba_prendilo (handle)
         

@@ -1,10 +1,10 @@
     program ver_pulisci
 
+    INCLUDE "dballe/dballef.h"
+
     character(LEN=19) :: database,user,password
-    integer :: handle
-    logical :: debug
-    data debug/.true./
-    external error_handle
+    INTEGER :: handle,handle_err
+    integer :: debug = 1
 
     namelist  /odbc/database,user,password
 
@@ -15,7 +15,7 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"cancello database=",database
 
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
     call idba_presentati(idbhandle,database,user,password)
 

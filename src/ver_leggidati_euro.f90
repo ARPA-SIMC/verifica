@@ -26,6 +26,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (nstaz=6000,nmesi=100)
 
     real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
@@ -37,9 +39,8 @@
 
     character(19) :: database,user,password
     integer :: handle
-    logical :: debug
-    data debug/.true./
-    external error_handle
+    integer :: debug = 1
+    integer :: handle_err
 
     NAMELIST  /euro/path,reg,nme,mese,anno
     namelist  /odbc/database,user,password
@@ -57,7 +58,7 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
     call idba_presentati(idbhandle,database,user,password)
 
@@ -119,43 +120,43 @@
 ! anagrafica
             CALL idba_setcontextana (handle)
             ! obbligatori
-            CALL idba_setr (handle,"lat",latoss(istaz))
-            CALL idba_setr (handle,"lon",lonoss(istaz))
-            CALL idba_seti (handle,"mobile",0)
+            CALL idba_set (handle,"lat",latoss(istaz))
+            CALL idba_set (handle,"lon",lonoss(istaz))
+            CALL idba_set (handle,"mobile",0)
 
-            CALL idba_setr (handle,"height",alte(istaz))
-            CALL idba_seti (handle,"block",69)
+            CALL idba_set (handle,"height",alte(istaz))
+            CALL idba_set (handle,"block",69)
         
             CALL idba_prendilo (handle)
 
-            CALL idba_enqi(handle,"ana_id",id_ana)
+            CALL idba_enq(handle,"ana_id",id_ana)
 
 ! dati
             call idba_unsetall (handle)
 
-            CALL idba_seti(handle,"ana_id",id_ana)
+            CALL idba_set(handle,"ana_id",id_ana)
             
             ! print*,'datatime ',data(3),data(2),data(1),ora(1),ora(2),00
-            CALL idba_seti (handle,"year",data(3))
-            CALL idba_seti (handle,"month",data(2))
-            CALL idba_seti (handle,"day",data(1))
-            CALL idba_seti (handle,"hour",ora(1))
-            CALL idba_seti (handle,"min",ora(2))
-            CALL idba_seti (handle,"sec",00)
+            CALL idba_set (handle,"year",data(3))
+            CALL idba_set (handle,"month",data(2))
+            CALL idba_set (handle,"day",data(1))
+            CALL idba_set (handle,"hour",ora(1))
+            CALL idba_set (handle,"min",ora(2))
+            CALL idba_set (handle,"sec",00)
             
-            CALL idba_seti (handle,"leveltype",1)
-            CALL idba_seti (handle,"l1",0)
-            CALL idba_seti (handle,"l2",0)
-            CALL idba_seti (handle,"pindicator",4)
-            CALL idba_seti (handle,"p1",-86400)
-            CALL idba_seti (handle,"p2",0)
+            CALL idba_set (handle,"leveltype",1)
+            CALL idba_set (handle,"l1",0)
+            CALL idba_set (handle,"l2",0)
+            CALL idba_set (handle,"pindicator",4)
+            CALL idba_set (handle,"p1",-86400)
+            CALL idba_set (handle,"p2",0)
             
             ! codice per gli osservati delle regioni
-            CALL idba_seti (handle,"rep_cod",50)
+            CALL idba_set (handle,"rep_cod",50)
             
           ! inserimento dati
             IF(preci(istaz,igio) >= 0.)THEN
-              CALL idba_setr(handle,"B13011",preci(istaz,igio))
+              CALL idba_set(handle,"B13011",preci(istaz,igio))
               CALL idba_prendilo (handle)
               CALL idba_unset (handle,"B13011")
             ENDIF

@@ -35,6 +35,8 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+    INCLUDE "dballe/dballef.h"
+
     parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
     parameter (MNSCAD=30,MNGIO=150,MNRM=102)
     integer ::   xgrib(MIDIMG)
@@ -62,10 +64,8 @@
 
 ! database
     integer :: handler,handle
-    logical :: init,debug,rmmiss
-    data init,debug,rmmiss/.true.,.true.,.false./
-
-    external error_handle
+    integer :: debug = 1
+    integer :: handle_err
 
     common /point/ij1,ij2,ij3,ij4
 
@@ -94,7 +94,7 @@
     close(1)
 
 ! gestione degli errori
-    call idba_error_set_callback(0,error_handle,debug,handle_err)
+    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
 
 ! connessione con database
     call idba_presentati(idbhandle,database,user,password)
@@ -325,9 +325,9 @@
                 ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                     call converti_scadenze(4,scad,scaddb)
 
-                    call idba_seti (handle,"p1",scaddb(2))
-                    call idba_seti (handle,"p2",scaddb(3))
-                    call idba_seti (handle,"pindicator",scaddb(4))
+                    call idba_set (handle,"p1",scaddb(2))
+                    call idba_set (handle,"p2",scaddb(3))
+                    call idba_set (handle,"pindicator",scaddb(4))
 
                     call idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
 
@@ -340,7 +340,7 @@
                         endif
                         print*,'scrivo: descr ',descr
 
-                        call idba_setc (handle,"rep_memo",descr)
+                        call idba_set (handle,"rep_memo",descr)
 
                         do ist=1,nstaz
                             if(abs(x(ist)-rmdo) > 0.1 .AND. &
@@ -355,14 +355,14 @@
                             ! prima faccio unset di ana_id senno' ricopre sempre!!!
 !!                                call idba_unset (handle,"ana_id")
 
-                                call idba_setr (handle,"lat",rlat)
-                                call idba_setr (handle,"lon",rlon)
-                                call idba_seti (handle,"mobile",0)
+                                call idba_set (handle,"lat",rlat)
+                                call idba_set (handle,"lon",rlon)
+                                call idba_set (handle,"mobile",0)
 
-                                call idba_seti (handle,"leveltype", &
+                                call idba_set (handle,"leveltype", &
                                 level(1))
-                                call idba_seti (handle,"l1",level(2))
-                                call idba_seti (handle,"l2",level(3))
+                                call idba_set (handle,"l1",level(2))
+                                call idba_set (handle,"l2",level(3))
 
                                 if(imet == 0)then ! scalare
 
@@ -380,7 +380,7 @@
 
                                 endif
 
-                                call idba_setr (handle,cvar,dato)
+                                call idba_set (handle,cvar,dato)
                                 call idba_prendilo (handle)
 
                             endif
@@ -573,22 +573,22 @@
                             ! prima faccio unset di ana_id senno' ricopre sempre!!!
 !!                                call idba_unset (handle,"ana_id")
 
-                                call idba_setr (handle,"lat",rlat)
-                                call idba_setr (handle,"lon",rlon)
-                                call idba_seti (handle,"mobile",0)
+                                call idba_set (handle,"lat",rlat)
+                                call idba_set (handle,"lon",rlon)
+                                call idba_set (handle,"mobile",0)
 
-                                call idba_setc (handle,"rep_memo",descr)
+                                call idba_set (handle,"rep_memo",descr)
 
-                                call idba_seti (handle,"leveltype", &
+                                call idba_set (handle,"leveltype", &
                                 level(1))
-                                call idba_seti (handle,"l1",level(2))
-                                call idba_seti (handle,"l2",level(3))
+                                call idba_set (handle,"l1",level(2))
+                                call idba_set (handle,"l2",level(3))
 
                                 dato=a+xstaz(ist,irm)*b
-                                call idba_seti (handle,cvar,dato)
+                                call idba_set (handle,cvar,dato)
                             ! Scrivo anche v
                                 dato=a+xstazv(ist,irm)*b
-                                call idba_seti (handle,cvarv,dato)
+                                call idba_set (handle,cvarv,dato)
 
                                 call idba_prendilo (handle)
 
