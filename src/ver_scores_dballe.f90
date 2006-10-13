@@ -112,17 +112,16 @@
     integer ::   data(3),ora(2),var(3),scad(4),level(3)
     integer ::   dataval(3),oraval(2),scaddb(4),p1,p2
     integer ::   icodice,itipost,ntot
-    real ::      dato
+    real ::      dato,h
     character descr*20,descrfisso*20,model*10,cvar*6,cel*3
     real ::      maerr,mserr,rmserr,bi
 
     real, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
     integer, ALLOCATABLE :: anaid(:)
-
     CHARACTER(LEN=19) :: database,user,password
 
     character btable*10
-    INTEGER :: handle,handle_err
+    INTEGER :: handle,handle_err,handleana,USTAZ
     integer :: debug = 1
 
     data      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
@@ -173,19 +172,26 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handle,"read","read","read")
+    call idba_preparati(idbhandle,handleana,"read","read","read")
 
+!???????????-SOSTITUIRE CON UNA LETTURA SELETTIVA CHE MI DICE QUANTE SONO QUELLE CHE VOGLIO
 ! leggo tutte le stazioni presenti in archivio
     call idba_quantesono(handle,nstaz)
     print*,'massimo numero stazioni e pseudo-stazioni ',nstaz
     if(nstaz > MNSTAZ)then
         print*,'SONO TANTE ',nstaz,' STAZIONI!! SEI SICURO/A?'
     endif
+!------------------------------------
+
 ! allocazione matrici
     ALLOCATE(anaid(1:nstaz))
 
+!------------------------------------------- 
     call leggiana_db_scores(iana,anaid, &
     itipost,rmdo,nstaz,handle)
     print*,'numero massimo stazioni ',nstaz
+!----------------------------------------
+
     nv=nstaz*ngio*nore
     if(nv > MNV)then
         print*,'attenzione!!! nv vale ',nv
@@ -308,7 +314,7 @@
 
             ! lettura previsioni da database
 
-            ! ricominciamo perche' ho gia' fatto una query nella subroutine
+            ! ricominciamo perche' non mi fido del resto del mondo
                 call idba_unsetall(handle)
 
                 CALL idba_set (handle,'query','bigana')
@@ -365,12 +371,24 @@
 
                         call idba_enq (handle,"ana_id",icodice)
 
+
+!mst  interrogo sezione anagrafica per avere l'altezza
+                       CALL idba_set (handleana,"ana_id",icodice)
+                       call idba_quantesono(handleana,USTAZ)
+                       CALL idba_elencamele (handleana)
+                       CALL idba_enq (handleana,"height",h)
+
+
+
+
                         do i=1,nstaz
                             if(icodice == anaid(i))then
                                 ipos=i
                             endif
                         enddo
 
+
+!?????????????????????????????????SE ESTRAGGO SOLO QUELLE CHE VOGLIO NON SERVE CONTROLLO PER L'ALTEZZA PERCHE' SONO GIA' FILTRATE
                         if(iquota == 0)then !pianura
                             IF(h >= hlimite .OR. h == -999.9)goto20
                         elseif(iquota == 1)then !montagna
@@ -453,6 +471,12 @@
                     call idba_enq (handle,"l2",level(3))
 
                     call idba_enq (handle,"ana_id",icodice)
+
+!mst  interrogo sezione anagrafica per avere l'altezza
+                       CALL idba_set (handleana,"ana_id",icodice)
+                       call idba_quantesono(handleana,USTAZ)
+                       CALL idba_elencamele (handleana)
+                       CALL idba_enq (handleana,"height",h)
 
                     do i=1,nstaz
                         if(icodice == anaid(i))then

@@ -101,7 +101,8 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handler,"read","read","read")
-
+!-----------------------------------------------------------------------------------------------------
+!STO CHIEDENDO AL DATABASE QUANTA ROBA HA DENTRO...POTREI CHIEDERE QUANTA ROBA CHE VOGLIO IO HA DENTRO 
     call idba_quantesono(handler,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
 

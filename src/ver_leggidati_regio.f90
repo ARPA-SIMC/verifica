@@ -94,7 +94,7 @@
                 numestaz=numestaz+1
 
                 code(istan)=scode
-                nomest(istan)=nome
+                nomest(istan)=nome !mst potrebbe bastare il codice della stazione es:EM00230
                 latoss(istan)=wlat
                 lonoss(istan)=wlon
                 if(ialt == 9999)then
@@ -121,7 +121,7 @@
             ipreci,itemp,idirv,ivelv,iumrel
             do nstana=1,numestaz
                 if (scode == code(nstana))then
-                    nsts=nstana
+                    nsts=nstana !mst più che il nome è utile il codice della stazione (cioè scode) perchè contiene sempre l'identificativo della regione
                     goto 198
                 endif
             enddo
@@ -194,7 +194,7 @@
             call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
 
         ! codice per gli osservati delle regioni
-            call idba_set (handle,"rep_cod",50)
+            call idba_set (handle,"rep_cod",50) !rete=regioni
 
         ! inserimento dati
             if (preci /= rmdo) then
