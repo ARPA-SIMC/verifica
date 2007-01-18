@@ -305,7 +305,7 @@
 
         nv=nv+1
         call idba_enqr (handle,btable,dato)
-        obs(nv)=dato
+        obs(icodice)=dato
     ! print*,'ecco ',ipos,iv,dato
         if(ruota)then
             call tlld(rlon,rlat,rxeq,cryeq,sryeq,trlon,trlat)

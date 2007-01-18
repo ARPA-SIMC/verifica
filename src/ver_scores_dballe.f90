@@ -174,7 +174,6 @@
     call idba_preparati(idbhandle,handle,"read","read","read")
     call idba_preparati(idbhandle,handleana,"read","read","read")
 
-!???????????-SOSTITUIRE CON UNA LETTURA SELETTIVA CHE MI DICE QUANTE SONO QUELLE CHE VOGLIO
 ! leggo tutte le stazioni presenti in archivio
     call idba_quantesono(handle,nstaz)
     print*,'massimo numero stazioni e pseudo-stazioni ',nstaz
@@ -314,7 +313,7 @@
 
             ! lettura previsioni da database
 
-            ! ricominciamo perche' non mi fido del resto del mondo
+            ! ricominciamo 
                 call idba_unsetall(handle)
 
                 CALL idba_set (handle,'query','bigana')
@@ -371,15 +370,11 @@
 
                         call idba_enq (handle,"ana_id",icodice)
 
-
 !mst  interrogo sezione anagrafica per avere l'altezza
-                       CALL idba_set (handleana,"ana_id",icodice)
-                       call idba_quantesono(handleana,USTAZ)
-                       CALL idba_elencamele (handleana)
-                       CALL idba_enq (handleana,"height",h)
-
-
-
+                        CALL idba_set (handleana,"ana_id",icodice)
+                        CALL idba_quantesono(handleana,USTAZ)
+                        CALL idba_elencamele (handleana)
+                        CALL idba_enq (handleana,"height",h)
 
                         do i=1,nstaz
                             if(icodice == anaid(i))then
@@ -387,8 +382,6 @@
                             endif
                         enddo
 
-
-!?????????????????????????????????SE ESTRAGGO SOLO QUELLE CHE VOGLIO NON SERVE CONTROLLO PER L'ALTEZZA PERCHE' SONO GIA' FILTRATE
                         if(iquota == 0)then !pianura
                             IF(h >= hlimite .OR. h == -999.9)goto20
                         elseif(iquota == 1)then !montagna
