@@ -97,44 +97,44 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter (MNSTAZ=5000,MNSCAD=30,MNGIO=366,MNORE=1)
-    parameter (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)
+    PARAMETER (MNSTAZ=5000,MNSCAD=30,MNGIO=366,MNORE=1)
+    PARAMETER (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    integer ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs
-    integer ::   scad1,scad2,inc
-    integer ::   scadenze(4,MNSCAD)
-    integer ::   itipo,iana,imod,ls,iquota,lthr
-    logical ::   ruota,media,massimo,prob,distr,diffh
-    real ::      dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
-    logical ::   daily
-    integer ::   nore,ore(24)
-    integer ::   data(3),ora(2),var(3),scad(4),level(3)
-    integer ::   dataval(3),oraval(2),scaddb(4),p1,p2
-    integer ::   icodice,itipost,ntot
-    real ::      dato,h
-    character descr*20,descrfisso*20,model*10,cvar*6,cel*3
-    real ::      maerr,mserr,rmserr,bi
-
-    real, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
-    integer, ALLOCATABLE :: anaid(:)
+    INTEGER ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs
+    INTEGER ::   scad1,scad2,inc
+    INTEGER ::   scadenze(4,MNSCAD)
+    INTEGER ::   itipo,iana,imod,ls,iquota,lthr
+    LOGICAL ::   ruota,media,massimo,prob,distr,diffh
+    REAL ::      dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
+    LOGICAL ::   daily,ldir
+    INTEGER ::   nore,ore(24)
+    INTEGER ::   DATA(3),ora(2),var(3),scad(4),level(3)
+    INTEGER ::   dataval(3),oraval(2),scaddb(4),p1,p2
+    INTEGER ::   icodice,itipost,ntot
+    REAL ::      dato,h
+    CHARACTER descr*20,descrfisso*20,model*10,cvar*6,cel*3
+    REAL ::      maerr,mserr,rmserr,bi
+    
+    REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
+    INTEGER, ALLOCATABLE :: anaid(:)
     CHARACTER(LEN=19) :: database,user,password
-
-    character btable*10
+    
+    CHARACTER btable*10
     INTEGER :: handle,handle_err,handleana,USTAZ
-    integer :: debug = 1
+    INTEGER :: debug = 1
 
-    data      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
-    namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-    nvar,nrm,nore,ore
-    namelist  /stat/model,itipo,iana,imet,imod,ls,ruota, &
-    nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
-    thr,perc
-    namelist  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily
-    namelist  /date/data
-    namelist  /scadenza/scadenze
-    namelist  /odbc/database,user,password
-
+    DATA      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
+    NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
+     nvar,nrm,nore,ore
+    NAMELIST  /stat/model,itipo,iana,imet,imod,ls,ruota, &
+     nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
+     thr,perc
+    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir
+    NAMELIST  /date/DATA
+    NAMELIST  /scadenza/scadenze
+    NAMELIST  /odbc/database,user,password
+    
     print*,'program scores'
 
     open(1,file='odbc.nml',status='old',readonly)
@@ -506,12 +506,21 @@
                         do i=1,nstaz
                             previ(i)=prev(i+lag,irm)
                         enddo
-                        call mae(nstaz,oss(1+lag),previ,nstaz, &
-                        rmddb,rmdo,npo,maerr)
-                        call mse(nstaz,oss(1+lag),previ,nstaz, &
-                        rmddb,rmdo,npo,mserr,rmserr)
-                        call bias(nstaz,oss(1+lag),previ,nstaz, &
-                        rmddb,rmdo,npo,bi)
+                        IF(.NOT.ldir)THEN
+                          CALL mae(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,maerr)
+                          CALL mse(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,mserr,rmserr)
+                          CALL bias(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,bi)
+                        ELSE
+                          CALL mae_dd(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,maerr)
+                          CALL mse_dd(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,mserr,rmserr)
+                          CALL bias_dd(nstaz,oss(1+lag),previ,nstaz, &
+                           rmddb,rmdo,npo,bi)
+                        ENDIF
                         WRITE(66,'(1x,i3,1x,i2,1x,i6,4(1x,f10.3))') &
                         igio,iore,npo,maerr,mserr,rmserr,bi
                         write(20,'(a8,i3)')' giorno= ',igio
@@ -545,9 +554,15 @@
                 previ(i)=prev(i,irm)
             enddo
         ! attenzione!!! Passo nv e non MNV perche' sono allocabili!
-            call mae(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
-            call mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
-            call bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
+            IF(.NOT.ldir)THEN
+              CALL mae(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
+              CALL mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
+              CALL bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
+            ELSE
+              CALL mae_dd(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
+              CALL mse_dd(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
+              CALL bias_dd(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
+            ENDIF
             write(11,'(1x,i6,4(1x,f10.3))') &
             npo,maerr,mserr,rmserr,bi
             write(20,'(a11,i3)')' scadenza= ',iscaddb

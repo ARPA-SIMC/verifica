@@ -385,3 +385,103 @@
     end subroutine costloss_det
 
 !*****************************************************************************
+
+      subroutine mae_dd(MNV,obs,pred,nv,rmddb,rmd,npo,maerr)
+
+! c VERIFICA - scores_util.f
+! c subroutine per il calcolo del mean absolute error della direzione (0-360)
+
+      real ::  maerr
+      real ::  obs(MNV),pred(MNV),err
+      parameter (flat=180.)
+
+      maerr=0.
+      npo=0
+      do iv=1,nv
+         IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            err=pred(iv)-obs(iv)
+            err=err + (sign(1.,flat-err)+sign(1.,-flat-err))*flat
+            maerr=maerr+abs(err)
+         endif
+      enddo
+      if(npo > 0)then
+         maerr=maerr/real(npo)
+      else
+         maerr=rmd
+      endif
+
+      return
+      end subroutine mae_dd
+
+!*****************************************************************  
+
+      subroutine mse_dd(MNV,obs,pred,nv,rmddb,rmd,npo,mserr,rmserr)    
+
+! c VERIFICA - scores_util.f
+! c subroutine per il calcolo del mean square error della direzione (0-360)
+
+      real ::  mserr,rmserr
+      real ::  obs(MNV),pred(MNV),err
+      parameter (flat=180.)
+
+      mserr=0.
+      npo=0
+      do iv=1,nv
+         IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            err=pred(iv)-obs(iv)
+            err=err + (sign(1.,flat-err)+sign(1.,-flat-err))*flat
+            mserr=mserr+(err)**2
+         endif
+      enddo
+      if(npo.gt.0)then
+         mserr=mserr/real(npo)
+         rmserr=sqrt(mserr)
+      else
+         mserr =rmd
+         rmserr=rmd
+      endif
+
+      return
+      end subroutine mse_dd
+
+!*******************************************************************
+
+      subroutine bias_dd(MNV,obs,pred,nv,rmddb,rmd,npo,b)
+
+! c VERIFICA - scores_util.f
+! c subroutine per il calcolo del bias (mean error) della direzione (0-360)
+
+      real ::  b,p,o
+      real ::  obs(MNV),pred(MNV),err
+      parameter (flat=180.)
+
+      b=0.
+      p=0.
+      o=0.
+      npo=0
+      do iv=1,nv
+         IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            err=pred(iv)-obs(iv)
+            err=err + (sign(1.,flat-err)+sign(1.,-flat-err))*flat
+            b=b+(err)
+            p=p+pred(iv)
+            o=o+obs(iv)
+         endif
+      enddo
+      if(npo > 0)then
+         b=b/real(npo)
+         p=p/real(npo)
+         o=o/real(npo)
+      else
+         b=rmd
+      endif
+
+      write(13,*)o,p
+
+      return
+      end
+
+!******************************************************************

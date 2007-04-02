@@ -131,7 +131,7 @@
             ! voglio solo le stazioni vere (itipostaz<70)
             IF(itipostaz < 70)THEN
               i=i+1
-              PRINT*,ist,icodice,itipostaz
+!              PRINT*,ist,icodice,itipostaz
               anaid(i)=icodice
             ENDIF
           ELSEIF(itipost == 80)THEN

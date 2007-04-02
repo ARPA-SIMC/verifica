@@ -5,12 +5,14 @@
    lthr=1,
    nsoglie=2,
    soglie=285.,290.,
-   daily=.F.
+   daily=.F.,
+   ldir=.F.
  $end
 
 ### ATTENZIONE!!!
 ### scrivere una namelist per ciascuna variabile!!!
 
+### cvar = codice variabile (come in Btable)
 ### iquota = per verificare solo punti sopra o sotto ad una certa quota
 ###          -1 se le voglio tutte
 ###          0 solo pianura (sotto hlimite)
@@ -24,4 +26,9 @@
 ###          la penultima e l'ultima soglia definiscono una classe attorno 
 ###          allo zero (per la direzione del vento o dell'onda);
 ###          scrivere anche l'estremo superiore dell'ultima classe in soglie
+### nsoglie = numero di soglie per gli score per soglia
+### soglie = elenco soglie per gli score per soglia, l'unita' di misura
+###          deve essere quella della variabile nella Btable
+### daily = .T. per avere anche gli score giorno per giorno
+### ldir = .T. solo per variabili tipo direzione vento o onda (tra 0 e 360)
 ### param=t 
