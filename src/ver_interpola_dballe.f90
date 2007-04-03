@@ -101,12 +101,11 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handler,"read","read","read")
-!-----------------------------------------------------------------------------------------------------
-!STO CHIEDENDO AL DATABASE QUANTA ROBA HA DENTRO...POTREI CHIEDERE QUANTA ROBA CHE VOGLIO IO HA DENTRO 
+
     call idba_quantesono(handler,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
 
-! llocazione matrici
+! allocazione matrici
     ALLOCATE(x(1:nstaz))
     ALLOCATE(y(1:nstaz))
     ALLOCATE(alt(1:nstaz))
@@ -207,7 +206,9 @@
         open(3,file='date.nml',status='old',readonly)
         do igio=1,ngio
             read(3,nml=date,err=9004)
-            print*,'data ',data
+            ora(1)=nora/100.
+            ora(2)=MOD(nora,100)
+            PRINT*,'data ',DATA,' ora ',ora
             do iscad=1,nscad
                 do is=1,4
                     scad(is)=scadenze(is,iscad)
@@ -232,8 +233,16 @@
                     ! trovo data e ora dell'emissione per ore successive (analisi)
                         ora(1)=ore(iore)/100.
                         ora(2)=mod(ore(iore),100)
-                        oraval(1)=ora(1)
-                        oraval(2)=ora(2)
+                        CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+                         ora(1),ora(2),iminuti)
+                        iminuti=iminuti+iscaddb*60
+                        CALL JELADATA6(iday,imonth,iyear, &
+                         ihour,imin,iminuti)
+                        dataval(1)=iday
+                        dataval(2)=imonth
+                        dataval(3)=iyear
+                        oraval(1)=ihour
+                        oraval(2)=imin
                     endif
 
                     print*,'validita'' ',dataval,oraval,iscaddb
@@ -288,7 +297,7 @@
                           ENDDO
                         ENDIF
 
-                    ! Interpolation of predicted data on (lat,lon) station points
+     ! Interpolation of predicted data on (lat,lon) station points
                         if(ruota == .TRUE. )then
                             call rot_grib_LAMBO(alorot,alarot, &
                             tlm0d,tph0d)
@@ -302,7 +311,7 @@
                                 igrid,ija,tlm0d,tph0d,wind,imod, &
                                 lsvar,xint,dummy,ier)
                                 if(ier == 2 .OR. ier == 4)then
-                                ! cerca di interpolare su un punto che non e' nel dominio dei dati!
+     ! cerca di interpolare su un punto che non e' nel dominio dei dati!
                                     xstaz(ist,irm)=rmdo
                                 elseif(ier == 0)then
                                     if (diffh) then
@@ -323,7 +332,7 @@
                         enddo
                     enddo         !nrm
 
-                ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
+     ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                     call converti_scadenze(4,scad,scaddb)
 
                     call idba_set (handle,"p1",scaddb(2))
@@ -367,7 +376,7 @@
 
                                 if(imet == 0)then ! scalare
 
-                                ! attenzione!!!!!! ho bisogno che il minimo sia 0????
+                            ! attenzione!!!!!! ho bisogno che il minimo sia 0????
                                     dato=a+xstaz(ist,irm)*b
 
                                 elseif(imet == 1)then !scalare direzione
@@ -540,7 +549,7 @@
                                 ija,tlm0d,tph0d,wind,imod,lsvar, &
                                 xintu,xintv,ier)
                                 if(ier == 2 .OR. ier == 4)then
-                                ! cerco di interpolare su un punto che non e' nel dominio dei dati
+                ! cerco di interpolare su un punto che non e' nel dominio dei dati
                                     xstaz(ist,irm)=rmdo
                                     xstazv(ist,irm)=rmdo
                                 elseif(ier == 0)then
