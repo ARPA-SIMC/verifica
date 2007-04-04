@@ -198,428 +198,438 @@
     write(*,*)'variabile ',var,' cvar ',cvar, &
     ' lsvar ',lsvar,' a ',a,' b ',b
 
-    if(imet == 0 .OR. imet == 1)then         ! scalare
-
-        wind=.false.
-
-    ! Read date
-        open(3,file='date.nml',status='old',readonly)
-        do igio=1,ngio
-            read(3,nml=date,err=9004)
-            ora(1)=nora/100.
-            ora(2)=MOD(nora,100)
-            PRINT*,'data ',DATA,' ora ',ora
-            do iscad=1,nscad
-                do is=1,4
-                    scad(is)=scadenze(is,iscad)
-                enddo
-                print*,'scadenza ',scad
-
-                iscaddb=max(scadenze(2,iscad),scadenze(3,iscad))
-                call JELADATA5(data(1),data(2),data(3), &
-                ora(1),ora(2),iminuti)
-                iminuti=iminuti+iscaddb*60
-                call JELADATA6(iday,imonth,iyear, &
-                ihour,imin,iminuti)
-                dataval(1)=iday
-                dataval(2)=imonth
-                dataval(3)=iyear
-                oraval(1)=ihour
-                oraval(2)=imin
-
-                do iore=1,nore
-
-                    if(iore > 1)then
-                    ! trovo data e ora dell'emissione per ore successive (analisi)
-                        ora(1)=ore(iore)/100.
-                        ora(2)=mod(ore(iore),100)
-                        CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
-                         ora(1),ora(2),iminuti)
-                        iminuti=iminuti+iscaddb*60
-                        CALL JELADATA6(iday,imonth,iyear, &
-                         ihour,imin,iminuti)
-                        dataval(1)=iday
-                        dataval(2)=imonth
-                        dataval(3)=iyear
-                        oraval(1)=ihour
-                        oraval(2)=imin
-                    endif
-
-                    print*,'validita'' ',dataval,oraval,iscaddb
-                    print*,'emissione ',data,ora,iscaddb
-
-                    do irm=1,nrm
-                        est(1)=-1
-                        est(2)=-1
-                        est(3)=-1
-                        call findgribest(iug,xgrib,idimg,data,ora, &
-                        scad,level,var,est,ier)
-                        if(ier == -1)then
-                            print*,'grib mancante - azzero ', &
-                            'tutto l''ensemble'
-                            xstaz=rmdo
-                            goto 111
-                        elseif(ier /= 0)then
-                            goto 9200
-                        endif
-                        call getinfoest(-1,xgrib,idimg, &
-                        data,ora,scad,level,var,est, &
-                        alat(1),alat(2),alon(1),alon(2), &
-                        ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
-                        if(ier /= 0)goto 9300
-                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
-                        ibm,ier)
-                        if(ibm /= 0 .OR. ier /= 0)goto 9400
-                        IF(lsvar == -1)THEN
-                          lsvar=1
-                          DO ivec=1,idimv
-                            IF(xgrid(ivec) == rmdo)THEN
-                              lsm(ivec)=0
-                            ELSE
-                              lsm(ivec)=1
-                            ENDIF
-                          ENDDO
-                        ELSEIF(lsvar == 0)THEN
-                          DO ivec=1,idimv
-                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==1)THEN
-                              lsm(ivec)=1
-                            ELSE
-                              lsm(ivec)=0
-                            ENDIF
-                          ENDDO
-                        ELSEIF(lsvar == 1)then
-                          DO ivec=1,idimv
-                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==0)THEN
-                              lsm(ivec)=0
-                            ELSE
-                              lsm(ivec)=1
-                            ENDIF
-                          ENDDO
-                        ENDIF
-
-     ! Interpolation of predicted data on (lat,lon) station points
-                        if(ruota == .TRUE. )then
-                            call rot_grib_LAMBO(alorot,alarot, &
-                            tlm0d,tph0d)
-                        endif
-                        do ist=1,nstaz
-                            if(abs(x(ist)-rmdo) > 0.1 .AND. &
-                            abs(y(ist)-rmdo) > 0.1)then
-                                call ngetpoint(x(ist),y(ist), &
-                                xgrid,xgrid,lsm, &
-                                idimv,nx,ny,alon(1),alat(1),dx,dy, &
-                                igrid,ija,tlm0d,tph0d,wind,imod, &
-                                lsvar,xint,dummy,ier)
-                                if(ier == 2 .OR. ier == 4)then
-     ! cerca di interpolare su un punto che non e' nel dominio dei dati!
-                                    xstaz(ist,irm)=rmdo
-                                elseif(ier == 0)then
-                                    if (diffh) then
-                                        ind=ij1
-                                        hdiff=abs(oro(ind)/9.81-alt(ist))
-                                        if (hdiff <= diffmax) then
-                                            xstaz(ist,irm)=xint
-                                        else
-                                            xstaz(ist,irm)=rmdo
-                                        endif
-                                    else
-                                        xstaz(ist,irm)=xint
-                                    endif
-                                else
-                                    goto 9600
-                                endif
-                            endif
-                        enddo
-                    enddo         !nrm
-
-     ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
-                    call converti_scadenze(4,scad,scaddb)
-
-                    call idba_set (handle,"p1",scaddb(2))
-                    call idba_set (handle,"p2",scaddb(3))
-                    call idba_set (handle,"pindicator",scaddb(4))
-
-                    call idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
-
-                ! scrittura su database
-                    do irm=1,nrm
-                        if(nrm > 1)then
-                            write(cel,'(i3.3)')irm
-                            descr=descrfisso(1:nlenvera(descrfisso)) &
-                            //'el'//cel
-                        endif
-                        print*,'scrivo: descr ',descr
-
-                        call idba_set (handle,"rep_memo",descr)
-
-                        do ist=1,nstaz
-                            if(abs(x(ist)-rmdo) > 0.1 .AND. &
-                            abs(y(ist)-rmdo) > 0.1 .AND. &
-                            xstaz(ist,irm) /= rmdo)then
-                                rlat=y(ist)
-                                rlon=x(ist)
-                                h=alt(ist)
-
-                            ! imposto tutta l'anagrafica
-
-                            ! prima faccio unset di ana_id senno' ricopre sempre!!!
-!!                                call idba_unset (handle,"ana_id")
-
-                                call idba_set (handle,"lat",rlat)
-                                call idba_set (handle,"lon",rlon)
-                                call idba_set (handle,"mobile",0)
-
-                                call idba_set (handle,"leveltype", &
-                                level(1))
-                                call idba_set (handle,"l1",level(2))
-                                call idba_set (handle,"l2",level(3))
-
-                                if(imet == 0)then ! scalare
-
-                            ! attenzione!!!!!! ho bisogno che il minimo sia 0????
-                                    dato=a+xstaz(ist,irm)*b
-
-                                elseif(imet == 1)then !scalare direzione
-
-                                    if(xstaz(ist,irm) <= 1. .AND. &
-                                    xstaz(ist,irm) /= 0.)then
-                                        dato=1.
-                                    else
-                                        dato=a+xstaz(ist,irm)*b
-                                    endif
-
-                                endif
-
-                                call idba_set (handle,cvar,dato)
-                                call idba_prendilo (handle)
-
-                            endif
-                        enddo      !nstaz
-
-                    enddo         !nrm
-
-                    111 continue      !grib non trovato
-
-                enddo            !nore
-            enddo               !nscad
-        enddo                  !ngio
-        close(3)               !date
-
-    elseif(imet == 2)then     ! vettore
-
-        wind=.true.
-
-        do i=1,3
-            varv(i)=kvar(i,2)
-        enddo
-        call variabile(3,varv,cvarv,a,b,.true.)
-
-        open(3,file='date.nml',status='old',readonly)
-        do igio=1,ngio
-            read(3,nml=date,err=9004)
-            print*,'data ',data
-            do iscad=1,nscad
-                do is=1,4
-                    scad(is)=scadenze(is,iscad)
-                enddo
-                print*,'scadenza ',scad
-
-                iscaddb=max(scadenze(2,iscad),scadenze(3,iscad))
-                call JELADATA5(data(1),data(2),data(3), &
-                ora(1),ora(2),iminuti)
-                iminuti=iminuti+iscaddb*60
-                call JELADATA6(iday,imonth,iyear, &
-                ihour,imin,iminuti)
-                dataval(1)=iday
-                dataval(2)=imonth
-                dataval(3)=iyear
-                oraval(1)=ihour
-                oraval(2)=imin
-
-                do iore=1,nore
-
-                    if(iore > 1)then
-                    ! trovo data e ora dell'emissione per ore successive (analisi)
-                        ora(1)=ore(iore)/100.
-                        ora(2)=mod(ore(iore),100)
-                        oraval(1)=ora(1)
-                        oraval(2)=ora(2)
-                    endif
-
-                    print*,'validita'' ',dataval,oraval,iscaddb
-                    print*,'emissione ',data,ora,iscaddb
-
-                ! u component
-                    do irm=1,nrm
-                        est(1)=-1
-                        est(2)=-1
-                        est(3)=-1
-                        call findgribest(iug,xgrib,idimg,data,ora, &
-                        scad,level,var,est,ier)
-                        if(ier == -1)then
-                            print*,'grib mancante - azzero ', &
-                            'tutto l''ensemble'
-                            xstaz=rmdo
-                            xstazv=rmdo
-                            goto 222
-                        elseif(ier /= 0)then
-                            goto 9200
-                        endif
-                        call getinfoest(-1,xgrib,idimg, &
-                        data,ora,scad,level,var,est, &
-                        alat(1),alat(2),alon(1),alon(2), &
-                        ny,nx,dy,dx,idrt,alarot,alorot,rot, &
-                        ija,ier)
-                        if(ier /= 0)goto 9300
-                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
-                        ibm,ier)
-                        if(ibm /= 0 .OR. ier /= 0)goto 9400
-                        IF(lsvar == -1)THEN
-                          lsvar=1
-                          DO ivec=1,idimv
-                            IF(xgrid(ivec) == rmdo)THEN
-                              lsm(ivec)=0
-                            ELSE
-                              lsm(ivec)=1
-                            ENDIF
-                          ENDDO
-                        ELSEIF(lsvar == 0)THEN
-                          DO ivec=1,idimv
-                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==1)THEN
-                              lsm(ivec)=1
-                            ELSE
-                              lsm(ivec)=0
-                            ENDIF
-                          ENDDO
-                        ELSEIF(lsvar == 1)then
-                          DO ivec=1,idimv
-                            IF (xgrid(ivec) == rmdo .or. lsm(ivec)==0)THEN
-                              lsm(ivec)=0
-                            ELSE
-                              lsm(ivec)=1
-                            ENDIF
-                          ENDDO
-                        ENDIF
-                        do iv=1,idimv
-                            xgridu(iv)=xgrid(iv)
-                        enddo
-                    enddo
-                ! v component
-                    do irm=1,nrm
-                        est(1)=-1
-                        est(2)=-1
-                        est(3)=-1
-                        call findgribest(iug,xgrib,idimg,data,ora, &
-                        scad,level,varv,est,ier)
-                        if(ier == -1)then
-                            print*,'grib mancante - azzero ', &
-                            'tutto l''ensemble'
-                            do jrm=1,nrm
-                                do ist=1,nstaz
-                                    xstaz(ist,jrm)=rmdo
-                                    xstazv(ist,jrm)=rmdo
-                                enddo
-                            enddo
-                            goto 222
-                        elseif(ier /= 0)then
-                            goto 9200
-                        endif
-                        call getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
-                        ibm,ier)
-                        if(ibm /= 0 .OR. ier /= 0)goto 9400
-                        do iv=1,idimv
-                            xgridv(iv)=xgrid(iv)
-                        enddo
-                    enddo
-
-                ! Interpolation of predicted data on (lat,lon) station points
-                    if(ruota == .TRUE. )then
-                        call rot_grib_LAMBO(alorot,alarot, &
-                        tlm0d,tph0d)
-                    endif
-                    do irm=1,nrm
-                        do ist=1,nstaz
-                            if(abs(x(ist)-rmdo) > 0.1 .AND. &
-                            abs(y(ist)-rmdo) > 0.1)then
-                                call ngetpoint(x(ist),y(ist), &
-                                xgridu,xgridv, &
-                                lsm, &
-                                idimv,nx,ny,alon(1),alat(1), &
-                                dx,dy,igrid, &
-                                ija,tlm0d,tph0d,wind,imod,lsvar, &
-                                xintu,xintv,ier)
-                                if(ier == 2 .OR. ier == 4)then
-                ! cerco di interpolare su un punto che non e' nel dominio dei dati
-                                    xstaz(ist,irm)=rmdo
-                                    xstazv(ist,irm)=rmdo
-                                elseif(ier == 0)then
-                                    xstaz(ist,irm)=xintu
-                                    xstazv(ist,irm)=xintv
-                                else
-                                    goto 9600
-                                endif
-                            endif
-                        enddo
-                    enddo         !nrm
-
-                ! scrittura su database
-                    do irm=1,nrm
-                        if(nrm > 1)then
-                            write(cel,'(i3.3)')irm
-                            descr=descrfisso(1:nlenvera(descrfisso)) &
-                            //'el'//cel
-                        endif
-                        print*,'scrivo: descr ',descr
-                        do ist=1,nstaz
-                            if(abs(x(ist)-rmdo) > 0.1 .AND. &
-                            abs(y(ist)-rmdo) > 0.1 .AND. &
-                            xstaz(ist,irm) /= rmdo)then
-                                rlat=y(ist)
-                                rlon=x(ist)
-                                h=alt(ist)
-
-                            ! imposto tutta l'anagrafica
-
-                            ! prima faccio unset di ana_id senno' ricopre sempre!!!
-!!                                call idba_unset (handle,"ana_id")
-
-                                call idba_set (handle,"lat",rlat)
-                                call idba_set (handle,"lon",rlon)
-                                call idba_set (handle,"mobile",0)
-
-                                call idba_set (handle,"rep_memo",descr)
-
-                                call idba_set (handle,"leveltype", &
-                                level(1))
-                                call idba_set (handle,"l1",level(2))
-                                call idba_set (handle,"l2",level(3))
-
-                                dato=a+xstaz(ist,irm)*b
-                                call idba_set (handle,cvar,dato)
-                            ! Scrivo anche v
-                                dato=a+xstazv(ist,irm)*b
-                                call idba_set (handle,cvarv,dato)
-
-                                call idba_prendilo (handle)
-
-                            endif
-                        enddo      !nstaz
-
-                    enddo         !nrm
-
-                    222 continue      !grib non trovato
-
-                enddo            !nore
-            enddo               !nscad
-        enddo                  !ngio
-
-        close(3)               !date
-
-    else
-        print*,'errore, imet non consentito'
-        call exit(1)
-    endif                     !imet
-
+    IF(imet == 0 .OR. imet == 1)THEN         ! scalare
+      
+      wind=.FALSE.
+      
+      ! Read date
+      OPEN(3,file='date.nml',status='old',readonly)
+      DO igio=1,ngio
+        READ(3,nml=date,err=9004)
+        ora(1)=nora/100.
+        ora(2)=MOD(nora,100)
+        PRINT*,'data ',DATA,' ora ',ora
+        DO iscad=1,nscad
+          DO is=1,4
+            scad(is)=scadenze(is,iscad)
+          ENDDO
+          PRINT*,'scadenza ',scad
+          
+          iscaddb=MAX(scadenze(2,iscad),scadenze(3,iscad))
+          CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+           ora(1),ora(2),iminuti)
+          iminuti=iminuti+iscaddb*60
+          CALL JELADATA6(iday,imonth,iyear, &
+           ihour,imin,iminuti)
+          dataval(1)=iday
+          dataval(2)=imonth
+          dataval(3)=iyear
+          oraval(1)=ihour
+          oraval(2)=imin
+          
+          DO iore=1,nore
+            
+            IF(iore > 1)THEN
+              ! trovo data e ora dell'emissione per ore successive (analisi)
+              ora(1)=ore(iore)/100.
+              ora(2)=MOD(ore(iore),100)
+              CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+               ora(1),ora(2),iminuti)
+              iminuti=iminuti+iscaddb*60
+              CALL JELADATA6(iday,imonth,iyear, &
+               ihour,imin,iminuti)
+              dataval(1)=iday
+              dataval(2)=imonth
+              dataval(3)=iyear
+              oraval(1)=ihour
+              oraval(2)=imin
+            ENDIF
+            
+            PRINT*,'validita'' ',dataval,oraval,iscaddb
+            PRINT*,'emissione ',DATA,ora,iscaddb
+            
+            DO irm=1,nrm
+              est(1)=-1
+              est(2)=-1
+              est(3)=-1
+              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+               scad,level,var,est,ier)
+              IF(ier == -1)THEN
+                PRINT*,'grib mancante - azzero ', &
+                 'tutto l''ensemble'
+                xstaz=rmdo
+                GOTO 111
+              ELSEIF(ier /= 0)THEN
+                GOTO 9200
+              ENDIF
+              CALL getinfoest(-1,xgrib,idimg, &
+               DATA,ora,scad,level,var,est, &
+               alat(1),alat(2),alon(1),alon(2), &
+               ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
+              IF(ier /= 0)GOTO 9300
+              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+               ibm,ier)
+              IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
+              IF(lsvar == -1)THEN
+                lsvar=1
+                DO ivec=1,idimv
+                  IF(xgrid(ivec) == rmdo)THEN
+                    lsm(ivec)=0
+                  ELSE
+                    lsm(ivec)=1
+                  ENDIF
+                ENDDO
+              ELSEIF(lsvar == 0)THEN
+                DO ivec=1,idimv
+                  IF (xgrid(ivec) == rmdo .OR. lsm(ivec)==1)THEN
+                    lsm(ivec)=1
+                  ELSE
+                    lsm(ivec)=0
+                  ENDIF
+                ENDDO
+              ELSEIF(lsvar == 1)THEN
+                DO ivec=1,idimv
+                  IF (xgrid(ivec) == rmdo .OR. lsm(ivec)==0)THEN
+                    lsm(ivec)=0
+                  ELSE
+                    lsm(ivec)=1
+                  ENDIF
+                ENDDO
+              ENDIF
+              
+              ! Interpolation of predicted data on (lat,lon) station points
+              IF(ruota == .TRUE. )THEN
+                CALL rot_grib_LAMBO(alorot,alarot, &
+                 tlm0d,tph0d)
+              ENDIF
+              DO ist=1,nstaz
+                IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
+                 ABS(y(ist)-rmdo) > 0.1)THEN
+                  CALL ngetpoint(x(ist),y(ist), &
+                   xgrid,xgrid,lsm, &
+                   idimv,nx,ny,alon(1),alat(1),dx,dy, &
+                   igrid,ija,tlm0d,tph0d,wind,imod, &
+                   lsvar,xint,dummy,ier)
+                  IF(ier == 2 .OR. ier == 4)THEN
+                    ! cerca di interpolare su un punto che non e' nel dominio dei dati!
+                    xstaz(ist,irm)=rmdo
+                  ELSEIF(ier == 0)THEN
+                    IF (diffh) THEN
+                      ind=ij1
+                      hdiff=ABS(oro(ind)/9.81-alt(ist))
+                      IF (hdiff <= diffmax) THEN
+                        xstaz(ist,irm)=xint
+                      ELSE
+                        xstaz(ist,irm)=rmdo
+                      ENDIF
+                    ELSE
+                      xstaz(ist,irm)=xint
+                    ENDIF
+                  ELSE
+                    GOTO 9600
+                  ENDIF
+                ENDIF
+              ENDDO
+            ENDDO         !nrm
+            
+            ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
+            CALL converti_scadenze(4,scad,scaddb)
+            
+            CALL idba_set (handle,"p1",scaddb(2))
+            CALL idba_set (handle,"p2",scaddb(3))
+            CALL idba_set (handle,"pindicator",scaddb(4))
+            
+            CALL idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
+            
+            ! scrittura su database
+            DO irm=1,nrm
+              IF(nrm > 1)THEN
+                WRITE(cel,'(i3.3)')irm
+                descr=descrfisso(1:nlenvera(descrfisso)) &
+                 //'el'//cel
+              ENDIF
+              PRINT*,'scrivo: descr ',descr
+              
+              CALL idba_set (handle,"rep_memo",descr)
+              
+              DO ist=1,nstaz
+                IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
+                 ABS(y(ist)-rmdo) > 0.1 .AND. &
+                 xstaz(ist,irm) /= rmdo)THEN
+                  rlat=y(ist)
+                  rlon=x(ist)
+                  h=alt(ist)
+                  
+                  ! imposto tutta l'anagrafica
+                  
+                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
+                  !!                                call idba_unset (handle,"ana_id")
+                  
+                  CALL idba_set (handle,"lat",rlat)
+                  CALL idba_set (handle,"lon",rlon)
+                  CALL idba_set (handle,"mobile",0)
+                  
+                  CALL idba_set (handle,"leveltype", &
+                   level(1))
+                  CALL idba_set (handle,"l1",level(2))
+                  CALL idba_set (handle,"l2",level(3))
+                  
+                  IF(imet == 0)THEN ! scalare
+                    
+                    ! attenzione!!!!!! ho bisogno che il minimo sia 0????
+                    dato=a+xstaz(ist,irm)*b
+                    
+                  ELSEIF(imet == 1)THEN !scalare direzione
+                    
+                    IF(xstaz(ist,irm) <= 1. .AND. &
+                     xstaz(ist,irm) /= 0.)THEN
+                      dato=1.
+                    ELSE
+                      dato=a+xstaz(ist,irm)*b
+                    ENDIF
+                    
+                  ENDIF
+                  
+                  CALL idba_set (handle,cvar,dato)
+                  CALL idba_prendilo (handle)
+                  
+                ENDIF
+              ENDDO      !nstaz
+              
+            ENDDO         !nrm
+            
+111         CONTINUE      !grib non trovato
+            
+          ENDDO            !nore
+        ENDDO               !nscad
+      ENDDO                  !ngio
+      CLOSE(3)               !date
+      
+    ELSEIF(imet == 2)THEN     ! vettore
+      
+      wind=.TRUE.
+      
+      DO i=1,3
+        varv(i)=kvar(i,2)
+      ENDDO
+      CALL variabile(3,varv,cvarv,a,b,.TRUE.)
+      
+      OPEN(3,file='date.nml',status='old',readonly)
+      DO igio=1,ngio
+        READ(3,nml=date,err=9004)
+        ora(1)=nora/100.
+        ora(2)=MOD(nora,100)
+        PRINT*,'data ',DATA
+        DO iscad=1,nscad
+          DO is=1,4
+            scad(is)=scadenze(is,iscad)
+          ENDDO
+          PRINT*,'scadenza ',scad
+          
+          iscaddb=MAX(scadenze(2,iscad),scadenze(3,iscad))
+          CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+           ora(1),ora(2),iminuti)
+          iminuti=iminuti+iscaddb*60
+          CALL JELADATA6(iday,imonth,iyear, &
+           ihour,imin,iminuti)
+          dataval(1)=iday
+          dataval(2)=imonth
+          dataval(3)=iyear
+          oraval(1)=ihour
+          oraval(2)=imin
+          
+          DO iore=1,nore
+            
+            IF(iore > 1)THEN
+              ! trovo data e ora dell'emissione per ore successive (analisi)
+              ora(1)=ore(iore)/100.
+              ora(2)=MOD(ore(iore),100)
+              CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+               ora(1),ora(2),iminuti)
+              iminuti=iminuti+iscaddb*60
+              CALL JELADATA6(iday,imonth,iyear, &
+               ihour,imin,iminuti)
+              dataval(1)=iday
+              dataval(2)=imonth
+              dataval(3)=iyear
+              oraval(1)=ihour
+              oraval(2)=imin
+            ENDIF
+            
+            PRINT*,'validita'' ',dataval,oraval,iscaddb
+            PRINT*,'emissione ',DATA,ora,iscaddb
+            
+            ! u component
+            DO irm=1,nrm
+              est(1)=-1
+              est(2)=-1
+              est(3)=-1
+              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+               scad,level,var,est,ier)
+              IF(ier == -1)THEN
+                PRINT*,'grib mancante - azzero ', &
+                 'tutto l''ensemble'
+                xstaz=rmdo
+                xstazv=rmdo
+                GOTO 222
+              ELSEIF(ier /= 0)THEN
+                GOTO 9200
+              ENDIF
+              CALL getinfoest(-1,xgrib,idimg, &
+               DATA,ora,scad,level,var,est, &
+               alat(1),alat(2),alon(1),alon(2), &
+               ny,nx,dy,dx,idrt,alarot,alorot,rot, &
+               ija,ier)
+              IF(ier /= 0)GOTO 9300
+              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+               ibm,ier)
+              IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
+              IF(lsvar == -1)THEN
+                lsvar=1
+                DO ivec=1,idimv
+                  IF(xgrid(ivec) == rmdo)THEN
+                    lsm(ivec)=0
+                  ELSE
+                    lsm(ivec)=1
+                  ENDIF
+                ENDDO
+              ELSEIF(lsvar == 0)THEN
+                DO ivec=1,idimv
+                  IF (xgrid(ivec) == rmdo .OR. lsm(ivec)==1)THEN
+                    lsm(ivec)=1
+                  ELSE
+                    lsm(ivec)=0
+                  ENDIF
+                ENDDO
+              ELSEIF(lsvar == 1)THEN
+                DO ivec=1,idimv
+                  IF (xgrid(ivec) == rmdo .OR. lsm(ivec)==0)THEN
+                    lsm(ivec)=0
+                  ELSE
+                    lsm(ivec)=1
+                  ENDIF
+                ENDDO
+              ENDIF
+              DO iv=1,idimv
+                xgridu(iv)=xgrid(iv)
+              ENDDO
+            ENDDO
+            ! v component
+            DO irm=1,nrm
+              est(1)=-1
+              est(2)=-1
+              est(3)=-1
+              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+               scad,level,varv,est,ier)
+              IF(ier == -1)THEN
+                PRINT*,'grib mancante - azzero ', &
+                 'tutto l''ensemble'
+                DO jrm=1,nrm
+                  DO ist=1,nstaz
+                    xstaz(ist,jrm)=rmdo
+                    xstazv(ist,jrm)=rmdo
+                  ENDDO
+                ENDDO
+                GOTO 222
+              ELSEIF(ier /= 0)THEN
+                GOTO 9200
+              ENDIF
+              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+               ibm,ier)
+              IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
+              DO iv=1,idimv
+                xgridv(iv)=xgrid(iv)
+              ENDDO
+            ENDDO
+            
+            ! Interpolation of predicted data on (lat,lon) station points
+            IF(ruota == .TRUE. )THEN
+              CALL rot_grib_LAMBO(alorot,alarot, &
+               tlm0d,tph0d)
+            ENDIF
+            DO irm=1,nrm
+              DO ist=1,nstaz
+                IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
+                 ABS(y(ist)-rmdo) > 0.1)THEN
+                  CALL ngetpoint(x(ist),y(ist), &
+                   xgridu,xgridv, &
+                   lsm, &
+                   idimv,nx,ny,alon(1),alat(1), &
+                   dx,dy,igrid, &
+                   ija,tlm0d,tph0d,wind,imod,lsvar, &
+                   xintu,xintv,ier)
+                  IF(ier == 2 .OR. ier == 4)THEN
+                    ! cerco di interpolare su un punto che non e' nel dominio dei dati
+                    xstaz(ist,irm)=rmdo
+                    xstazv(ist,irm)=rmdo
+                  ELSEIF(ier == 0)THEN
+                    xstaz(ist,irm)=xintu
+                    xstazv(ist,irm)=xintv
+                  ELSE
+                    GOTO 9600
+                  ENDIF
+                ENDIF
+              ENDDO
+            ENDDO         !nrm
+            
+            ! scrittura su database
+            DO irm=1,nrm
+              IF(nrm > 1)THEN
+                WRITE(cel,'(i3.3)')irm
+                descr=descrfisso(1:nlenvera(descrfisso)) &
+                 //'el'//cel
+              ENDIF
+              PRINT*,'scrivo: descr ',descr
+              DO ist=1,nstaz
+                IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
+                 ABS(y(ist)-rmdo) > 0.1 .AND. &
+                 xstaz(ist,irm) /= rmdo)THEN
+                  rlat=y(ist)
+                  rlon=x(ist)
+                  h=alt(ist)
+                  
+                  ! imposto tutta l'anagrafica
+                  
+                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
+                  !!                                call idba_unset (handle,"ana_id")
+                  
+                  CALL idba_set (handle,"lat",rlat)
+                  CALL idba_set (handle,"lon",rlon)
+                  CALL idba_set (handle,"mobile",0)
+                  
+                  CALL idba_set (handle,"rep_memo",descr)
+                  
+                  CALL idba_set (handle,"leveltype", &
+                   level(1))
+                  CALL idba_set (handle,"l1",level(2))
+                  CALL idba_set (handle,"l2",level(3))
+                  
+                  dato=a+xstaz(ist,irm)*b
+                  CALL idba_set (handle,cvar,dato)
+                  ! Scrivo anche v
+                  dato=a+xstazv(ist,irm)*b
+                  CALL idba_set (handle,cvarv,dato)
+                  
+                  CALL idba_prendilo (handle)
+                  
+                ENDIF
+              ENDDO      !nstaz
+              
+            ENDDO         !nrm
+            
+222         CONTINUE      !grib non trovato
+            
+          ENDDO            !nore
+        ENDDO               !nscad
+      ENDDO                  !ngio
+      
+      CLOSE(3)               !date
+      
+    ELSE
+      PRINT*,'errore, imet non consentito'
+      CALL EXIT(1)
+    ENDIF                     !imet
+    
     call pbclose(iug,ier)
     if(ier < 0)goto9500
 

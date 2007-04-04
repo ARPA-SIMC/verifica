@@ -269,74 +269,95 @@
     write(*,*)'variabile ',var,' cvar ',cvar, &
     ' lsvar ',lsvar,' a ',a,' b ',b
 
-    if(imet == 0 .OR. imet == 1)then         ! scalare
+    IF(imet == 0 .OR. imet == 1)THEN         ! scalare
 
     ! Read date
-        open(3,file='date.nml',status='old',readonly)
-        do igio=1,ngio
-            read(3,nml=date,err=9004)
-            print*,'data ',data
-            WRITE(88,*)data
-            do iscad=1,nscad
-                do is=1,4
-                    scad(is)=scadenze(is,iscad)
-                enddo
-                print*,'scadenza ',scad
-                WRITE(88,*)scad
-            ! fisso la scadenza cui chiedere le osservazioni (data e ora di validita')
-            ! la scadenza puo' essere al secondo o al terzo posto, nell'altro
-            ! o c'e' 0 o c'e' l'estremo inferiore dell'intervallo di cumulazione
-                iscaddb=max(scadenze(2,iscad),scadenze(3,iscad))
-                call JELADATA5(data(1),data(2),data(3), &
-                ora(1),ora(2),iminuti)
-                iminuti=iminuti+iscaddb*60
-                call JELADATA6(iday,imonth,iyear, &
-                ihour,imin,iminuti)
-                dataval(1)=iday
-                dataval(2)=imonth
-                dataval(3)=iyear
-                oraval(1)=ihour
-                oraval(2)=imin
-                print*,'validita'' ',dataval,oraval,iscaddb
-                print*,'emissione ',data,ora,iscaddb
-
-                do irm=1,nrm
-                    est(1)=-1
-                    est(2)=-1
-                    est(3)=-1
-                    call findgribest(iug,xgrib,idimg,data,ora, &
-                    scad,level,var,est,ier)
-                    if(ier == -1)then
-                        print*,'grib mancante - azzero &
-                        tutto l''ensemble'
-                        goto 111
-                    elseif(ier /= 0)then
-                        goto 9200
-                    endif
-                    call getinfoest(-1,xgrib,idimg,data,ora,scad,level, &
-                    var,est,alat(1),alat(2),alon(1),alon(2), &
-                    ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
-                    if(ier /= 0)goto 9300
-                    call getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
-                    ibm,ier)
-                    if(ibm /= 0 .OR. ier /= 0)goto 9400
-                    do iv=1,idimv
-
-                    ! converto i previsti nell'unita' di misura prevista dalla Blocale
-                        rmgrid(iv,irm)=a+xgrid(iv)*b
-                    enddo
-                enddo            ! nrm
-
+      OPEN(3,file='date.nml',status='old',readonly)
+      DO igio=1,ngio
+        READ(3,nml=date,err=9004)
+        ora(1)=nora/100.
+        ora(2)=MOD(nora,100)
+        PRINT*,'data ',DATA,' ora ',ora
+        WRITE(88,*)DATA
+        DO iscad=1,nscad
+          DO is=1,4
+            scad(is)=scadenze(is,iscad)
+          ENDDO
+          PRINT*,'scadenza ',scad
+          WRITE(88,*)scad
+          ! fisso la scadenza cui chiedere le osservazioni (data e ora di validita')
+          ! la scadenza puo' essere al secondo o al terzo posto, nell'altro
+          ! o c'e' 0 o c'e' l'estremo inferiore dell'intervallo di cumulazione
+          iscaddb=MAX(scadenze(2,iscad),scadenze(3,iscad))
+          CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+           ora(1),ora(2),iminuti)
+          iminuti=iminuti+iscaddb*60
+          CALL JELADATA6(iday,imonth,iyear, &
+           ihour,imin,iminuti)
+          dataval(1)=iday
+          dataval(2)=imonth
+          dataval(3)=iyear
+          oraval(1)=ihour
+          oraval(2)=imin
+          
+          DO iore=1,nore
+            
+            IF(iore > 1)THEN
+              ! trovo data e ora dell'emissione per ore successive (analisi)
+              ora(1)=ore(iore)/100.
+              ora(2)=MOD(ore(iore),100)
+              CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
+               ora(1),ora(2),iminuti)
+              iminuti=iminuti+iscaddb*60
+              CALL JELADATA6(iday,imonth,iyear, &
+               ihour,imin,iminuti)
+              dataval(1)=iday
+              dataval(2)=imonth
+              dataval(3)=iyear
+              oraval(1)=ihour
+              oraval(2)=imin
+            ENDIF
+            
+            PRINT*,'validita'' ',dataval,oraval,iscaddb
+            PRINT*,'emissione ',DATA,ora,iscaddb
+            
+            DO irm=1,nrm
+              est(1)=-1
+              est(2)=-1
+              est(3)=-1
+              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+               scad,level,var,est,ier)
+              IF(ier == -1)THEN
+                PRINT*,'grib mancante - azzero &
+                 tutto l''ensemble'
+                GOTO 111
+              ELSEIF(ier /= 0)THEN
+                GOTO 9200
+              ENDIF
+              CALL getinfoest(-1,xgrib,idimg,DATA,ora,scad,level, &
+               var,est,alat(1),alat(2),alon(1),alon(2), &
+               ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
+              IF(ier /= 0)GOTO 9300
+              CALL getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
+               ibm,ier)
+              IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
+              DO iv=1,idimv
+                
+                ! converto i previsti nell'unita' di misura prevista dalla Blocale
+                rmgrid(iv,irm)=a+xgrid(iv)*b
+              ENDDO
+            ENDDO            ! nrm
+            
             ! leggo le osservazioni presenti in archivio per questa scadenza
-                do istaz=1,MNSTAZ
-                    obsst(istaz)=rmddb
-                enddo
-
+            DO istaz=1,MNSTAZ
+              obsst(istaz)=rmddb
+            ENDDO
+            
             ! le box sono gia' antiruotate e le stazioni le leggo dal db normali
-                CALL leggioss_db(handler,handleana,3,2, &
-                dataval,oraval,cvar,scad, &
-                rxeq,ryeq,.false.,rmddb, &
-                MNSTAZ,x,y,alt,nstdispo,obsst)
+            CALL leggioss_db(handler,handleana,3,2, &
+             dataval,oraval,cvar,scad, &
+             rxeq,ryeq,.FALSE.,rmddb, &
+             MNSTAZ,x,y,alt,nstdispo,obsst)
             ! esce il dato su punto eventualmente ruotato nell'unita' di misura
             ! in cui e' rappresentato nel database
 
@@ -345,191 +366,191 @@
             ! c nella tabella B!!!
 
             ! calcolo sulle box
-                call medbox(MIDIMV,MNRM,MNSTAZ,MNBOX, &
-                xb,yb,nbox,dxb,dyb,x,y,alt,obsst,rmgrid, &
-                npmod,xpmod,ypmod, &
-                nminobs,rmddb,rmd,rmdo,nrm,media,massimo,prob, &
-                distr,perc, &
-                lsm,lsvar,obm,thr,obs,pred,nb,xbox,ybox,altbox)
-
-                do ib=1,nb
-                    write(88,*)obs(ib),pred(ib,1),xbox(ib),ybox(ib), &
-                    altbox(ib)
-                enddo
-
+            CALL medbox(MIDIMV,MNRM,MNSTAZ,MNBOX, &
+             xb,yb,nbox,dxb,dyb,x,y,alt,obsst,rmgrid, &
+             npmod,xpmod,ypmod, &
+             nminobs,rmddb,rmd,rmdo,nrm,media,massimo,prob, &
+             distr,perc, &
+             lsm,lsvar,obm,thr,obs,pred,nb,xbox,ybox,altbox)
+            
+            DO ib=1,nb
+              WRITE(88,*)obs(ib),pred(ib,1),xbox(ib),ybox(ib), &
+               altbox(ib)
+            ENDDO
+            
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
-                call converti_scadenze(4,scad,scaddb)
-
-                call idba_set (handle,"p1",scaddb(2))
-                call idba_set (handle,"p2",scaddb(3))
-                call idba_set (handle,"pindicator",scaddb(4))
-
-                call idba_set (handle,"year",dataval(3))
-                call idba_set (handle,"month",dataval(2))
-                call idba_set (handle,"day",dataval(1))
-                call idba_set (handle,"hour",oraval(1))
-                call idba_set (handle,"min",oraval(2))
-                call idba_set (handle,"sec",0)
-
+            CALL converti_scadenze(4,scad,scaddb)
+            
+            CALL idba_set (handle,"p1",scaddb(2))
+            CALL idba_set (handle,"p2",scaddb(3))
+            CALL idba_set (handle,"pindicator",scaddb(4))
+            
+            CALL idba_set (handle,"year",dataval(3))
+            CALL idba_set (handle,"month",dataval(2))
+            CALL idba_set (handle,"day",dataval(1))
+            CALL idba_set (handle,"hour",oraval(1))
+            CALL idba_set (handle,"min",oraval(2))
+            CALL idba_set (handle,"sec",0)
+            
             ! scrittura su database
             ! scrivo i previsti
-                DO irm=1,nrm
-                  IF(nrm > 1)THEN
-                    WRITE(cel,'(i3.3)')irm
-                    descr=descrfisso(1:nlenvera(descrfisso)) &
-                     //'el'//cel
-                  ELSE
-                    descr=descrfisso
+            DO irm=1,nrm
+              IF(nrm > 1)THEN
+                WRITE(cel,'(i3.3)')irm
+                descr=descrfisso(1:nlenvera(descrfisso)) &
+                 //'el'//cel
+              ELSE
+                descr=descrfisso
+              ENDIF
+              PRINT*,'descr ',descr
+              DO ib=1,nb
+                IF(pred(ib,irm) /= rmddb .AND. &
+                 pred(ib,irm) /= rmdo)THEN
+                  rlat=ybox(ib)
+                  rlon=xbox(ib)
+                  h=altbox(ib)
+                  WRITE(cb,'(i5.5)')ib
+                  name='_box'//cb
+                  station=ib
+                  
+                  ! imposto tutta l'anagrafica
+                  
+                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
+                  !    call idba_unset (handle,"ana_id")
+                  ! prima faccio unset di ana_id senno' non riesce a fissare rep_memo!!!
+                  !    call idba_unset (handle,"rep_cod")
+                  
+                  CALL idba_setcontextana(handleanaw)
+                  !!                            call idba_seti (handleanaw,"!ana","scrivo anagrafica")
+                  CALL idba_set (handleanaw,"name",name)
+                  CALL idba_set (handleanaw,"block",BLOCK)
+                  CALL idba_set (handleanaw,"station",station)
+                  CALL idba_set (handleanaw,"height",h)
+                  CALL idba_set (handleanaw,"lat",rlat)
+                  CALL idba_set (handleanaw,"lon",rlon)
+                  CALL idba_set (handleanaw,"mobile",0)
+                  CALL idba_prendilo (handleanaw)
+                  CALL idba_enq (handleanaw, "ana_id", id_ana)
+                  
+                  CALL idba_set (handle, "ana_id", id_ana)
+                  CALL idba_set (handle,"leveltype", &
+                   level(1))
+                  CALL idba_set (handle,"l1",level(2))
+                  CALL idba_set (handle,"l2",level(3))
+                  CALL idba_set (handle,"rep_memo",descr)
+                  
+                  IF(imet == 0)THEN ! scalare
+                    
+                    ! attenzione!!!!!! ho bisogno che il minimo sia 0????
+                    ! niente conversione!!! Viene fatta in lettura!
+                    dato=pred(ib,irm)
+                    
+                  ELSEIF(imet == 1)THEN !scalare direzione
+                    
+                    IF(pred(ib,irm) <= 1. .AND. &
+                     pred(ib,irm) /= 0.)THEN
+                      dato=1
+                    ELSE
+                      dato=pred(ib,irm)
+                    ENDIF
+                    
                   ENDIF
-                    PRINT*,'descr ',descr
-                    do ib=1,nb
-                        if(pred(ib,irm) /= rmddb .AND. &
-                        pred(ib,irm) /= rmdo)then
-                            rlat=ybox(ib)
-                            rlon=xbox(ib)
-                            h=altbox(ib)
-                            write(cb,'(i5.5)')ib
-                            name='_box'//cb
-                            station=ib
-
-                        ! imposto tutta l'anagrafica
-
-                        ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                        !    call idba_unset (handle,"ana_id")
-                        ! prima faccio unset di ana_id senno' non riesce a fissare rep_memo!!!
-                        !    call idba_unset (handle,"rep_cod")
-
-                            call idba_setcontextana(handleanaw)
-!!                            call idba_seti (handleanaw,"!ana","scrivo anagrafica")
-                            call idba_set (handleanaw,"name",name)
-                            call idba_set (handleanaw,"block",block)
-                            call idba_set (handleanaw,"station",station)
-                            call idba_set (handleanaw,"height",h)
-                            call idba_set (handleanaw,"lat",rlat)
-                            call idba_set (handleanaw,"lon",rlon)
-                            call idba_set (handleanaw,"mobile",0)
-                            call idba_prendilo (handleanaw)
-                            call idba_enq (handleanaw, "ana_id", id_ana)
-
-                            call idba_set (handle, "ana_id", id_ana)
-                            call idba_set (handle,"leveltype", &
-                            level(1))
-                            call idba_set (handle,"l1",level(2))
-                            call idba_set (handle,"l2",level(3))
-                            call idba_set (handle,"rep_memo",descr)
-
-                            if(imet == 0)then ! scalare
-
-                            ! attenzione!!!!!! ho bisogno che il minimo sia 0????
-                            ! niente conversione!!! Viene fatta in lettura!
-                                dato=pred(ib,irm)
-
-                            elseif(imet == 1)then !scalare direzione
-
-                                if(pred(ib,irm) <= 1. .AND. &
-                                pred(ib,irm) /= 0.)then
-                                    dato=1
-                                else
-                                    dato=pred(ib,irm)
-                                endif
-
-                            endif
-
-                            call idba_set (handle,cvar,dato)
-                            call idba_prendilo (handle)
-
-                        endif      !previsti
-                    enddo         !nb
-                enddo            !nrm
-
+                  
+                  CALL idba_set (handle,cvar,dato)
+                  CALL idba_prendilo (handle)
+                  
+                ENDIF      !previsti
+              ENDDO         !nb
+            ENDDO            !nrm
+            
             ! scrivo gli osservati
-                nlm=nlenvera(model)
-                descr='oss'//descrfisso((nlm+1):(nlm+5))
-                iscaddb=0
-                print*,descr,dataval,oraval,iscaddb
-                do ib=1,nb
-                    if(obs(ib) /= rmddb .AND. &
-                    obs(ib) /= rmdo)then
-                        rlat=ybox(ib)
-                        rlon=xbox(ib)
-                        h=altbox(ib)
-                        write(cb,'(i5.5)')ib
-                        name='_box'//cb
-                        station=ib
-
-                    ! cambio scadenza!!!
-                        if(scaddb(4) > 0)then
-                            p1=0-(scaddb(3)-scaddb(2))
-                            p2=0
-                        else
-                            p1=0
-                            p2=0
-                        endif
-
-                    ! imposto tutta l'anagrafica
-
-                    ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                    !    call idba_unset (handle,"ana_id")
-                    ! prima faccio unset di rep_cod senno' non riesce a fissare rep_memo!!!
-                    !    call idba_unset (handle,"rep_cod")
-
-                        CALL idba_setcontextana (handleanaw)
-!!                        CALL idba_set (handleanaw,"!ana","scrivo anagrafica")
-                        call idba_set (handleanaw,"name",name)
-                        call idba_set (handleanaw,"block",block)
-                        call idba_set (handleanaw,"station",station)
-
-                        call idba_set (handleanaw,"height",h)
-                        call idba_set (handleanaw,"lat",rlat)
-                        call idba_set (handleanaw,"lon",rlon)
-                        call idba_set (handleanaw,"mobile",0)
-                        CALL idba_prendilo (handleanaw)
-                        CALL idba_enq (handleanaw, "ana_id", id_ana)
-
-                        CALL idba_set (handle, "ana_id", id_ana)
-                        call idba_set (handle,"pindicator",scaddb(4))
-                        call idba_set (handle,"p1",p1)
-                        call idba_set (handle,"p2",p2)
-
-                        call idba_set (handle,"leveltype", &
-                        level(1))
-                        call idba_set (handle,"l1",level(2))
-                        call idba_set (handle,"l2",level(3))
-
-
-                        call idba_set (handle,"rep_memo",descr)
-
-                        if(imet == 0)then ! scalare
-
-                        ! attenzione!!!!!! ho bisogno che il minimo sia 0????
-                        ! niente conversione!!! Viene fatta in lettura!
-                            dato=obs(ib)
-
-                        elseif(imet == 1)then !scalare direzione
-
-                            if(obs(ib) <= 1. .AND. &
-                            obs(ib) /= 0.)then
-                                dato=1
-                            else
-                                dato=obs(ib)
-                            endif
-
-                        endif
-
-                        call idba_set (handle,cvar,dato)
-                        call idba_prendilo (handle)
-
-                    endif         !osservati
-                enddo            !nb
-
-                111 continue
-
-            enddo               !nscad
-        enddo                  !ngio
-        close(3)               !date
-    endif                     !cvar
-
-    close(1)
+            nlm=nlenvera(model)
+            descr='oss'//descrfisso((nlm+1):(nlm+5))
+            PRINT*,descr,dataval,oraval
+            DO ib=1,nb
+              IF(obs(ib) /= rmddb .AND. &
+               obs(ib) /= rmdo)THEN
+                rlat=ybox(ib)
+                rlon=xbox(ib)
+                h=altbox(ib)
+                WRITE(cb,'(i5.5)')ib
+                name='_box'//cb
+                station=ib
+                
+                ! cambio scadenza!!!
+                IF(scaddb(4) > 0)THEN
+                  p1=0-(scaddb(3)-scaddb(2))
+                  p2=0
+                ELSE
+                  p1=0
+                  p2=0
+                ENDIF
+                
+                ! imposto tutta l'anagrafica
+                
+                ! prima faccio unset di ana_id senno' ricopre sempre!!!
+                !    call idba_unset (handle,"ana_id")
+                ! prima faccio unset di rep_cod senno' non riesce a fissare rep_memo!!!
+                !    call idba_unset (handle,"rep_cod")
+                
+                CALL idba_setcontextana (handleanaw)
+                !!                        CALL idba_set (handleanaw,"!ana","scrivo anagrafica")
+                CALL idba_set (handleanaw,"name",name)
+                CALL idba_set (handleanaw,"block",BLOCK)
+                CALL idba_set (handleanaw,"station",station)
+                
+                CALL idba_set (handleanaw,"height",h)
+                CALL idba_set (handleanaw,"lat",rlat)
+                CALL idba_set (handleanaw,"lon",rlon)
+                CALL idba_set (handleanaw,"mobile",0)
+                CALL idba_prendilo (handleanaw)
+                CALL idba_enq (handleanaw, "ana_id", id_ana)
+                
+                CALL idba_set (handle, "ana_id", id_ana)
+                CALL idba_set (handle,"pindicator",scaddb(4))
+                CALL idba_set (handle,"p1",p1)
+                CALL idba_set (handle,"p2",p2)
+                
+                CALL idba_set (handle,"leveltype", &
+                 level(1))
+                CALL idba_set (handle,"l1",level(2))
+                CALL idba_set (handle,"l2",level(3))
+                
+                
+                CALL idba_set (handle,"rep_memo",descr)
+                
+                IF(imet == 0)THEN ! scalare
+                  
+                  ! attenzione!!!!!! ho bisogno che il minimo sia 0????
+                  ! niente conversione!!! Viene fatta in lettura!
+                  dato=obs(ib)
+                  
+                ELSEIF(imet == 1)THEN !scalare direzione
+                  
+                  IF(obs(ib) <= 1. .AND. &
+                   obs(ib) /= 0.)THEN
+                    dato=1
+                  ELSE
+                    dato=obs(ib)
+                  ENDIF
+                  
+                ENDIF
+                
+                CALL idba_set (handle,cvar,dato)
+                CALL idba_prendilo (handle)
+                
+              ENDIF        !osservati
+            ENDDO          !nb
+            
+111         CONTINUE
+            
+          ENDDO            !nore
+        ENDDO              !nscad
+      ENDDO                !ngio
+      CLOSE(3)             !date
+    ENDIF                  !cvar
+    
+    CLOSE(1)
     call pbclose(iug,ier)
     if(ier < 0)goto9500
 
