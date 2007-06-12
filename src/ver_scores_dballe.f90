@@ -97,7 +97,7 @@
 
     INCLUDE "dballe/dballef.h"
 
-    PARAMETER (MNSTAZ=5000,MNSCAD=30,MNGIO=366,MNORE=1)
+    PARAMETER (MNSTAZ=5000,MNSCAD=72,MNGIO=366,MNORE=1)
     PARAMETER (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
@@ -107,7 +107,7 @@
     INTEGER ::   itipo,iana,imod,ls,iquota,lthr
     LOGICAL ::   ruota,media,massimo,prob,distr,diffh
     REAL ::      dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
-    LOGICAL ::   daily,ldir
+    LOGICAL ::   daily,ldir,lselect
     INTEGER ::   nore,ore(24)
     INTEGER ::   DATA(3),ora(2),var(3),scad(4),level(3)
     INTEGER ::   dataval(3),oraval(2),scaddb(4),p1,p2
@@ -130,7 +130,7 @@
     NAMELIST  /stat/model,itipo,iana,imet,imod,ls,ruota, &
      nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
      thr,perc
-    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir
+    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect
     NAMELIST  /date/DATA
     NAMELIST  /scadenza/scadenze
     NAMELIST  /odbc/database,user,password
@@ -185,10 +185,30 @@
 ! allocazione matrici
     ALLOCATE(anaid(1:nstaz))
 
+! provvisorio!
+! lettura punti (staz o pseudostaz) su cui fare la verifica da db
 !------------------------------------------- 
-    call leggiana_db_scores(iana,anaid, &
-    itipost,rmdo,nstaz,handle)
-    print*,'numero massimo stazioni ',nstaz
+! leggo tutte le stazioni presenti in db
+    read(2,nml=lista,err=9003)
+    PRINT*,'lselect= ',lselect
+    CALL leggiana_db_scores(iana,anaid, &
+     itipost,rmdo,nstaz,handle,lselect)
+    PRINT*,'numero massimo stazioni ',nstaz
+!----------------------------------------
+
+! cosi' diventera' una volta risolto il problema nella nuova subroutine
+! lettura punti (staz o pseudostaz) su cui fare la verifica da db
+!------------------------------------------- 
+!    IF(lselect)THEN
+! leggo solo le stazione selezionate dall'utente
+!      CALL leggi_selstaz(anaid,nstaz,handle)
+!      PRINT*,'numero massimo stazioni ',nstaz
+!    ELSE
+! leggo tutte le stazioni presenti in db
+!      CALL leggiana_db_scores(iana,anaid, &
+!       itipost,rmdo,nstaz,handle)
+!      PRINT*,'numero massimo stazioni ',nstaz
+!    ENDIF
 !----------------------------------------
 
     nv=nstaz*ngio*nore
@@ -230,7 +250,6 @@
     open(13,file='andam.dat',status='unknown')
 
     open(1,file='scadenze.nml',status='old',readonly)
-    read(2,nml=lista,err=9003)
     read(1,nml=scadenza,err=9003)
     write(11,*)' descrittore= ',descrfisso
     write(66,*)' descrittore= ',descrfisso

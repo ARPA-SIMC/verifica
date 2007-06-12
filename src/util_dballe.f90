@@ -94,7 +94,7 @@
 !*****************************************************************************
 
     subroutine leggiana_db_scores(iana,anaid, &
-    itipost,rmdo,nstaz,handle)
+    itipost,rmdo,nstaz,handle,lselect)
 
 ! c VERIFICA - util.f
 ! c legge l'anagrafica stazioni dal database
@@ -107,31 +107,61 @@
 
     integer :: handle,iana,nstaz
 
-    real :: x(nstaz),y(nstaz),alt(nstaz)
+    REAL :: x(nstaz),y(nstaz),alt(nstaz),toll
     integer :: anaid(nstaz)
-    logical :: c_e_i
+    LOGICAL :: c_e_i,lselect
+
+    DATA toll/0.0001/
 
 ! inizializzazione matrici
     x = rmdo
     y = rmdo
     alt = rmdo
 
+    IF(lselect)THEN
+      nread=0
+      OPEN(1,file='selstaz.dat',status='old')
+      DO ist=1,nstaz
+        READ(1,*,END=200)rlon,rlat
+        nread=nread+1
+        x(nread)=rlon
+        y(nread)=rlat
+      ENDDO
+200   CONTINUE
+      CLOSE(1)
+      PRINT*,'lette ',nread,' stazioni'
+    ENDIF
+
     i=0
-    do ist=1,nstaz
+    DO ist=1,nstaz
+      
+      CALL idba_elencamele(handle)
+      
+      CALL idba_enqi (handle,"ana_id",icodice)
+      CALL idba_enqi (handle,"block",itipostaz)
+      CALL idba_enqr (handle,"lat",rlat)
+      CALL idba_enqr (handle,"lon",rlon)
+      
+      IF(.NOT. c_e_i(itipostaz))itipostaz=0
+      
+      IF(lselect)THEN
 
-        call idba_elencamele(handle)
+        DO jst=1,nread
+          IF(ABS(rlon-x(jst))<toll .AND. ABS(rlat-y(jst))<toll)THEN
+            i=i+1
+            PRINT*,ist,icodice,rlon,rlat
+            anaid(i)=icodice
+          ENDIF
+        ENDDO
 
-        call idba_enqi (handle,"ana_id",icodice)
-        call idba_enqi (handle,"block",itipostaz)
-
-        if(.not. c_e_i(itipostaz))itipostaz=0
+      ELSE
 
         IF(iana == 0)THEN
           IF(itipost == 0)THEN
             ! voglio solo le stazioni vere (itipostaz<70)
             IF(itipostaz < 70)THEN
               i=i+1
-!              PRINT*,ist,icodice,itipostaz
+              !              PRINT*,ist,icodice,itipostaz
               anaid(i)=icodice
             ENDIF
           ELSEIF(itipost == 80)THEN
@@ -142,24 +172,67 @@
               anaid(i)=icodice
             ENDIF
           ENDIF
-          ELSEIF(iana == 1)THEN
-            ! voglio solo le analisi (itipostaz=200)
-            IF(itipostaz == 90)THEN
-              i=i+1
-              WRITE(33,*)ist,icodice,itipostaz
-              anaid(i)=icodice
-            ENDIF
-          ELSE
-            PRINT*,"ERRORE"
-            PRINT*,"iana, opzione non gestita"
-
+        ELSEIF(iana == 1)THEN
+          ! voglio solo le analisi (itipostaz=200)
+          IF(itipostaz == 90)THEN
+            i=i+1
+            WRITE(33,*)ist,icodice,itipostaz
+            anaid(i)=icodice
           ENDIF
-    enddo
+        ELSE
+          PRINT*,"ERRORE"
+          PRINT*,"iana, opzione non gestita"
+          
+        ENDIF
+
+      ENDIF
+      
+    ENDDO
     
     nstaz=i
 
     return
     end subroutine leggiana_db_scores
+
+!*****************************************************************************
+
+    subroutine leggi_selstaz(anaid,nstaz,handle)
+
+! VERIFICA - util.f
+! legge l'anagrafica stazioni dal database
+! solo le stazioni scelte dall'utente e specificate nel file di appoggio 
+! autore: Chiara Marsigli
+
+    integer :: handle,nstaz
+
+    integer :: anaid(nstaz)
+
+    OPEN(1,file='selstaz.dat',status='old')
+
+    i=0
+    do ist=1,nstaz
+
+      READ(1,*,end=100)rlon,rlat
+      
+      CALL idba_setr (handle,"lat",rlat)
+      CALL idba_setr (handle,"lon",rlon)
+
+! esiste una API che permette di ottenere ana_id da lon e lat??????
+
+      CALL idba_enqi (handle,"ana_id",icodice)
+
+      i=i+1
+      anaid(i)=icodice
+
+    enddo
+    
+100 continue
+    nstaz=i
+
+    close(1)
+
+    return
+    end subroutine leggi_selstaz
 
 
 !*****************************************************************************

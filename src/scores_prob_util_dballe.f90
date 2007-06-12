@@ -26,19 +26,27 @@
 !****************************************************************************
 
     subroutine brier(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    rmddb,rmdo,thr,wght,ntot,nocc,bs,rel,res,bss)
+    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,bs,rel,res,bss)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo di Brier Score, Brier Skill Score,
 ! c BS decomposition e Reliability Diagram
 
-    parameter (N=102,NK=10)
-    real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    real ::    obar(0:N),ybar(0:N),ofreq(0:NK)
-    integer :: nbar(0:N),npu(0:NK)
+    parameter (NK=10)
+    real :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    REAL :: ofreq(0:NK),thr
+    integer :: npu(0:NK)
+    real, ALLOCATABLE :: obar(:),ybar(:)
+    integer, ALLOCATABLE :: nbar(:)
     integer :: wght(MNGIO,MNRM)
 
     print*,'subroutine brier',nfc
+
+    N=nelsupens
+! allocazione matrici dati
+    ALLOCATE(obar(0:N))
+    ALLOCATE(ybar(0:N))
+    ALLOCATE(nbar(0:N))
 
     oavg=0.
     ntot=0
@@ -49,13 +57,8 @@
         npu(ik)=0
     enddo
 
-! mi riconduco comunque ad un super-ensemble completo (102 elementi)
-! tranne quando uso un EPS
-    if(nfc == 51)then
-        nel=nfc
-    else
-        nel=N
-    endif
+! mi riconduco ad un super-ensemble completo
+    nel=N
 
     do k=0,nel
         obar(k)=0.
@@ -160,28 +163,24 @@
 
 !**************************************************************************************
     subroutine brier_prob(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    rmddb,rmdo,thr,wght,ntot,nocc,bs,bss)
+    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,bs,bss)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo di Brier Score, Brier Skill Score e BS decomposition
 
-    parameter (N=102)
     real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
     integer :: wght(MNGIO,MNRM)
-    real ::    o,p,nocc
+    REAL ::    o,p,nocc,thr
 
     print*,'subroutine brier_prob',nfc
+
+    N=nelsupens
 
     ntot=0
     nocc=0.
 
-! mi riconduco comunque ad un super-ensemble completo (102 elementi)
-! tranne quando uso un EPS
-    if(nfc == 51)then
-        nel=nfc
-    else
-        nel=N
-    endif
+! mi riconduco ad un super-ensemble completo
+    nel=N
 
     bs=0.
     bscli=0.
@@ -237,26 +236,29 @@
 !**************************************************************************************
 
     subroutine roc(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    rmddb,rmdo,thr,wght,ntot,nocc,roca)
+    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,roca)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo della ROC area e delle ROC curves
 
-    parameter (N=102)
-    integer :: kobs(0:N,2),nobs(2),nprev(0:N)
-    real ::    hit(0:N),far(0:N),fareck(0:N)
-    real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    integer :: nobs(2)
+    REAL :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM),thr
     integer :: wght(MNGIO,MNRM)
+    integer, ALLOCATABLE :: kobs(:,:),nprev(:)
+    real, ALLOCATABLE :: hit(:),far(:),fareck(:)
 
     print*,'subroutine roc',nfc
 
-! mi riconduco comunque ad un super-ensemble completo (102 elementi)
-! tranne quando uso un EPS
-    if(nfc == 51)then
-        nel=nfc
-    else
-        nel=N
-    endif
+    N=nelsupens
+! allocazione matrici dati
+    ALLOCATE(kobs(0:N,2))
+    ALLOCATE(nprev(0:N))
+    ALLOCATE(hit(0:N))
+    ALLOCATE(far(0:N))
+    ALLOCATE(fareck(0:N))
+
+! mi riconduco ad un super-ensemble completo
+    nel=N
 
 ! initialisation
     do kclass=1,2
@@ -381,14 +383,17 @@
 !***********************************************************************************
 
     subroutine terr(MNSTAZ,MNRM,obs,pred,nstaz,nrm, &
-    rmddb,rmdo,wght,ipos)
+    nelsupens,rmddb,rmdo,wght,ipos)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo del total error di ogni membro
 
-    parameter (N=102)
     real :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
-    integer :: wght(MNRM),num(N)
+    integer :: wght(MNRM)
+    INTEGER, ALLOCATABLE :: num(:)
+
+    N=nelsupens
+    ALLOCATE(num(N))
 
     npu=0
     err=0.
@@ -417,7 +422,7 @@
         ' terr= ',err
     enddo
 
-    write(22,'(a,f8.3,a,i1,a,i1)') &
+    write(22,'(a,f8.3,a,i1,a,i2)') &
     'errmin= ',errmin,' irmmin= ',irmmin,' num ',num(irmmin)
 
     do irm=1,nrm
@@ -437,7 +442,7 @@
         if(irmmin == num(irm))ipos=irm
     enddo
 
-    write(22,'(a,f8.3,a,i1,a,i1)') &
+    write(22,'(a,f8.3,a,i1,a,i2)') &
     'errmin= ',errmin,' irmmin= ',irmmin,' num ',ipos
 
     return
@@ -446,31 +451,36 @@
 !***********************************************************************************
 
     subroutine costloss(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    rmddb,rmdo,thr,wght,ntot,nocc,area)
+    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,area)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo delle Cost-loss curves e della Cost-loss area
 
-    parameter (NCL=1000,N=102)
+    parameter (NCL=1000)
 
-    integer :: kobs(0:N,2),nobs(2),npre(0:N)
-    real ::    hit(0:N),far(0:N)
+    integer :: nobs(2)
     real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
     integer :: wght(MNGIO,MNRM)
-    real ::    ks(0:N)
-    real ::    omed
+    REAL ::    omed,thr
     real ::    me,mecli,mep
-    real ::    val(0:N,0:NCL),enve(0:NCL)
+    real ::    enve(0:NCL)
 
-!    print*,'subroutine cost-loss ',nfc
+    integer, ALLOCATABLE :: kobs(:,:),npre(:)
+    real, ALLOCATABLE :: hit(:),far(:)
+    real, ALLOCATABLE :: ks(:)
+    real, ALLOCATABLE :: val(:,:)
 
-! mi riconduco comunque ad un super-ensemble completo (102 elementi)
-! tranne quando uso un EPS
-    if(nfc == 51)then
-        nel=nfc
-    else
-        nel=N
-    endif
+    print*,'subroutine cost-loss ',nfc
+
+    N=nelsupens
+    ALLOCATE(kobs(0:N,2),npre(0:N))
+    ALLOCATE(hit(0:N))
+    ALLOCATE(far(0:N))
+    ALLOCATE(ks(0:N))
+    ALLOCATE(val(0:N,0:NCL))
+
+! mi riconduco ad un super-ensemble completo
+    nel=N
 
 ! initialisation
     do kclass=1,2
@@ -619,18 +629,22 @@
 !***********************************************************************************
 
     subroutine outrange(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    rmddb,rmdo,wght,outr)
+    nelsupens,rmddb,rmdo,wght,outr)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo della Percentage of Outliers e dell'errore associato
 
-    parameter (N=102)
-    real ::      predor(N)
-    integer ::   inter(0:N)
     real ::      obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
     integer ::   wght(MNGIO,MNRM)
 
+    REAL, ALLOCATABLE :: predor(:)
+    INTEGER, ALLOCATABLE :: inter(:)
+
     print*,'subroutine outrange',nfc
+
+    N=nelsupens
+    ALLOCATE(predor(N))
+    ALLOCATE(inter(0:N))
 
 ! initialisation
     outr=0.
@@ -761,6 +775,117 @@
 
     return
     end subroutine outrange
+
+!***********************************************************************************
+
+    SUBROUTINE ranked(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc,nsoglie, &
+     nelsupens,rmddb,rmdo,soglie,wght,rps,rpss)
+
+! c VERIFICA - scores_prob_util.f
+! c subroutine per il calcolo di Ranked Probability Score e 
+! c Ranked Probability Skill Score
+
+    REAL :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    REAL :: soglie(nsoglie)
+    INTEGER :: wght(MNGIO,MNRM)
+    INTEGER :: ntot
+    REAL, ALLOCATABLE :: pobs(:),ppred(:),nocc(:)
+    REAL :: rps,rpss,rpscli
+
+    print*,'subroutine ranked ',nfc
+
+    N=nelsupens
+! allocazione matrici dati
+    ALLOCATE(pobs(nsoglie))
+    ALLOCATE(ppred(nsoglie))
+    ALLOCATE(nocc(nsoglie))
+
+! compute the sample climatology for every threshold
+    ntot=0
+    DO iso=1,nsoglie
+      nocc(iso)=0
+    ENDDO
+    DO ig=1,ngio
+      DO is=1,nstaz
+        nmd=0
+        ifc=1
+        IF(ABS(obs(is,ig)-rmddb).LT.1.0E-6)nmd=1
+        DO WHILE(nmd.EQ.0.AND.ifc.LE.nfc)
+          IF(ABS(pred(is,ig,ifc)-rmddb).LT.1.0E-6)nmd=1 
+          ifc=ifc+1
+        ENDDO
+        ! IF missing DATA (nmd=1) no action is taken 
+        IF(nmd == 0)THEN
+          ntot=ntot+1
+          DO iso=1,nsoglie
+            IF(obs(is,ig).LE.soglie(iso))THEN
+              nocc(iso)=nocc(iso)+1
+            ENDIF
+          ENDDO
+        ENDIF
+      ENDDO
+    ENDDO
+    DO iso=1,nsoglie
+      IF(ntot /= 0)nocc(iso)=nocc(iso)/REAL(ntot)
+    ENDDO
+
+    rps=0.
+    DO ig=1,ngio
+      DO is=1,nstaz
+        ! check on missing DATA
+        nmd=0
+        ifc=1
+        IF(ABS(obs(is,ig)-rmddb).LT.1.0E-6)nmd=1
+        DO WHILE(nmd.EQ.0.AND.ifc.LE.nfc)
+          IF(ABS(pred(is,ig,ifc)-rmddb).LT.1.0E-6)nmd=1 
+          ifc=ifc+1
+        ENDDO
+        ! IF missing DATA (nmd=1) no action is taken 
+        IF(nmd == 0)THEN
+          ntot=ntot+1
+          DO iso=1,nsoglie
+            pobs(iso)=0.
+            ppred(iso)=0.
+          ENDDO
+          ! computation of cumulated Pm and Om
+          DO iso=1,nsoglie
+            IF(obs(is,ig).LE.soglie(iso))THEN
+              pobs(iso)=1.
+            ENDIF
+            DO ifc=1,nfc
+              IF(pred(is,ig,ifc).LE.soglie(iso))THEN
+                ppred(iso)=ppred(iso)+1./REAL(nfc)
+              ENDIF
+            ENDDO
+          ENDDO
+          ! computation of Ranked Probability Score
+          rankp=0.
+          rankpcli=0.
+          DO iso=1,nsoglie
+            rankp=rankp+(ppred(iso)-pobs(iso))**2
+            rankpcli=rankpcli+(nocc(iso)-pobs(iso))**2
+          ENDDO
+          WRITE(19,*)'igio ',ig,'istaz ',is,'rankp ',rankp/REAL(nsoglie),'rankpcli ',rankpcli/REAL(nsoglie)
+          rps=rps+rankp/real(nsoglie)
+          rpscli=rpscli+rankpcli/real(nsoglie)
+        ENDIF
+      ENDDO
+    ENDDO
+
+    rps=rps/REAL(nstaz*ngio)
+    rpscli=rpscli/REAL(nstaz*ngio)
+    
+! compute reference RPS (RPScli) and the Skill Score (RPSS)
+    IF(rpscli /= 0.)THEN
+      rpss=(rpscli-rps)/rpscli
+    ELSE
+      rpss=rmdo
+    ENDIF
+
+    WRITE(19,*)'rps ',rps,'rpscli ',rpscli,'rpss ',rpss
+
+    RETURN
+    END SUBROUTINE ranked
 
 !***********************************************************************************
 

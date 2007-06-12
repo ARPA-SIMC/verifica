@@ -28,11 +28,11 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter (MNSTAZ=5000,MNSCAD=24,MNGIO=190,MNORE=1)
+    parameter (MNSTAZ=5000,MNSCAD=72,MNGIO=190,MNORE=1)
     parameter (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE,MNRM=102)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    integer ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs
+    INTEGER ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs,nelsupens
     integer ::   scad1,scad2,inc
     integer ::   scadenze(4,MNSCAD)
     integer ::   itipo,iana,imod,ls,iquota
@@ -45,7 +45,7 @@
     real ::      dato
     character descr*20,descrfisso*20,model*10
     character cvar*6,cel*3
-    real ::      bs,bss,roca,clarea,outr
+    REAL ::      bs,bss,roca,clarea,outr,rps,rpss
     logical ::   lwght
     integer ::   nowght(MNRM),pesi(MNRM)
     integer ::   temp_wght(MNRM),distrib(MNRM)
@@ -66,7 +66,7 @@
     namelist  /stat/model,itipo,iana,imet,imod,ls,ruota, &
     nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
     thr,perc
-    namelist  /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght
+    NAMELIST  /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght,nelsupens
     namelist  /date/data
     namelist  /scadenza/scadenze
     namelist  /pesirm/pesi
@@ -215,7 +215,7 @@
 
                 call idba_set (handle,"rep_memo",descr)
 
-            ! print*,'prev ',descr,dataval,oraval,iscaddb
+            ! PRINT*,'prev ',descr,dataval,oraval,iscaddb
 
                 call idba_voglioquesto (handle,N)
             ! print*,'numero dati trovati= ',N
@@ -388,7 +388,7 @@
             write(22,'(a,f8.3)')' ossmed= ',ossmed
             if(ossmed > 0.2)then
                 call terr(nstaz,nrm,osse,previ,nstaz,nrm, &
-                rmddb,rmdo,temp_wght,ipos)
+                nelsupens,rmddb,rmdo,temp_wght,ipos)
                 distrib(ipos)=distrib(ipos)+1
                 ng=ng+1
             endif
@@ -410,37 +410,40 @@
 
         write(11,'(3x,a,4x,a,4x,a, &
         5x,a,5x,a,5x,a,5x,a, &
-        5x,a,4x,a,5x,a)') &
+        5x,a,4x,a,5x,a,4x,a,4x,a)') &
         'thr','ntot','nocc', &
         'bs','rel','res','bss', &
-        'roca','cla','outr'
+        'roca','cla','outr','rps','rpss'
 
     ! output degli scores
 
         if(prob)then
             call brier_prob(nstaz,ngio,nrm,oss,prev, &
             ngio,nstaz,nrm, &
-            rmddb,rmds,soglie(1),wght, &
+            nelsupens,rmddb,rmds,soglie(1),wght, &
             ntot,rnocc,bs,bss)
         else
-            call outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz, &
-            nrm,rmddb,rmds,wght,outr)
+            CALL outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+            nelsupens,rmddb,rmds,wght,outr)
+            CALL ranked(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm,nsoglie, &
+            nelsupens,rmddb,rmds,soglie,wght,rps,rpss)
+
             do iso=1,nsoglie
 
                 CALL brier(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                rmddb,rmds,soglie(iso),wght, &
+                nelsupens,rmddb,rmds,soglie(iso),wght, &
                 ntot,nocc,bs,rel,res,bss)
                 call roc(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                rmddb,rmds,soglie(iso),wght,ntot,nocc,roca)
-                call costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz, &
-                nrm,rmddb,rmds,soglie(iso),wght,ntot,nocc,clarea)
+                nelsupens,rmddb,rmds,soglie(iso),wght,ntot,nocc,roca)
+                call costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                nelsupens,rmddb,rmds,soglie(iso),wght,ntot,nocc,clarea)
                 print*,soglie(iso),ntot,nocc, &
                 bs,rel,res,bss, &
                 roca,clarea,outr
-                write(11,'(1x,f5.1,2(2x,i6),7(2x,f6.3))') &
+                write(11,'(1x,f5.1,2(2x,i6),9(2x,f6.3))') &
                 soglie(iso),ntot,nocc, &
                 bs,rel,res,bss, &
-                roca,clarea,outr
+                roca,clarea,outr,rps,rpss
 
             enddo               !nsoglie
         endif

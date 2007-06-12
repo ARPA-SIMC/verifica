@@ -38,7 +38,8 @@
     INCLUDE "dballe/dballef.h"
 
     parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
-    parameter (MNSCAD=30,MNGIO=150,MNRM=102)
+    parameter (MNSCAD=72,MNGIO=150,MNRM=102)
+    parameter (MNBOX=150000)
     integer ::   xgrib(MIDIMG)
     real ::      xgrid(MIDIMV),lsm(MIDIMV),oro(MIDIMV)
     real ::      xgridu(MIDIMV),xgridv(MIDIMV)
@@ -50,6 +51,7 @@
     real ::      alat(4),alon(4)
     character vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
     character descr*20
+    real ::      xpmod(MNBOX),ypmod(MNBOX)
 ! namelists
     INTEGER ::   kvar(3,2),lsvar,nore
     integer ::   scadenze(4,MNSCAD),dum(2)
@@ -135,6 +137,11 @@
     vfile='estratti.grib'
     call pbopen(iug,vfile,'r',ier)
     if(ier /= 0)goto9100
+
+! leggo le coordinate del modello
+    CALL leggibox(vfile,MNBOX,xpmod,ypmod,npmod,alorot,alarot, &
+     ruota,.FALSE.,dum,dum,dum,dum)
+    print*,'numero totale punti modello ',npmod
 
 ! leggo la land-sea mask
     if (ls >= 0) then
@@ -305,15 +312,23 @@
               DO ist=1,nstaz
                 IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
                  ABS(y(ist)-rmdo) > 0.1)THEN
+
                   CALL ngetpoint(x(ist),y(ist), &
                    xgrid,xgrid,lsm, &
                    idimv,nx,ny,alon(1),alat(1),dx,dy, &
                    igrid,ija,tlm0d,tph0d,wind,imod, &
                    lsvar,xint,dummy,ier)
+                  
                   IF(ier == 2 .OR. ier == 4)THEN
                     ! cerca di interpolare su un punto che non e' nel dominio dei dati!
                     xstaz(ist,irm)=rmdo
                   ELSEIF(ier == 0)THEN
+                    xx=x(ist)-xpmod(ij1)
+                    yy=y(ist)-ypmod(ij1)
+                    WRITE(34,*)x(ist),y(ist),xint,ij1,xpmod(ij1),ypmod(ij1),xgrid(ij1)
+                    IF(xx.GE.0.001 .OR. yy.GE.0.001)WRITE(35,*)xx,yy,ij1
+                    IF((xint-xgrid(ij1)).GE.0.001)PRINT*,"!!!! ",xint,xgrid(ij1)
+                  
                     IF (diffh) THEN
                       ind=ij1
                       hdiff=ABS(oro(ind)/9.81-alt(ist))

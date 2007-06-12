@@ -6,7 +6,8 @@
    nsoglie=2,
    soglie=285.,290.,
    daily=.F.,
-   ldir=.F.
+   ldir=.F.,
+   lselect=.F.
  $end
 
 ### ATTENZIONE!!!
@@ -31,4 +32,7 @@
 ###          deve essere quella della variabile nella Btable
 ### daily = .T. per avere anche gli score giorno per giorno
 ### ldir = .T. solo per variabili tipo direzione vento o onda (tra 0 e 360)
+### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
+###               delle stazioni presenti in db, le cui coordinate devono
+###               essere specificate nel file selstaz.dat (lon lat)
 ### param=t 

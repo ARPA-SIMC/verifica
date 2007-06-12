@@ -86,6 +86,7 @@ mv fort.14 brier.dat
 mv fort.12 roc.dat
 mv fort.23 costloss.dat
 mv fort.15 outliers.dat
-mv fort.16 outliers_isto.dat
+mv fort.16 taldiag.dat
 mv fort.22 detscores.dat
 mv fort.24 reldiag.dat
+mv fort.19 ranked.dat
