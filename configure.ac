@@ -19,6 +19,7 @@ AC_CHECK_LIB([m], [sin], , AC_MSG_ERROR([m library not found]), )
 AC_LANG_PUSH(Fortran)
 
 LIBDBALLEF_DEFS
+
 AC_CHECK_LIB([mega], [jeladata5], , AC_MSG_ERROR([mega library not found]), )
 AC_CHECK_LIB([hibu], [ngetpoint], , AC_MSG_ERROR([hibu library not found]), )
 AC_CHECK_LIB([emos], [gribex], , AC_MSG_ERROR([emos library not found]), )
@@ -26,10 +27,7 @@ AC_CHECK_LIB([grib_util], [findgrib], , AC_MSG_ERROR([gributil library not found
 
 AC_LANG_POP
 
-LIBS="$LIBDBALLEF_LIBS -lcnf $LIBS"
-# a regime sara': LIBS="$LIBDBALLEF_LIBS $LIBS"
- 
-
+LIBS="${LIBDBALLEF_LIBS} $LIBS"
 
 AC_CONFIG_FILES([
 Makefile
