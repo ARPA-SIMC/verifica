@@ -29,20 +29,20 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter    (MNBOX=150000)
-    parameter    (MIDIMG=100000,MIDIMV=MIDIMG*4)
-    real ::         xgrid(MIDIMV)
-    integer ::      kgrib(MIDIMG)
+    parameter (MNBOX=150000)
+    parameter (MIDIMG=1200000)
+    integer :: kgrib(MIDIMG)
+    REAL, ALLOCATABLE :: xgrid(:)
     character(80) :: rfile,ofile
     character(19) :: database,user,password
-    REAL ::         obm,rmdo,dist,alorot,alarot,slon1,slon2,slat1,slat2
-    integer ::      iana,nstaz,nbox
-    logical ::      ruota,area
+    REAL :: obm,rmdo,dist,alorot,alarot,slon1,slon2,slat1,slat2
+    integer :: iana,nstaz,nbox
+    logical :: ruota,area
     real, ALLOCATABLE :: x(:),y(:),alt(:)
-    real ::         xb(MNBOX),yb(MNBOX)
+    real :: xb(MNBOX),yb(MNBOX)
 ! grib fields
-    integer ::      ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
-    real ::         psec2(384),psec3(2)
+    integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
+    REAL :: psec2(384),psec3(2),dummy(1)
 
     integer :: debug = 1
     INTEGER :: handle,handle_err
@@ -82,6 +82,23 @@
 
     area=.false.
 
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+    iug=0
+    call pbopen(iug,rfile,'r',ier)
+    if(ier /= 0)goto9100
+    call pbgrib(iug,kgrib,MIDIMG,idimg,ier)
+    if(ier /= 0)goto9300
+    call gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
+    dummy,size(dummy), &
+    kgrib,MIDIMG,idimg,'J',ier)
+    if(ier > 0)goto9500
+    MIDIMV=ksec4(1)
+    PRINT*,'MIDIMV= ',MIDIMV
+    call pbclose(iug,ier)
+    if(ier /= 0)goto9600
+
+    ALLOCATE(xgrid(MIDIMV))
+
     iug=0
     idimg=MIDIMG
     psec3(2)=rmdo
@@ -100,7 +117,7 @@
     if(ier /= 0)goto9300
     print*,'pbgrib fatta ',ier
     call gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
-    xgrid,MIDIMV,kgrib,MIDIMG,kword,'D',ier)
+    xgrid,MIDIMV,kgrib,MIDIMG,idimg,'D',ier)
     if(ier == -6)goto9400
     if(ier > 0)goto9500
     call pbclose(iug,ier)

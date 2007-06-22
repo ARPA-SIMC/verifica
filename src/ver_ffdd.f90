@@ -26,31 +26,31 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    parameter     (MIDIMG=80000,MIDIMV=MIDIMG*4)
-    real ::          xgrib(MIDIMG),xgridu(MIDIMV),xgridv(MIDIMV)
-    real ::          xgridf(MIDIMV),xgridd(MIDIMV)
-    integer ::       kgrib(MIDIMG)
-    integer ::       level(3),var(3),est(3),scad(4),data(3),ora(2)
-    real ::          alat(4),alon(4)
+    parameter (MIDIMG=1200000)
+    integer :: kgrib(MIDIMG)
+    REAL, ALLOCATABLE :: xgridu(:),xgridv(:)
+    REAL, ALLOCATABLE :: xgridf(:),xgridd(:)
+    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    real :: alat(4),alon(4)
     character uvfile*20,ifile*20,dfile*20
 ! grib fields
-    integer ::       ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
-    real ::          psec2(10),psec3(2)
+    integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
+    REAL :: psec2(10),psec3(2),dummy(1)
 
-    integer ::       genproc,tabella,ucomp,vcomp,scadenza
-    integer ::       intensita,direzione
-    integer ::       giorno(3)
+    integer :: genproc,tabella,ucomp,vcomp,scadenza
+    integer :: intensita,direzione
+    integer :: giorno(3)
     namelist      /parameters/genproc,tabella,giorno,ucomp,vcomp, &
     scadenza,intensita,direzione
 
-    data          ksec0/2*0/
-    data          ksec1/104*0/
-    data          ksec2/22*0/
-    data          ksec3/2*0/
-    data          ksec4/42*0/
-    data          kgrib/MIDIMG*0/
-    data          psec2/10*0./
-    data          psec3/2*0./
+    data ksec0/2*0/
+    data ksec1/104*0/
+    data ksec2/22*0/
+    data ksec3/2*0/
+    data ksec4/42*0/
+    data kgrib/MIDIMG*0/
+    data psec2/10*0./
+    data psec3/2*0./
 
     data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
     scad/-1,-1,-1,-1/, data/-1,-1,-1/, ora/-1,-1/
@@ -73,6 +73,33 @@
     scad(2)=scadenza
     print*,'ffdd.f - scadenza ',scadenza
 
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+    iug=0
+    call pbopen(iug,uvfile,'r',ier)
+    if(ier /= 0)goto9100
+    CALL pbgrib(iug,kgrib,MIDIMG,idimg,ier)
+    if(ier /= 0)goto9800
+    CALL gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
+     dummy,SIZE(dummy), &
+     kgrib,MIDIMG,idimg,'J',ier)
+    if(ier /= 0)goto9600
+    MIDIMV=ksec4(1)
+!CALL pbgrib(unit, this%rawgrib, this%cursize*nb, actsize, ier)
+!IF (ier == -3 .AND. this%cursize < maxsize) THEN ! rawgrib too small
+!pzsec4 => zzsec4 ! Gribex requires a valid section 4 also for 'I/J', satisfy it!
+!ierval = 1 ! Do not abort in case of error
+!CALL gribex(this%isec0, this%isec1, this%isec2, this%zsec2, &
+! this%isec3, this%zsec3, this%isec4, pzsec4, SIZE(pzsec4), &
+! this%rawgrib, this%cursize, actsize, 'J', ierval)
+!ALLOCATE(this%zsec4(MAX(1,this%isec4(1))), STAT=ierval)
+    call pbclose(iug,ier)
+    if(ier /= 0)goto9500
+
+    ALLOCATE(xgridu(MIDIMV))
+    ALLOCATE(xgridv(MIDIMV))
+    ALLOCATE(xgridf(MIDIMV))
+    ALLOCATE(xgridd(MIDIMV))
+
     iug=0
     idimg=MIDIMG
     idimv=MIDIMV
@@ -82,27 +109,27 @@
     if(ier /= 0)goto9100
 
     var(3)=ucomp
-    call findgribest(iug,xgrib,idimg,data,ora,scad,level,var,est,ier)
+    call findgribest(iug,kgrib,idimg,data,ora,scad,level,var,est,ier)
     if(ier == -1)then
         goto 9150
     elseif(ier /= 0)then
         goto 9200
     endif
-    call getinfoest(-1,xgrib,idimg,data,ora,scad,level,var,est, &
+    call getinfoest(-1,kgrib,idimg,data,ora,scad,level,var,est, &
     alat(1),alat(2),alon(1),alon(2),ny,nx,dy,dx,idrt, &
     alarot,alorot,rot,ija,ier)
     if(ier /= 0)goto 9300
-    call getdata(xgrib,idimg,imd,rmd,xgridu,idimv,ibm,ier)
+    call getdata(kgrib,idimg,imd,rmd,xgridu,idimv,ibm,ier)
     if(ibm /= 0 .OR. ier /= 0)goto 9400
 
     var(3)=vcomp
-    call findgribest(iug,xgrib,idimg,data,ora,scad,level,var,est,ier)
+    call findgribest(iug,kgrib,idimg,data,ora,scad,level,var,est,ier)
     if(ier == -1)then
         goto 9150
     elseif(ier /= 0)then
         goto 9200
     endif
-    call getdata(xgrib,idimg,imd,rmd,xgridv,idimv,ibm,ier)
+    call getdata(kgrib,idimg,imd,rmd,xgridv,idimv,ibm,ier)
     if(ibm /= 0 .OR. ier /= 0)goto 9400
 
     call pbclose(iug,ier)
@@ -217,5 +244,7 @@
     9600 print *,"Errore durante la gribex ",ier
     stop
     9700 print *,"Errore durante la pbwrite ",ier
+    stop
+    9800 print *,"Errore durante la pbgrib ",ier
     stop
     end program

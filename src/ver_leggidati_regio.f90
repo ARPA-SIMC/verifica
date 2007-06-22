@@ -30,12 +30,15 @@
 
     parameter (nstaz=2000,nmesi=100,MNRE=12)
 
-    real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
+    real :: lonoss(nstaz),latoss(nstaz)
+    integer :: alte(nstaz)
     integer :: idata(3),block,station
     character(LEN=7) :: scode,code(nstaz)
     character(LEN=20) :: nomest(nstaz),nome
     character reg(MNRE)*2,mese(nmesi)*2,anno(nmesi)*4
     character path*80,pathana*80,cdum*2
+    integer :: imd ! valore mancante che si trova nei file delle regioni
+    REAL :: rmdo ! valore interno al programma, non scrivo il valore in db se e' dato mancante!
 
     character(19) :: database,user,password
     integer :: handle
@@ -45,7 +48,7 @@
     namelist  /regioni/path,pathana,nre,reg,nme,mese,anno
     namelist  /odbc/database,user,password
 
-    data rmd/9999/,rmdo/-999.9/
+    data imd/9999/,rmdo/-999.9/
 
     open(1,file='odbc.nml',status='old',readonly)
     read(1,nml=odbc)
@@ -97,10 +100,10 @@
                 nomest(istan)=nome !mst potrebbe bastare il codice della stazione es:EM00230
                 latoss(istan)=wlat
                 lonoss(istan)=wlon
-                if(ialt == 9999)then
-                    alte(istan)=-999.9
+                if(ialt == imd)then
+                  alte(istan)=dba_mvi
                 else
-                    alte(istan)=real(ialt)
+                  alte(istan)=ialt
                 endif
             enddo               !anag
 
@@ -131,33 +134,33 @@
             198 continue
 
         ! conversione delle variabili per l'archivio
-            if(ipreci /= rmd)then
+            if(ipreci /= imd)then
                 preci=real(ipreci)*0.1
             else
                 preci=rmdo
             endif
-            if(itemp /= rmd)then
+            if(itemp /= imd)then
                 temp=real(itemp)*0.1+273.16
             else
                 temp=rmdo
             endif
-            if(idirv /= rmd)then
+            if(idirv /= imd)then
                 dirv=real(idirv)
             else
                 dirv=rmdo
             endif
-            if(ivelv /= rmd)then
+            if(ivelv /= imd)then
                 velv=real(ivelv)*0.1
             else
                 velv=rmdo
             endif
-            if(iumrel /= rmd)then
+            if(iumrel /= imd)then
                 umrel=real(iumrel)
             else
                 velv=rmdo
             endif
         ! calcolo td da t e umrel
-            if(itemp /= rmd .AND. iumrel /= rmd)then
+            if(itemp /= imd .AND. iumrel /= imd)then
                 td=trug(umrel,temp)
             else
                 td=rmdo
@@ -208,7 +211,7 @@
                 call idba_prendilo (handle)
                 call idba_unset (handle,"B13011")
             ! aggiungo altre info
-            ! if (hmo.ne.rmd) then
+            ! if (hmo.ne.imd) then
             ! call idba_setc(handle,"*var", "B22021")
             ! call idba_seti(handle,"*B22071",3)
             ! call idba_critica(handle)

@@ -37,75 +37,89 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
+    parameter (MIDIMG=1200000)
     parameter (MNSCAD=72,MNGIO=150,MNRM=102)
     parameter (MNBOX=150000)
-    integer ::   xgrib(MIDIMG)
-    real ::      xgrid(MIDIMV),lsm(MIDIMV),oro(MIDIMV)
-    real ::      xgridu(MIDIMV),xgridv(MIDIMV)
-    integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
-    integer ::   dataval(3),oraval(2),scaddb(4)
-    integer ::   varv(3),ore(24)
-    real ::      a,b,dato
-    integer ::   iscaddb
-    real ::      alat(4),alon(4)
+    integer :: kgrib(MIDIMG)
+    REAL, ALLOCATABLE :: xgrid(:),lsm(:),oro(:)
+    REAL, ALLOCATABLE :: xgridu(:),xgridv(:)
+    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    integer :: dataval(3),oraval(2),scaddb(4)
+    integer :: varv(3),ore(24)
+    real :: a,b,dato
+    integer :: iscaddb
+    real :: alat(4),alon(4)
     character vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
     character descr*20
-    real ::      xpmod(MNBOX),ypmod(MNBOX)
+    real :: xpmod(MNBOX),ypmod(MNBOX)
 ! namelists
-    INTEGER ::   kvar(3,2),lsvar,nore
-    integer ::   scadenze(4,MNSCAD),dum(2)
-    integer ::   imet,imod,ls,itipo,iana,ivor
-    logical ::   ruota,media,massimo,prob,distr,diffh
-    real ::      dxb,dyb,diffmax,hdiff,thr,perc
+    INTEGER :: kvar(3,2),lsvar,nore
+    integer :: scadenze(4,MNSCAD),dum(2)
+    integer :: imet,imod,ls,itipo,iana,ivor
+    logical :: ruota,media,massimo,prob,distr,diffh
+    real :: dxb,dyb,diffmax,hdiff,thr,perc
     character model*10
     character(19) :: database,user,password
 
-    real, ALLOCATABLE :: x(:),y(:),alt(:)
-    real, ALLOCATABLE :: xstaz(:,:),xstazv(:,:)
+    REAL, ALLOCATABLE :: x(:),y(:),alt(:)
+    REAL, ALLOCATABLE :: xstaz(:,:),xstazv(:,:)
+
+! grib fields
+    integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
+    REAL :: psec2(384),psec3(2),dummy(1)
+
+    data ksec0/2*0/
+    data ksec1/104*0/
+    data ksec2/384*0/
+    data ksec3/2*0/
+    data ksec4/60*0/
+! ksec4(5)=0 per real data
+    data kgrib/MIDIMG*0/
+    data psec2/384*0./
+    data psec3/2*0./
 
 ! database
-    integer :: handler,handle
-    integer :: debug = 1
-    integer :: handle_err
+    INTEGER :: handler,handle
+    INTEGER :: debug = 1
+    INTEGER :: handle_err
 
-    common /point/ij1,ij2,ij3,ij4
+    COMMON /point/ij1,ij2,ij3,ij4
+    
+    NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
+     nvar,nrm,nore,ore
+    NAMELIST  /date/DATA
+    NAMELIST  /scadenza/scadenze
+    NAMELIST  /parametro/kvar
+    NAMELIST  /stat/model,itipo,iana,imet,imod,ls, &
+     ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
+     diffh,diffmax,thr,perc
+    NAMELIST  /odbc/database,user,password
 
-    namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-    nvar,nrm,nore,ore
-    namelist  /date/data
-    namelist  /scadenza/scadenze
-    namelist  /parametro/kvar
-    namelist  /stat/model,itipo,iana,imet,imod,ls, &
-    ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
-    diffh,diffmax,thr,perc
-    namelist  /odbc/database,user,password
+    DATA level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
+     scad/-1,-1,-1,-1/, DATA/-1,-1,-1/, ora/-1,-1/, &
+     varv/-1,-1,-1/
+    DATA rmdo/-999.9/
 
-    data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
-    scad/-1,-1,-1,-1/, data/-1,-1,-1/, ora/-1,-1/, &
-    varv/-1,-1,-1/
-    data rmdo/-999.9/
+    PRINT*,'program interpola'
 
-    print*,'program interpola'
-
-    open(1,file='odbc.nml',status='old',readonly)
-    read(1,nml=odbc,err=9001)
-    close(1)
-    open(1,file='stat.nml',status='old',readonly)
-    read(1,nml=stat,err=9002)
-    close(1)
+    OPEN(1,file='odbc.nml',status='old',readonly)
+    READ(1,nml=odbc,err=9001)
+    CLOSE(1)
+    OPEN(1,file='stat.nml',status='old',readonly)
+    READ(1,nml=stat,err=9002)
+    CLOSE(1)
 
 ! gestione degli errori
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
-
+    CALL idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    
 ! connessione con database
-    call idba_presentati(idbhandle,database,user,password)
-
+    CALL idba_presentati(idbhandle,database,user,password)
+    
 ! apertura database in lettura
-    call idba_preparati(idbhandle,handler,"read","read","read")
-
-    call idba_quantesono(handler,nstaz)
-    print*,'massimo numero pseudo-stazioni ',nstaz
+    CALL idba_preparati(idbhandle,handler,"read","read","read")
+    
+    CALL idba_quantesono(handler,nstaz)
+    PRINT*,'massimo numero pseudo-stazioni ',nstaz
 
 ! allocazione matrici
     ALLOCATE(x(1:nstaz))
@@ -129,12 +143,32 @@
 ! apertura database in scrittura
     call idba_preparati(idbhandle,handle,"write","write","write")
 
+    vfile='estratti.grib'
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+    iug=0
+    call pbopen(iug,vfile,'r',ier)
+    if(ier /= 0)goto9100
+    CALL pbgrib(iug,kgrib,MIDIMG,idimg,ier)
+    if(ier /= 0)goto9800
+    CALL gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
+     dummy,SIZE(dummy), &
+     kgrib,MIDIMG,idimg,'J',ier)
+    if(ier /= 0)goto9700
+    MIDIMV=ksec4(1)
+    call pbclose(iug,ier)
+    if(ier /= 0)goto9500
+
+    ALLOCATE(xgrid(MIDIMV))
+    ALLOCATE(lsm(MIDIMV))
+    ALLOCATE(oro(MIDIMV))
+    ALLOCATE(xgridu(MIDIMV))
+    ALLOCATE(xgridv(MIDIMV))
+
     iug=0
     idimg=MIDIMG
     idimv=MIDIMV
     imd=-32768
     igrid=0                    !sono griglie regolari
-    vfile='estratti.grib'
     call pbopen(iug,vfile,'r',ier)
     if(ier /= 0)goto9100
 
@@ -147,7 +181,7 @@
     if (ls >= 0) then
         var(3)=ivlsm
         PRINT*,DATA,ora,scad,level,var,est
-        call findgribest(iug,xgrib,idimg,data,ora, &
+        call findgribest(iug,kgrib,idimg,data,ora, &
         scad,level,var,est,ier)
         if(ier == -1)then
             print*,'non trovo la land-sea mask! '
@@ -155,14 +189,14 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmdo,lsm,idimv, &
+        call getdata(kgrib,idimg,imd,rmdo,lsm,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
 ! leggo l'orografia
     if(diffh)then
         var(3)=ivor
-        call findgrib(iug,xgrib,idimg,data,ora, &
+        call findgrib(iug,kgrib,idimg,data,ora, &
         scad,level,var,ier)
         if(ier == -1)then
             print*,'non trovo orografia! '
@@ -170,7 +204,7 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmdo,oro,idimv, &
+        call getdata(kgrib,idimg,imd,rmdo,oro,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
@@ -184,7 +218,7 @@
     print*,'nrm ',nrm
     print*,'nvar in parameters ',nvar
 
-! llocazione matrici
+! allocazione matrici
     ALLOCATE(xstaz(1:nstaz,1:nrm))
     ALLOCATE(xstazv(1:nstaz,1:nrm))
 
@@ -259,7 +293,7 @@
               est(1)=-1
               est(2)=-1
               est(3)=-1
-              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+              CALL findgribest(iug,kgrib,idimg,DATA,ora, &
                scad,level,var,est,ier)
               IF(ier == -1)THEN
                 PRINT*,'grib mancante - azzero ', &
@@ -269,12 +303,12 @@
               ELSEIF(ier /= 0)THEN
                 GOTO 9200
               ENDIF
-              CALL getinfoest(-1,xgrib,idimg, &
+              CALL getinfoest(-1,kgrib,idimg, &
                DATA,ora,scad,level,var,est, &
                alat(1),alat(2),alon(1),alon(2), &
                ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
               IF(ier /= 0)GOTO 9300
-              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+              CALL getdata(kgrib,idimg,imd,rmdo,xgrid,idimv, &
                ibm,ier)
               IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
               IF(lsvar == -1)THEN
@@ -304,7 +338,7 @@
                 ENDDO
               ENDIF
               
-              ! Interpolation of predicted data on (lat,lon) station points
+           ! Interpolation of predicted data on (lat,lon) station points
               IF(ruota == .TRUE. )THEN
                 CALL rot_grib_LAMBO(alorot,alarot, &
                  tlm0d,tph0d)
@@ -320,15 +354,9 @@
                    lsvar,xint,dummy,ier)
                   
                   IF(ier == 2 .OR. ier == 4)THEN
-                    ! cerca di interpolare su un punto che non e' nel dominio dei dati!
+           ! cerca di interpolare su un punto che non e' nel dominio dei dati!
                     xstaz(ist,irm)=rmdo
-                  ELSEIF(ier == 0)THEN
-                    xx=x(ist)-xpmod(ij1)
-                    yy=y(ist)-ypmod(ij1)
-                    WRITE(34,*)x(ist),y(ist),xint,ij1,xpmod(ij1),ypmod(ij1),xgrid(ij1)
-                    IF(xx.GE.0.001 .OR. yy.GE.0.001)WRITE(35,*)xx,yy,ij1
-                    IF((xint-xgrid(ij1)).GE.0.001)PRINT*,"!!!! ",xint,xgrid(ij1)
-                  
+                  ELSEIF(ier == 0)THEN                  
                     IF (diffh) THEN
                       ind=ij1
                       hdiff=ABS(oro(ind)/9.81-alt(ist))
@@ -347,7 +375,7 @@
               ENDDO
             ENDDO         !nrm
             
-            ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
+           ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
             CALL converti_scadenze(4,scad,scaddb)
             
             CALL idba_set (handle,"p1",scaddb(2))
@@ -479,7 +507,7 @@
               est(1)=-1
               est(2)=-1
               est(3)=-1
-              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+              CALL findgribest(iug,kgrib,idimg,DATA,ora, &
                scad,level,var,est,ier)
               IF(ier == -1)THEN
                 PRINT*,'grib mancante - azzero ', &
@@ -490,13 +518,13 @@
               ELSEIF(ier /= 0)THEN
                 GOTO 9200
               ENDIF
-              CALL getinfoest(-1,xgrib,idimg, &
+              CALL getinfoest(-1,kgrib,idimg, &
                DATA,ora,scad,level,var,est, &
                alat(1),alat(2),alon(1),alon(2), &
                ny,nx,dy,dx,idrt,alarot,alorot,rot, &
                ija,ier)
               IF(ier /= 0)GOTO 9300
-              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+              CALL getdata(kgrib,idimg,imd,rmdo,xgrid,idimv, &
                ibm,ier)
               IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
               IF(lsvar == -1)THEN
@@ -534,7 +562,7 @@
               est(1)=-1
               est(2)=-1
               est(3)=-1
-              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+              CALL findgribest(iug,kgrib,idimg,DATA,ora, &
                scad,level,varv,est,ier)
               IF(ier == -1)THEN
                 PRINT*,'grib mancante - azzero ', &
@@ -549,7 +577,7 @@
               ELSEIF(ier /= 0)THEN
                 GOTO 9200
               ENDIF
-              CALL getdata(xgrib,idimg,imd,rmdo,xgrid,idimv, &
+              CALL getdata(kgrib,idimg,imd,rmdo,xgrid,idimv, &
                ibm,ier)
               IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
               DO iv=1,idimv
@@ -675,5 +703,9 @@
     9500 print *,"Errore durante la pbclose ",ier
     stop
     9600 print *,"Errore durante la ngetpoint ",ier
+    stop
+    9700 print *,"Errore durante la gribex ",ier
+    stop
+    9800 print *,"Errore durante la pbgrib ",ier
     stop
     end program

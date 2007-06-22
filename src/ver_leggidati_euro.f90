@@ -30,7 +30,8 @@
 
     parameter (nstaz=6000,nmesi=100)
 
-    real :: lonoss(nstaz),latoss(nstaz),alte(nstaz)
+    real :: lonoss(nstaz),latoss(nstaz)
+    integer :: alte(nstaz)
     REAL :: preci(nstaz,31)
     INTEGER :: data(3),ora(2)
     INTEGER :: giomax,nme,ialt
@@ -45,7 +46,7 @@
     NAMELIST  /euro/path,reg,nme,mese,anno
     namelist  /odbc/database,user,password
 
-    data rmd/9999/,rmdo/-999.9/
+    data imd/9999/
 
     open(1,file='odbc.nml',status='old',readonly)
     read(1,nml=odbc)
@@ -89,10 +90,10 @@
           
           numestaz=numestaz+1
           
-          IF(ialt == 9999)THEN
-            alte(istaz)=-999.9
+          IF(ialt == imd)THEN
+            alte(istaz)=dba_mvi
           ELSE
-            alte(istaz)=REAL(ialt)
+            alte(istaz)=ialt
           ENDIF
 
         ENDDO
@@ -161,7 +162,7 @@
               CALL idba_unset (handle,"B13011")
             ENDIF
             ! aggiungo altre info
-            ! if (hmo.ne.rmd) then
+            ! if (hmo.ne.imd) then
             ! call idba_setc(handle,"*var", "B22021")
             ! call idba_seti(handle,"*B22071",3)
             ! call idba_critica(handle)

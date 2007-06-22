@@ -25,28 +25,31 @@
 ! Internet: http://www.arpa.emr.it/sim/
 !****************************************************************************
 
-    subroutine brier(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,bs,rel,res,bss)
+    SUBROUTINE brier(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
+     nelsupens,rmddb,rmdo,thr,wght,loutput,ntot,nocc,bs,rel,res,bss)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo di Brier Score, Brier Skill Score,
 ! c BS decomposition e Reliability Diagram
 
-    parameter (NK=10)
-    real :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    REAL :: ofreq(0:NK),thr
-    integer :: npu(0:NK)
-    real, ALLOCATABLE :: obar(:),ybar(:)
-    integer, ALLOCATABLE :: nbar(:)
-    integer :: wght(MNGIO,MNRM)
+    PARAMETER (NK=10)
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo,thr
+    REAL :: ofreq(0:NK)
+    INTEGER :: npu(0:NK)
+! automatic array, vengono automaticamente allocati e deallocati 
+! solo nella subroutine, ma la loro dimensione deve venire passata
+    REAL :: obar(0:nelsupens),ybar(0:nelsupens) 
+    INTEGER :: nbar(0:nelsupens)
 
-    print*,'subroutine brier',nfc
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    REAL, INTENT(out) :: bs,rel,res,bss
+    INTEGER, INTENT(out) :: ntot,nocc
+    LOGICAL :: loutput
 
-    N=nelsupens
-! allocazione matrici dati
-    ALLOCATE(obar(0:N))
-    ALLOCATE(ybar(0:N))
-    ALLOCATE(nbar(0:N))
+!    PRINT*,'subroutine brier',nfc
 
     oavg=0.
     ntot=0
@@ -58,7 +61,7 @@
     enddo
 
 ! mi riconduco ad un super-ensemble completo
-    nel=N
+    nel=nelsupens
 
     do k=0,nel
         obar(k)=0.
@@ -111,7 +114,7 @@
         else
             ofreq(ik)=rmdo
         endif
-        write(24,'(2(2x,f7.2))')real(ik)/10.,ofreq(ik)
+        IF(loutput)WRITE(24,'(2(2x,f7.2))')REAL(ik)/10.,ofreq(ik)
     enddo
 
     if(ntot /= 0)then
@@ -140,15 +143,17 @@
             bss=rmdo
         endif
 
-        write(14,'(/1x,10hTHRESHOLD=,f6.1)') thr
-        write(14,'(1x,5hNTOT=,i6,7h  NOCC=,i6,8h  P_CLI=,f10.3)') &
-        ntot,nocc,bscli
-        write(14,'(1x,3hBS=,f13.6)') bs
-        write(14,'(1x,4hrel=,f13.6)') rel
-        write(14,'(1x,4hres=,f13.6)') res
-        write(14,'(1x,4hunc=,f13.6)') unc
-        write(14,'(1x,5hobar=,f13.6)') oavg
-        write(14,'(1x,4hBSS=,f13.6)') bss
+        IF(loutput)THEN
+          WRITE(14,'(/1x,10hTHRESHOLD=,f6.1)') thr
+          WRITE(14,'(1x,5hNTOT=,i6,7h  NOCC=,i6,8h  P_CLI=,f10.3)') &
+           ntot,nocc,bscli
+          WRITE(14,'(1x,3hBS=,f13.6)') bs
+          WRITE(14,'(1x,4hrel=,f13.6)') rel
+          WRITE(14,'(1x,4hres=,f13.6)') res
+          WRITE(14,'(1x,4hunc=,f13.6)') unc
+          WRITE(14,'(1x,5hobar=,f13.6)') oavg
+          WRITE(14,'(1x,4hBSS=,f13.6)') bss
+        ENDIF
 
     else
         bs=rmdo
@@ -162,25 +167,29 @@
     end subroutine brier
 
 !**************************************************************************************
-    subroutine brier_prob(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,bs,bss)
+    SUBROUTINE brier_prob(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
+     nelsupens,rmddb,rmdo,thr,wght,loutput,ntot,nocc,bs,bss)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo di Brier Score, Brier Skill Score e BS decomposition
+    
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo,thr
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    REAL :: o,p
+    REAL, INTENT(out) :: bs,bss,nocc
+    INTEGER, INTENT(out) :: ntot
+    LOGICAL :: loutput
 
-    real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    integer :: wght(MNGIO,MNRM)
-    REAL ::    o,p,nocc,thr
-
-    print*,'subroutine brier_prob',nfc
-
-    N=nelsupens
+!    PRINT*,'subroutine brier_prob',nfc
 
     ntot=0
     nocc=0.
 
 ! mi riconduco ad un super-ensemble completo
-    nel=N
+    nel=nelsupens
 
     bs=0.
     bscli=0.
@@ -219,11 +228,13 @@
             bss=rmdo
         endif
 
-        write(14,'(/1x,10hTHRESHOLD=,f6.1)') thr
-        write(14,'(1x,5hNTOT=,i6,7h  NOCC=,f9.2,8h  P_CLI=,f10.3)') &
-        ntot,nocc,bscli
-        write(14,'(1x,3hBS=,f13.6)') bs
-        write(14,'(1x,4hBSS=,f13.6)') bss
+        IF(loutput)THEN
+          WRITE(14,'(/1x,10hTHRESHOLD=,f6.1)') thr
+          WRITE(14,'(1x,5hNTOT=,i6,7h  NOCC=,f9.2,8h  P_CLI=,f10.3)') &
+           ntot,nocc,bscli
+          WRITE(14,'(1x,3hBS=,f13.6)') bs
+          WRITE(14,'(1x,4hBSS=,f13.6)') bss
+        ENDIF
     else
         bs=rmdo
         bscli=rmdo
@@ -235,30 +246,28 @@
 
 !**************************************************************************************
 
-    subroutine roc(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,roca)
+    SUBROUTINE roc(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
+     nelsupens,rmddb,rmdo,thr,wght,loutput,ntot,nocc,roca)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo della ROC area e delle ROC curves
+    
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo,thr
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    INTEGER :: nobs(2)
+    INTEGER :: kobs(0:nelsupens,2),nprev(0:nelsupens)
+    REAL :: hit(0:nelsupens),far(0:nelsupens),fareck(0:nelsupens)
+    REAL, INTENT(out) :: roca
+    INTEGER, INTENT(out) :: ntot,nocc
+    LOGICAL :: loutput
 
-    integer :: nobs(2)
-    REAL :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM),thr
-    integer :: wght(MNGIO,MNRM)
-    integer, ALLOCATABLE :: kobs(:,:),nprev(:)
-    real, ALLOCATABLE :: hit(:),far(:),fareck(:)
-
-    print*,'subroutine roc',nfc
-
-    N=nelsupens
-! allocazione matrici dati
-    ALLOCATE(kobs(0:N,2))
-    ALLOCATE(nprev(0:N))
-    ALLOCATE(hit(0:N))
-    ALLOCATE(far(0:N))
-    ALLOCATE(fareck(0:N))
+!    PRINT*,'subroutine roc',nfc
 
 ! mi riconduco ad un super-ensemble completo
-    nel=N
+    nel=nelsupens
 
 ! initialisation
     do kclass=1,2
@@ -355,17 +364,19 @@
             endif
         enddo
     ! output far and hit
-        write(12,'(/1x,10hTHRESHOLD=,f6.1)') thr
-        write(12,'(1x,5hNTOT=,i6,7h  NOCC=,i6,8h  P_CLI=,f15.8)') &
-        nobs(1)+nobs(2),nobs(1), &
-        real(nobs(1)*nobs(2))/real((nobs(1)+nobs(2))**2)
-        write(12,'(1x,5hAREA=,f10.3)')roca
-        write(12,'(//8x,a,8x,a,5x,a,8x,a/)') &
-        'far','hit','fareck','nprev'
-        do kpred=0,nel
-            write (12,'(3(1x,f10.3),1x,i8)')far(kpred),hit(kpred) &
-            ,fareck(kpred),nprev(kpred)
-        enddo
+        IF(loutput)THEN
+          WRITE(12,'(/1x,10hTHRESHOLD=,f6.1)') thr
+          WRITE(12,'(1x,5hNTOT=,i6,7h  NOCC=,i6,8h  P_CLI=,f15.8)') &
+           nobs(1)+nobs(2),nobs(1), &
+           REAL(nobs(1)*nobs(2))/REAL((nobs(1)+nobs(2))**2)
+          WRITE(12,'(1x,5hAREA=,f10.3)')roca
+          WRITE(12,'(//8x,a,8x,a,5x,a,8x,a/)') &
+           'far','hit','fareck','nprev'
+          DO kpred=0,nel
+            WRITE (12,'(3(1x,f10.3),1x,i8)')far(kpred),hit(kpred) &
+             ,fareck(kpred),nprev(kpred)
+          ENDDO
+        ENDIF
     ! write(13,'(1x,a,1x,f5.1)')'thr',thr
     ! do kpred=0,nel
     ! write (13,'((1x,i3,1x,f10.3))')
@@ -382,19 +393,21 @@
 
 !***********************************************************************************
 
-    subroutine terr(MNSTAZ,MNRM,obs,pred,nstaz,nrm, &
-    nelsupens,rmddb,rmdo,wght,ipos)
+    SUBROUTINE terr(MNSTAZ,MNRM,obs,pred,nstaz,nrm, &
+     nelsupens,rmddb,rmdo,wght,loutput,ipos)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo del total error di ogni membro
 
-    real :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
-    integer :: wght(MNRM)
-    INTEGER, ALLOCATABLE :: num(:)
-
-    N=nelsupens
-    ALLOCATE(num(N))
-
+    REAL, INTENT(in) :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNRM
+    INTEGER, INTENT(in) :: nstaz,nrm,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo
+    INTEGER, INTENT(inout) :: wght(MNRM)
+    INTEGER :: num(nelsupens)
+    INTEGER, INTENT(out) :: ipos
+    LOGICAL :: loutput
+    
     npu=0
     err=0.
     errmin=9999.
@@ -417,13 +430,13 @@
             errmin=err
             irmmin=irm
         endif
-        write(22,'(a,i2,a,i3,a,f8.3)') &
-        'elemento= ',irm,' peso= ',wght(irm), &
-        ' terr= ',err
+        IF(loutput)WRITE(22,'(a,i2,a,i3,a,f8.3)') &
+         'elemento= ',irm,' peso= ',wght(irm), &
+         ' terr= ',err
     enddo
 
-    write(22,'(a,f8.3,a,i1,a,i2)') &
-    'errmin= ',errmin,' irmmin= ',irmmin,' num ',num(irmmin)
+    IF(loutput)WRITE(22,'(a,f8.3,a,i1,a,i2)') &
+     'errmin= ',errmin,' irmmin= ',irmmin,' num ',num(irmmin)
 
     do irm=1,nrm
         do jrm=irm+1,nrm
@@ -442,45 +455,44 @@
         if(irmmin == num(irm))ipos=irm
     enddo
 
-    write(22,'(a,f8.3,a,i1,a,i2)') &
-    'errmin= ',errmin,' irmmin= ',irmmin,' num ',ipos
+    IF(loutput)WRITE(22,'(a,f8.3,a,i1,a,i2)') &
+     'errmin= ',errmin,' irmmin= ',irmmin,' num ',ipos
 
     return
     end subroutine terr
 
 !***********************************************************************************
 
-    subroutine costloss(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    nelsupens,rmddb,rmdo,thr,wght,ntot,nocc,area)
+    SUBROUTINE costloss(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
+     nelsupens,rmddb,rmdo,thr,wght,loutput,ntot,nocc,area)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo delle Cost-loss curves e della Cost-loss area
 
-    parameter (NCL=1000)
+    PARAMETER (NCL=1000)
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo,thr
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    INTEGER :: nobs(2)
+    REAL :: omed
+    REAL :: me,mecli,mep
+    REAL :: enve(0:NCL)    
+    INTEGER :: kobs(0:nelsupens,2),npre(0:nelsupens)
+    REAL :: hit(0:nelsupens),far(0:nelsupens)
+    REAL :: ks(0:nelsupens)
+    REAL, ALLOCATABLE :: val(:,:)
+    REAL, INTENT(out) :: area
+    INTEGER, INTENT(out) :: ntot,nocc
+    LOGICAL :: loutput
+    
+!    PRINT*,'subroutine cost-loss ',nfc
 
-    integer :: nobs(2)
-    real ::    obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    integer :: wght(MNGIO,MNRM)
-    REAL ::    omed,thr
-    real ::    me,mecli,mep
-    real ::    enve(0:NCL)
-
-    integer, ALLOCATABLE :: kobs(:,:),npre(:)
-    real, ALLOCATABLE :: hit(:),far(:)
-    real, ALLOCATABLE :: ks(:)
-    real, ALLOCATABLE :: val(:,:)
-
-    print*,'subroutine cost-loss ',nfc
-
-    N=nelsupens
-    ALLOCATE(kobs(0:N,2),npre(0:N))
-    ALLOCATE(hit(0:N))
-    ALLOCATE(far(0:N))
-    ALLOCATE(ks(0:N))
-    ALLOCATE(val(0:N,0:NCL))
+    ALLOCATE(val(0:nelsupens,0:NCL))
 
 ! mi riconduco ad un super-ensemble completo
-    nel=N
+    nel=nelsupens
 
 ! initialisation
     do kclass=1,2
@@ -599,52 +611,58 @@
     ! enddo
 
     ! output per la grafica
-        do icl=0,NCL
-            write(23,'(2(1x,e15.3))') &
-            real(icl)*fact,enve(icl)
+        IF(loutput)THEN
+          DO icl=0,NCL
+            WRITE(23,'(2(1x,e15.3))') &
+             REAL(icl)*fact,enve(icl)
         ! o in uno stesso file
         ! write(17,'(52(1x,f9.6),1x,e15.3)')
         ! $              real(icl)*fact,
         ! $              (val(kpred,icl),
         ! $              kpred=1,nel),
         ! $              enve(icl)
-        enddo
+          ENDDO
+        ENDIF
 
     ! fine controllo sulle osservazioni
     else
         area=rmdo
     ! output per la grafica
-        do icl=0,NCL
-            write(23,'(2(1x,e15.3))') &
-            real(icl)*fact,rmdo
-        enddo
+        IF(loutput)THEN
+          DO icl=0,NCL
+            WRITE(23,'(2(1x,e15.3))') &
+             REAL(icl)*fact,rmdo
+          ENDDO
+        ENDIF
     endif
 
     ntot=nobs(1)+nobs(2)
     nocc=nobs(1)
+
+    DEALLOCATE(val)
 
     return
     end subroutine costloss
 
 !***********************************************************************************
 
-    subroutine outrange(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
-    nelsupens,rmddb,rmdo,wght,outr)
+    SUBROUTINE outrange(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
+     nelsupens,rmddb,rmdo,wght,loutput,outr)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo della Percentage of Outliers e dell'errore associato
 
-    real ::      obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    integer ::   wght(MNGIO,MNRM)
-
-    REAL, ALLOCATABLE :: predor(:)
-    INTEGER, ALLOCATABLE :: inter(:)
-
-    print*,'subroutine outrange',nfc
-
-    N=nelsupens
-    ALLOCATE(predor(N))
-    ALLOCATE(inter(0:N))
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    REAL :: predor(nelsupens)
+    INTEGER :: inter(0:nelsupens)
+    REAL, INTENT(out) :: outr
+    LOGICAL :: loutput
+    
+!    PRINT*,'subroutine outrange',nfc
 
 ! initialisation
     outr=0.
@@ -760,45 +778,46 @@
     ELSE
       outr=rmdo
     ENDIF
-    write(15,'(1x,a9,f6.3,2x,2(a9,f6.3,1x,a9,f7.3,2x))') &
-    'OUTRANGE=',outr, &
-    'OUTRAmin=',outrn,'errmedio=',errn, &
-    'OUTRAmax=',outrx,'errmedio=',errx
-! write(15,'(/1x,8(a5,f8.1,2x))')'pout',pout,'pin',pin,
-! $     'poutn',poutn,'pinn',pinn,'poutx',poutx,'pinx',pinx
-    write(15,'(1x,a,2(a,i3)/)')'classe max',' sotto min ',kerrmaxn, &
-    ' sopra max ',kerrmaxx
-    if(ntot == 0)return
-    do i=0,nfc
-        write(16,'(1x,i3,1x,f7.5)')i,inter(i)/real(ntot)
-    enddo
+    IF(loutput)WRITE(15,'(1x,a9,f6.3,2x,2(a9,f6.3,1x,a9,f7.3,2x))') &
+     'OUTRANGE=',outr, &
+     'OUTRAmin=',outrn,'errmedio=',errn, &
+     'OUTRAmax=',outrx,'errmedio=',errx
+    ! write(15,'(/1x,8(a5,f8.1,2x))')'pout',pout,'pin',pin,
+    ! $     'poutn',poutn,'pinn',pinn,'poutx',poutx,'pinx',pinx
+    IF(loutput)WRITE(15,'(1x,a,2(a,i3)/)')'classe max',' sotto min ',kerrmaxn, &
+     ' sopra max ',kerrmaxx
+    IF(ntot == 0)RETURN
+    IF(loutput)THEN
+      DO i=0,nfc
+        WRITE(16,'(1x,i3,1x,f7.5)')i,inter(i)/REAL(ntot)
+      ENDDO
+    ENDIF
 
     return
     end subroutine outrange
 
 !***********************************************************************************
-
+    
     SUBROUTINE ranked(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc,nsoglie, &
-     nelsupens,rmddb,rmdo,soglie,wght,rps,rpss)
+     nelsupens,rmddb,rmdo,soglie,wght,loutput,rps,rpss)
 
 ! c VERIFICA - scores_prob_util.f
 ! c subroutine per il calcolo di Ranked Probability Score e 
 ! c Ranked Probability Skill Score
 
-    REAL :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
-    REAL :: soglie(nsoglie)
-    INTEGER :: wght(MNGIO,MNRM)
+    REAL, INTENT(in) :: obs(MNSTAZ,MNGIO),pred(MNSTAZ,MNGIO,MNRM)
+    INTEGER, INTENT(in) :: MNSTAZ,MNGIO,MNRM
+    INTEGER, INTENT(in) :: ngio,nstaz,nfc,nsoglie,nelsupens
+    REAL, INTENT(in) :: rmddb,rmdo
+    REAL, INTENT(in) :: soglie(nsoglie)
+    INTEGER, INTENT(in) :: wght(MNGIO,MNRM)
+    REAL :: pobs(nsoglie),ppred(nsoglie),nocc(nsoglie)
     INTEGER :: ntot
-    REAL, ALLOCATABLE :: pobs(:),ppred(:),nocc(:)
-    REAL :: rps,rpss,rpscli
+    REAL :: rpscli
+    REAL, INTENT(out) :: rps,rpss
+    LOGICAL :: loutput
 
-    print*,'subroutine ranked ',nfc
-
-    N=nelsupens
-! allocazione matrici dati
-    ALLOCATE(pobs(nsoglie))
-    ALLOCATE(ppred(nsoglie))
-    ALLOCATE(nocc(nsoglie))
+!    print*,'subroutine ranked ',nfc
 
 ! compute the sample climatology for every threshold
     ntot=0
@@ -865,9 +884,10 @@
             rankp=rankp+(ppred(iso)-pobs(iso))**2
             rankpcli=rankpcli+(nocc(iso)-pobs(iso))**2
           ENDDO
-          WRITE(19,*)'igio ',ig,'istaz ',is,'rankp ',rankp/REAL(nsoglie),'rankpcli ',rankpcli/REAL(nsoglie)
-          rps=rps+rankp/real(nsoglie)
-          rpscli=rpscli+rankpcli/real(nsoglie)
+          IF(loutput)WRITE(19,*)'igio ',ig,'istaz ',is,'rankp ', &
+           rankp/REAL(nsoglie),'rankpcli ',rankpcli/REAL(nsoglie)
+          rps=rps+rankp/REAL(nsoglie)
+          rpscli=rpscli+rankpcli/REAL(nsoglie)
         ENDIF
       ENDDO
     ENDDO
@@ -882,19 +902,19 @@
       rpss=rmdo
     ENDIF
 
-    WRITE(19,*)'rps ',rps,'rpscli ',rpscli,'rpss ',rpss
+    IF(loutput)WRITE(19,*)'rps ',rps,'rpscli ',rpscli,'rpss ',rpss
 
     RETURN
     END SUBROUTINE ranked
 
 !***********************************************************************************
 
-    subroutine ordine (x,n)
+    SUBROUTINE ordine (x,n)
 
 ! c VERIFICA - scores_prob_util.f
 ! c riordinamento in senso crescente degli elementi di un vettore
 
-    real :: x(n)
+    REAL, INTENT(inout) :: x(n)
 
     do i=1,n-1
         imin=i

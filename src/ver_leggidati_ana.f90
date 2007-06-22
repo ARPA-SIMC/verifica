@@ -1,7 +1,7 @@
     program leggidati_ana
 
 ! c VERIFICA - leggidati_ana.f
-! c programma per la lettura da file grib e scrittura su database mysql
+! c programma per la lettura da file grib e scrittura su database dballe
 ! c di "osservati" su grigliato (analisi)
 ! c autore: Chiara Marsigli
 
@@ -29,7 +29,7 @@
     INCLUDE "dballe/dballef.h"
 
     parameter (MNBOX=80000)
-    parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
+    parameter (MIDIMG=1200000)
 
     real :: xb(MNBOX),yb(MNBOX),alte(MNBOX),h
     integer :: pos(MNBOX)
@@ -39,15 +39,25 @@
     logical :: forever
 
     character cvar*6,fileorog*80,vfile*80
-    logical ::   ruota,area
+    logical :: ruota,area
 
-    integer ::   xgrib(MIDIMG)
-    real ::      xgrid(MIDIMV)
-    integer ::   ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
-    real ::      psec2(10),psec3(2)
-    integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
-    real ::      alat(4),alon(4)
+    integer :: kgrib(MIDIMG)
+    REAL, ALLOCATABLE :: xgrid(:)
+    integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
+    REAL :: psec2(384),psec3(2),dummy(1)
+    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    real :: alat(4),alon(4)
     character(19) :: database,user,password
+
+    data ksec0/2*0/
+    data ksec1/104*0/
+    data ksec2/384*0/
+    data ksec3/2*0/
+    data ksec4/60*0/
+! ksec4(5)=0 per real data
+    data kgrib/MIDIMG*0/
+    data psec2/384*0./
+    data psec3/2*0./
 
     data block/90/
     data forever/.true./
@@ -75,6 +85,22 @@
     read(1,nml=areaoss,err=9002)
     close(1)
 
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+    iug=0
+    call pbopen(iug,fileorog,'r',ier)
+    if(ier /= 0)goto9100
+    CALL pbgrib(iug,kgrib,MIDIMG,idimg,ier)
+    if(ier /= 0)goto9800
+    CALL gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
+     dummy,SIZE(dummy), &
+     kgrib,MIDIMG,idimg,'J',ier)
+    if(ier /= 0)goto9600
+    MIDIMV=ksec4(1)
+    call pbclose(iug,ier)
+    if(ier /= 0)goto9500
+
+    ALLOCATE(xgrid(MIDIMV))
+
     print*,'orografia e coordinate delle box'
     iug=0
     idimg=MIDIMG
@@ -84,11 +110,11 @@
     igrid=0                   !sono griglie regolari
     call pbopen(iug,fileorog,'r',ier)
     if(ier /= 0)goto9100
-    call getinfoest(iug,xgrib,idimg,data,ora,scad,level, &
+    call getinfoest(iug,kgrib,idimg,data,ora,scad,level, &
     var,est,alat(1),alat(2),alon(1),alon(2), &
     ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
     if(ier /= 0)goto 9300
-    call getdata(xgrib,idimg,imd,rmd,xgrid,idimv,ibm,ier)
+    call getdata(kgrib,idimg,imd,rmd,xgrid,idimv,ibm,ier)
     if(ibm /= 0 .OR. ier /= 0)goto 9400
     call pbclose(iug,ier)
     if(ier < 0)goto9500
@@ -183,12 +209,12 @@
 ! CICLO SUI GRIB
     do while(forever)
 
-        call getinfoest(iug,xgrib,idimg,data,ora,scad,level, &
+        call getinfoest(iug,kgrib,idimg,data,ora,scad,level, &
         var,est,alat(1),alat(2),alon(1),alon(2), &
         ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
         if(ier == -1)goto 111
         if(ier /= 0)goto 9300
-        call getdata(xgrib,idimg,imd,rmd,xgrid,idimv,ibm,ier)
+        call getdata(kgrib,idimg,imd,rmd,xgrid,idimv,ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
 
         CALL variabile(3,var,cvar,a,b,.TRUE.)
@@ -288,6 +314,10 @@
     9400 print *,"Errore durante la getdata ",ier
     stop
     9500 print *,"Errore durante la pbclose ",ier
+    stop
+    9600 print *,"Errore durante la gribex ",ier
+    stop
+    9800 print *,"Errore durante la pbgrib ",ier
     stop
 
     end program

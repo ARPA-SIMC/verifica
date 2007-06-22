@@ -56,7 +56,7 @@
 ! interval = intervallo desiderato tra una cumulata e la successiva (minuti)
 ! perc = percentuale di dati mancanti accettabile per ottenere la cumulata
 
-    data rmd/9999/,rmdo/-999.9/
+    data rmdo/-999.9/
     data cvar/'B13011'/
 
     open(1,file='odbc.nml',status='old',readonly)
@@ -105,7 +105,7 @@
     print*,'massimo numero pseudo-stazioni ',nstaz
 ! allocazione matrici
     ALLOCATE(anaid(1:nstaz))
-    call leggiana_db_all(anaid,rmdo,nstaz,handler)
+    call leggiana_db_all(anaid,nstaz,handler)
 
     NSTAZ: DO ist=1,nstaz
 

@@ -237,7 +237,7 @@
 
 !*****************************************************************************
 
-    SUBROUTINE leggiana_db_all(anaid,rmdo,nstaz,handle)
+    SUBROUTINE leggiana_db_all(anaid,nstaz,handle)
 
 ! c VERIFICA - util.f
 ! c legge l'anagrafica stazioni dal database
@@ -728,29 +728,28 @@
 ! c legge le ccordinate delle pseudostazioni da file grib (punti di griglia)
 ! c autore: Chiara Marsigli
 
-    real ::      xb(MNBOX),yb(MNBOX)
+    real :: xb(MNBOX),yb(MNBOX)
     character vfile*60
-    parameter (MIDIMG=80000,MIDIMV=MIDIMG*4)
-    integer ::   xgrib(MIDIMG)
-    real ::      xgrid(MIDIMV)
-    logical ::   ruota,area
+    parameter (MIDIMG=1200000)
+    integer :: kgrib(MIDIMG)
+    logical :: ruota,area
 ! grib fields
-    integer ::   ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
-    real ::      psec2(10),psec3(2)
-    integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
-    real ::      alat(4),alon(4)
+    integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
+    REAL :: psec2(10),psec3(2),dummy(1)
+    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    real :: alat(4),alon(4)
 
     print*,'subroutine leggibox'
+
 ! leggo un grib tanto per gradire, per conoscerne la griglia
     iug=0
     idimg=MIDIMG
-    idimv=MIDIMV
     imd=-32768
     rmd=-1.5E21
     igrid=0   !sono griglie regolari
     call pbopen(iug,vfile,'r',ier)
     if(ier /= 0)goto9100
-    call getinfoest(iug,xgrib,idimg,data,ora,scad,level, &
+    call getinfoest(iug,kgrib,idimg,data,ora,scad,level, &
     var,est,alat(1),alat(2),alon(1),alon(2), &
     ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
     if(ier /= 0)goto 9300
@@ -1236,7 +1235,7 @@
 
 !************************************************************************
 
-    logical function c_e_i(var)
+    LOGICAL FUNCTION c_e_i(var)
 
 !       Verifica la condizione di presenza o assenza del dato secondo
 !       le specifiche dballe restituendo una variabile logical .true.
@@ -1247,16 +1246,18 @@
 !       OUTPUT:
 !       C_E_i   LOGICAL .TRUE.se il dato e` presente
 
+    INCLUDE "dballe/dballef.h"
+
     integer  var
 
-    c_e_i=.true.
-    if (var == Z"7fffffff")c_e_i= .FALSE. 
-    return
-    end function c_e_i
+    c_e_i=.TRUE.
+    IF (var == dba_mvi )c_e_i= .FALSE. 
+    RETURN
+    END FUNCTION c_e_i
 
 !************************************************************************
 
-    logical function c_e_c(var)
+    LOGICAL FUNCTION c_e_c(var)
 
 !       Verifica la condizione di presenza o assenza del dato secondo
 !       le specifiche meteodata restituendo una variabile logical .true.
@@ -1267,10 +1268,11 @@
 !       OUTPUT:
 !       C_E_c   LOGICAL         .TRUE.se il dato e` presente
 
-      character (len=*) var
+    INCLUDE "dballe/dballef.h"
 
-      c_e_c=.false.
-      if (var /= "")c_e_c=.true.
-      return
-
-    end function c_e_c
+    CHARACTER (len=*) var
+    
+    c_e_c=.FALSE.
+    IF (var /= dba_mvc )c_e_c=.TRUE.
+    RETURN
+    END FUNCTION c_e_c

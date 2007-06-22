@@ -30,40 +30,54 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter (MIDIMG=100000,MIDIMV=MIDIMG*4)
+    parameter (MIDIMG=1200000)
     parameter (MNSTAZ=5000,MNSCAD=72,MNGIO=150,MNRM=102)
     parameter (MNBOX=150000)
-    integer ::   xgrib(MIDIMG)
-    real ::      xgrid(MIDIMV),lsm(MIDIMV),obm(MIDIMV),oro(MIDIMV)
-    real ::      rmgrid(MIDIMV,MNRM)
-    real ::      x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ)
-    real ::      xb(MNBOX),yb(MNBOX)
-    real ::      xbox(MNSTAZ),ybox(MNSTAZ),altbox(MNSTAZ)
+    integer :: kgrib(MIDIMG)
+    REAL, ALLOCATABLE :: xgrid(:),lsm(:),obm(:),oro(:)
+    REAL, ALLOCATABLE :: rmgrid(:,:)
+    real :: x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ)
+    real :: xb(MNBOX),yb(MNBOX)
+    real :: xbox(MNSTAZ),ybox(MNSTAZ),altbox(MNSTAZ)
 ! ATTENZIONE!!!! da sistemare!!!!!
-    integer ::   block,station
+    integer :: block,station
     character(20) :: name
     character(5) :: cb
-    real ::      xpmod(MNBOX),ypmod(MNBOX)
-    real ::      rlon,rlat,h
-    real ::      obsst(MNSTAZ)   ! sulle stazioni
-    real ::      obs(MNSTAZ),pred(MNSTAZ,MNRM) ! nelle box
-    integer ::   level(3),var(3),est(3),scad(4),data(3),ora(2)
-    integer ::   dataval(3),oraval(2),p1,p2
-    real ::      a,b
-    INTEGER ::   iscaddb,scaddb(4)
-    real ::      alat(4),alon(4)
+    real :: xpmod(MNBOX),ypmod(MNBOX)
+    real :: rlon,rlat,h
+    real :: obsst(MNSTAZ)   ! sulle stazioni
+    real :: obs(MNSTAZ),pred(MNSTAZ,MNRM) ! nelle box
+    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    integer :: dataval(3),oraval(2),p1,p2
+    real :: a,b
+    INTEGER :: iscaddb,scaddb(4)
+    real :: alat(4),alon(4)
     character vfile*60,obmfile*60
     character cvar*6,cel*3,descrfisso*20
     character descr*20
 ! namelists
-    INTEGER ::   kvar(3,2),nore,ore(24)
-    integer ::   scadenze(4,MNSCAD)
-    integer ::   imod,ls,itipo,iana,imet
-    logical ::   ruota,media,massimo,prob,distr,diffh
-    logical ::   area
-    real ::      dxb,dyb,diffmax,hdiff,thr,perc
+    INTEGER :: kvar(3,2),nore,ore(24)
+    integer :: scadenze(4,MNSCAD)
+    integer :: imod,ls,itipo,iana,imet
+    logical :: ruota,media,massimo,prob,distr,diffh
+    logical :: area
+    real :: dxb,dyb,diffmax,hdiff,thr,perc
     character model*10
     character(19) :: database,user,password
+
+    integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
+    REAL :: psec2(384),psec3(2),dummy(1)
+
+    data ksec0/2*0/
+    data ksec1/104*0/
+    data ksec2/384*0/
+    data ksec3/2*0/
+    data ksec4/60*0/
+! ksec4(5)=0 per real data
+    data kgrib/MIDIMG*0/
+    data psec2/384*0./
+    data psec3/2*0./
+
 ! database
     INTEGER :: handler,handle,handleana,handleanaw,id_ana
     integer :: debug = 1
@@ -136,13 +150,34 @@
     print*,'descrittore ',descr
     descrfisso=descr
 
+    vfile='estratti.grib'
+
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+    iug=0
+    call pbopen(iug,vfile,'r',ier)
+    if(ier /= 0)goto9100
+    CALL pbgrib(iug,kgrib,MIDIMG,idimg,ier)
+    if(ier /= 0)goto9800
+    CALL gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
+     dummy,SIZE(dummy), &
+     kgrib,MIDIMG,idimg,'J',ier)
+    if(ier /= 0)goto9700
+    MIDIMV=ksec4(1)
+    call pbclose(iug,ier)
+    if(ier /= 0)goto9500
+
+    ALLOCATE(xgrid(MIDIMV))
+    ALLOCATE(lsm(MIDIMV))
+    ALLOCATE(oro(MIDIMV))
+    ALLOCATE(obm(MIDIMV))
+    ALLOCATE(rmgrid(MIDIMV,MNRM))
+
     iug=0
     idimg=MIDIMG
     idimv=MIDIMV
     imd=-32768
     rmd=-1.5E21
     igrid=0                     !sono griglie regolari
-    vfile='estratti.grib'
     obmfile='obm_'//model(1:nlenvera(model))//'.grib'
     PRINT*,'obmfile= ',obmfile
 
@@ -186,7 +221,7 @@
         call pbopen(iug,obmfile,'r',ier)
         if(ier /= 0)goto 9100
         var(3)=ivlsm
-        call findgribest(iug,xgrib,idimg,data,ora, &
+        call findgribest(iug,kgrib,idimg,data,ora, &
         scad,level,var,est,ier)
         if(ier == -1)then
             print*,'non trovo la observation mask! '
@@ -195,7 +230,7 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmd,obm,idimv, &
+        call getdata(kgrib,idimg,imd,rmd,obm,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
         call pbclose(iug,ier)
@@ -212,7 +247,7 @@
 ! leggo la land-sea mask
     if(ls >= 0)then
         var(3)=ivlsm
-        call findgribest(iug,xgrib,idimg,data,ora, &
+        call findgribest(iug,kgrib,idimg,data,ora, &
         scad,level,var,est,ier)
         if(ier == -1)then
             print*,'non trovo la land-sea mask! '
@@ -220,14 +255,14 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmd,lsm,idimv, &
+        call getdata(kgrib,idimg,imd,rmd,lsm,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
 ! leggo l'orografia
     if(diffh)then
         var(3)=ivor
-        call findgrib(iug,xgrib,idimg,data,ora, &
+        call findgrib(iug,kgrib,idimg,data,ora, &
         scad,level,var,ier)
         if(ier == -1)then
             print*,'non trovo orografia! '
@@ -235,7 +270,7 @@
         elseif(ier /= 0)then
             goto 9200
         endif
-        call getdata(xgrib,idimg,imd,rmd,oro,idimv, &
+        call getdata(kgrib,idimg,imd,rmd,oro,idimv, &
         ibm,ier)
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
@@ -325,7 +360,7 @@
               est(1)=-1
               est(2)=-1
               est(3)=-1
-              CALL findgribest(iug,xgrib,idimg,DATA,ora, &
+              CALL findgribest(iug,kgrib,idimg,DATA,ora, &
                scad,level,var,est,ier)
               IF(ier == -1)THEN
                 PRINT*,'grib mancante - azzero &
@@ -334,11 +369,11 @@
               ELSEIF(ier /= 0)THEN
                 GOTO 9200
               ENDIF
-              CALL getinfoest(-1,xgrib,idimg,DATA,ora,scad,level, &
+              CALL getinfoest(-1,kgrib,idimg,DATA,ora,scad,level, &
                var,est,alat(1),alat(2),alon(1),alon(2), &
                ny,nx,dy,dx,idrt,alarot,alorot,rot,ija,ier)
               IF(ier /= 0)GOTO 9300
-              CALL getdata(xgrib,idimg,imd,rmd,xgrid,idimv, &
+              CALL getdata(kgrib,idimg,imd,rmd,xgrid,idimv, &
                ibm,ier)
               IF(ibm /= 0 .OR. ier /= 0)GOTO 9400
               DO iv=1,idimv
@@ -421,7 +456,7 @@
                   !    call idba_unset (handle,"rep_cod")
                   
                   CALL idba_setcontextana(handleanaw)
-                  !!                            call idba_seti (handleanaw,"!ana","scrivo anagrafica")
+                  ! call idba_seti (handleanaw,"!ana","scrivo anagrafica")
                   CALL idba_set (handleanaw,"name",name)
                   CALL idba_set (handleanaw,"block",BLOCK)
                   CALL idba_set (handleanaw,"station",station)
@@ -582,5 +617,9 @@
     9400 print *,"Errore durante la getdata ",ier
     stop
     9500 print *,"Errore durante la pbclose ",ier
+    stop
+    9700 print *,"Errore durante la gribex ",ier
+    stop
+    9800 print *,"Errore durante la pbgrib ",ier
     stop
     end program

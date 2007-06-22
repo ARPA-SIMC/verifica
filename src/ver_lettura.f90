@@ -23,6 +23,11 @@
     integer :: leveltype,l1,l2,pindicator,p1,p2
     integer :: year,month,day,hour,min,sec
 
+    integer :: imd
+    LOGICAL :: c_e_c,c_e_i
+
+    DATA imd/9999/
+
 ! --------
 
 
@@ -114,8 +119,12 @@
         CALL idba_quantesono (handleana,NN)
         CALL idba_elencamele (handleana)
         CALL idba_enq (handleana,"name",name)
+        IF (.not. c_e_c(name)) name=''
         CALL idba_enq (handleana,"height",height)
+        PRINT*,name,height
+        IF (.not. c_e_i(height)) height=imd
         CALL idba_enq (handleana,"block",BLOCK)
+        IF (.not. c_e_i(block)) block=imd
 
         call idba_voglioancora (handle,NN)
 

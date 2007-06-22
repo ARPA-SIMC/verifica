@@ -34,5 +34,5 @@
 ### ldir = .T. solo per variabili tipo direzione vento o onda (tra 0 e 360)
 ### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
 ###               delle stazioni presenti in db, le cui coordinate devono
-###               essere specificate nel file selstaz.dat (lon lat)
+###               essere specificate nel file locale selstaz.dat (rlon rlat)
 ### param=t 

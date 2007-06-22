@@ -32,23 +32,24 @@
     parameter (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE,MNRM=102)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    INTEGER ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs,nelsupens
-    integer ::   scad1,scad2,inc
-    integer ::   scadenze(4,MNSCAD)
-    integer ::   itipo,iana,imod,ls,iquota
-    logical ::   ruota,media,massimo,prob,distr,diffh
-    real ::      dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
-    integer ::   nore,ore(24)
-    integer ::   data(3),ora(2),var(3),scad(4),level(3)
-    integer ::   dataval(3),oraval(2),scaddb(4),p1,p2
-    integer ::   icodice,itipost,ntot
-    real ::      dato
+    INTEGER :: nora,ngio,nscad,nvar,nrm,nsoglie,nminobs,nelsupens
+    integer :: scad1,scad2,inc
+    integer :: scadenze(4,MNSCAD)
+    integer :: itipo,iana,imod,ls,iquota
+    logical :: ruota,media,massimo,prob,distr,diffh
+    real :: dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
+    integer :: nore,ore(24)
+    integer :: data(3),ora(2),var(3),scad(4),level(3)
+    integer :: dataval(3),oraval(2),scaddb(4),p1,p2
+    integer :: icodice,itipost,ntot
+    real :: dato
     character descr*20,descrfisso*20,model*10
     character cvar*6,cel*3
-    REAL ::      bs,bss,roca,clarea,outr,rps,rpss
-    logical ::   lwght
-    integer ::   nowght(MNRM),pesi(MNRM)
-    integer ::   temp_wght(MNRM),distrib(MNRM)
+    REAL :: bs,bss,roca,clarea,outr,rps,rpss
+    logical :: lwght
+    integer :: nowght(MNRM),pesi(MNRM)
+    integer :: temp_wght(MNRM),distrib(MNRM)
+    LOGICAL :: loutput,lselect
 
     real, ALLOCATABLE :: oss(:,:),prev(:,:,:),osse(:),previ(:,:)
     integer, ALLOCATABLE :: anaid(:)
@@ -60,21 +61,22 @@
     INTEGER :: handle,handle_err
     integer :: debug = 1
 
-    data      rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
-    namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-    nvar,nrm,nore,ore
-    namelist  /stat/model,itipo,iana,imet,imod,ls,ruota, &
-    nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
-    thr,perc
-    NAMELIST  /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght,nelsupens
-    namelist  /date/data
-    namelist  /scadenza/scadenze
-    namelist  /pesirm/pesi
-    namelist  /odbc/database,user,password
+    DATA rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
+    DATA loutput/.TRUE./,lselect/.FALSE./
+    NAMELIST /parameters/nora,ngio,nscad,scad1,scad2,inc, &
+     nvar,nrm,nore,ore
+    NAMELIST /stat/model,itipo,iana,imet,imod,ls,ruota, &
+     nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
+     thr,perc
+    NAMELIST /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght,nelsupens
+    NAMELIST /date/DATA
+    NAMELIST /scadenza/scadenze
+    NAMELIST /pesirm/pesi
+    NAMELIST /odbc/database,user,password
 
     OPEN(55,file='ctrl_output.dat',status='unknown')
 
-    print*,'program scores_prob'
+    PRINT*,'program scores_prob'
 
     open(1,file='odbc.nml',status='old',readonly)
     read(1,nml=odbc,err=9001)
@@ -130,7 +132,7 @@
     ALLOCATE(anaid(1:nstaz))
 
     call leggiana_db_scores(iana,anaid, &
-    itipost,rmdo,nstaz,handle)
+    itipost,rmdo,nstaz,handle,lselect)
     print*,'numero massimo stazioni ',nstaz
 
 ! llocazione matrici dati
@@ -218,7 +220,7 @@
             ! PRINT*,'prev ',descr,dataval,oraval,iscaddb
 
                 call idba_voglioquesto (handle,N)
-            ! print*,'numero dati trovati= ',N
+               ! PRINT*,'numero dati trovati= ',N
                 if(N == 0)then
                     PRINT*,'pre - non ci sono dati'
                     print*,dataval,oraval
@@ -388,7 +390,7 @@
             write(22,'(a,f8.3)')' ossmed= ',ossmed
             if(ossmed > 0.2)then
                 call terr(nstaz,nrm,osse,previ,nstaz,nrm, &
-                nelsupens,rmddb,rmdo,temp_wght,ipos)
+                nelsupens,rmddb,rmdo,temp_wght,loutput,ipos)
                 distrib(ipos)=distrib(ipos)+1
                 ng=ng+1
             endif
@@ -420,23 +422,23 @@
         if(prob)then
             call brier_prob(nstaz,ngio,nrm,oss,prev, &
             ngio,nstaz,nrm, &
-            nelsupens,rmddb,rmds,soglie(1),wght, &
+            nelsupens,rmddb,rmds,soglie(1),wght,loutput, &
             ntot,rnocc,bs,bss)
         else
             CALL outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-            nelsupens,rmddb,rmds,wght,outr)
+            nelsupens,rmddb,rmds,wght,loutput,outr)
             CALL ranked(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm,nsoglie, &
-            nelsupens,rmddb,rmds,soglie,wght,rps,rpss)
+            nelsupens,rmddb,rmds,soglie,wght,loutput,rps,rpss)
 
             do iso=1,nsoglie
 
                 CALL brier(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                nelsupens,rmddb,rmds,soglie(iso),wght, &
+                nelsupens,rmddb,rmds,soglie(iso),wght,loutput, &
                 ntot,nocc,bs,rel,res,bss)
                 call roc(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                nelsupens,rmddb,rmds,soglie(iso),wght,ntot,nocc,roca)
+                nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,roca)
                 call costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                nelsupens,rmddb,rmds,soglie(iso),wght,ntot,nocc,clarea)
+                nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,clarea)
                 print*,soglie(iso),ntot,nocc, &
                 bs,rel,res,bss, &
                 roca,clarea,outr
