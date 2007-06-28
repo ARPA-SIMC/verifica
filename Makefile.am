@@ -29,6 +29,7 @@ share/cumula.nml.template \
 share/dballe.txt \
 share/expansion_ver.template \
 share/euro.nml.template \
+share/ffdd_nml.template \
 share/getgribdat_ver \
 share/griBlocale.txt \
 share/lista_ens.nml.template \

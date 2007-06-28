@@ -1,0 +1,11 @@
+
+ $parameters
+   genproc=@@genproc,
+   tabella=@@tabella,
+   giorno=@@giorno,
+   ucomp=@@ucomp,
+   vcomp=@@vcomp,
+   scadenza=@@scadenza,
+   intensita=@@intensita,
+   direzione=@@direzione,
+ $end
