@@ -364,7 +364,7 @@
 
                     call idba_set (handle,"rep_memo",descr)
 
-                    print*,'prev ',descr,dataval,oraval,scaddb,cvar
+!                    print*,'prev ',descr,dataval,oraval,scaddb,cvar
 
                     call idba_voglioquesto (handle,N)
                 ! print*,'numero di dati trovati',N
@@ -373,7 +373,7 @@
                         print*,dataval,oraval
                         goto 66
                     else
-                      PRINT*,'pre - numero di dati trovati ',N
+!                      PRINT*,'pre - numero di dati trovati ',N
                     endif
 
                     do idati=1,N
@@ -462,7 +462,7 @@
 
                 call idba_set (handle,"var",cvar)
 
-                PRINT*,'oss ',descr,dataval,oraval,cvar
+!                PRINT*,'oss ',descr,dataval,oraval,cvar
 
                 call idba_voglioquesto (handle,N)
                 if(N == 0)then
@@ -470,7 +470,7 @@
                     print*,dataval,oraval
                     goto 66
                 else
-                  PRINT*,'oss - numero di dati trovati ',N
+!                  PRINT*,'oss - numero di dati trovati ',N
                 endif
 
                 do idati=1,N

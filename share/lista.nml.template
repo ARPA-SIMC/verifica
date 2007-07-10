@@ -27,7 +27,8 @@
 ###          la penultima e l'ultima soglia definiscono una classe attorno 
 ###          allo zero (per la direzione del vento o dell'onda);
 ###          scrivere anche l'estremo superiore dell'ultima classe in soglie
-### nsoglie = numero di soglie per gli score per soglia
+### nsoglie = numero di soglie per gli score per soglia,
+###           pari al numero di elementi del vettore soglie
 ### soglie = elenco soglie per gli score per soglia, l'unita' di misura
 ###          deve essere quella della variabile nella Btable
 ### daily = .T. per avere anche gli score giorno per giorno

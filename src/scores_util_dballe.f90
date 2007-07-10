@@ -116,157 +116,202 @@
 
 !*****************************************************************
 
-    subroutine score_con_table(MNV,obs,pred,nv, &
-    nsoglie,soglie,iscaddb,rmddb,rmd,lthr)
-
+    SUBROUTINE score_con_table(MNV,obs,pred,nv, &
+     nsoglie,soglie,iscaddb,rmddb,rmd,lthr)
+    
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo della tabella di contingenza e dei suoi indici
-
-    real :: soglie(nsoglie)
-    real :: obs(MNV),pred(MNV)
-    real :: mserr,rmserr,b
-    integer :: lthr
-
-    write(10,'(//a9,i3/)')'scadenza=',iscaddb
-    write(20,'(1x,a5,6x,a3,5x,a3,6x,a2,6x,a2, &
-    7x,a2,7x,a3,6x,a2,5x,a6,3x,a6,5x,a3,4x,a6,4x,a4)') &
-    'thr','npo','nos','bs','hr','ts','pod','fa', &
-    'rnd ts','rnd fa','hss','rmserr','bias'
-
-    do ith=1,nsoglie
-        no=0
-        nf=0
-        nc=0
-        npo=0
-        mserr=0.
-        b=0.
-
-        if(lthr == 1)then      !sopra le soglie
-            do iv=1,nv
-                if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
-                    npo=npo+1
-                    if(obs(iv) >= soglie(ith)) then
-                        no=no+1
-                        mserr=mserr+(pred(iv)-obs(iv))**2
-                        b=b+(pred(iv)-obs(iv))
-                    endif
-                    if(pred(iv) >= soglie(ith))then
-                        nf=nf+1
-                        if(obs(iv) >= soglie(ith)) nc=nc+1
-                    end if
-                end if
-            end do
-            call costloss_det(MNV,obs,pred,nv,rmddb,rmd, &
-            soglie(ith),area)
-        elseif(lthr == -1)then   !sotto le soglie
-            do iv=1,nv
-                if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
-                    npo=npo+1
-                    if(obs(iv) <= soglie(ith)) then
-                        no=no+1
-                        mserr=mserr+(pred(iv)-obs(iv))**2
-                        b=b+(pred(iv)-obs(iv))
-                    endif
-                    if(pred(iv) <= soglie(ith))then
-                        nf=nf+1
-                        if(obs(iv) <= soglie(ith)) nc=nc+1
-                    end if
-                end if
-            end do
-        elseif(lthr == 2)then  !classi chiuse
-            if (ith == nsoglie) goto111
-            do iv=1,nv
-                if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
-                    npo=npo+1
-                    if(obs(iv) >= soglie(ith) .AND. &
-                    obs(iv) < soglie(ith+1))then
-                        no=no+1
-                        mserr=mserr+(pred(iv)-obs(iv))**2
-                        b=b+(pred(iv)-obs(iv))
-                    endif
-                    if(pred(iv) >= soglie(ith) .AND. &
-                    pred(iv) < soglie(ith+1))then
-                        nf=nf+1
-                        if(obs(iv) >= soglie(ith) .AND. &
-                        obs(iv) < soglie(ith+1)) nc=nc+1
-                    end if
-                end if
-            end do
-        endif
-
+    
+    REAL :: soglie(nsoglie)
+    REAL :: obs(MNV),pred(MNV)
+    REAL :: mserr,rmserr,b
+    INTEGER :: lthr
+    PARAMETER (flat=180.)
+    
+    WRITE(10,'(//a9,i3/)')'scadenza=',iscaddb
+    WRITE(20,'(1x,a5,6x,a3,5x,a3,6x,a2,6x,a2, &
+     7x,a2,7x,a3,6x,a2,5x,a6,3x,a6,5x,a3,4x,a6,4x,a4)') &
+     'thr','npo','nos','bs','hr','ts','pod','fa', &
+     'rnd ts','rnd fa','hss','rmserr','bias'
+    
+    DO ith=1,nsoglie
+      no=0
+      nf=0
+      nc=0
+      npo=0
+      mserr=0.
+      b=0.
+      
+      IF(lthr == 1)THEN      !sopra le soglie
+        DO iv=1,nv
+          IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            IF(obs(iv) >= soglie(ith)) THEN
+              no=no+1
+              mserr=mserr+(pred(iv)-obs(iv))**2
+              b=b+(pred(iv)-obs(iv))
+            ENDIF
+            IF(pred(iv) >= soglie(ith))THEN
+              nf=nf+1
+              IF(obs(iv) >= soglie(ith)) nc=nc+1
+            END IF
+          END IF
+        END DO
+        CALL costloss_det(MNV,obs,pred,nv,rmddb,rmd, &
+         soglie(ith),area)
+      ELSEIF(lthr == -1)THEN   !sotto le soglie
+        DO iv=1,nv
+          IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            IF(obs(iv) <= soglie(ith)) THEN
+              no=no+1
+              mserr=mserr+(pred(iv)-obs(iv))**2
+              b=b+(pred(iv)-obs(iv))
+            ENDIF
+            IF(pred(iv) <= soglie(ith))THEN
+              nf=nf+1
+              IF(obs(iv) <= soglie(ith)) nc=nc+1
+            END IF
+          END IF
+        END DO
+      ELSEIF(lthr == 2)THEN  !classi chiuse
+        IF (ith == nsoglie) goto111
+        DO iv=1,nv
+          IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+            npo=npo+1
+            IF(obs(iv) >= soglie(ith) .AND. &
+             obs(iv) < soglie(ith+1))THEN
+              no=no+1
+              mserr=mserr+(pred(iv)-obs(iv))**2
+              b=b+(pred(iv)-obs(iv))
+            ENDIF
+            IF(pred(iv) >= soglie(ith) .AND. &
+             pred(iv) < soglie(ith+1))THEN
+              nf=nf+1
+              IF(obs(iv) >= soglie(ith) .AND. &
+               obs(iv) < soglie(ith+1)) nc=nc+1
+            END IF
+          END IF
+        END DO
+      ELSEIF(lthr == 3)THEN  !classi chiuse e variabile tra 0 e 360
+        IF (ith == nsoglie)THEN 
+          goto111
+        ELSEIF (ith == (nsoglie-1))THEN
+          DO iv=1,nv
+            IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+              npo=npo+1
+              IF(obs(iv) >= soglie(ith) .AND. obs(iv) < 360. .OR. &
+               obs(iv) >= 0. .AND. obs(iv) < soglie(ith+1))THEN
+                no=no+1
+                err=pred(iv)-obs(iv)
+                err=err + (SIGN(1.,flat-err)+SIGN(1.,-flat-err))*flat
+                mserr=mserr+(err)**2
+                b=b+err
+              ENDIF
+              IF(pred(iv) >= soglie(ith) .AND. pred(iv) < 360. .OR. &
+               pred(iv) >= 0. .AND. pred(iv) < soglie(ith+1))THEN
+                nf=nf+1
+                IF(obs(iv) >= soglie(ith) .AND. obs(iv) < 360. .OR. &
+                 obs(iv) >= 0. .AND. obs(iv) < soglie(ith+1)) nc=nc+1
+              END IF
+            END IF
+          END DO
+        ELSE
+          DO iv=1,nv
+            IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+              npo=npo+1
+              IF(obs(iv) >= soglie(ith) .AND. &
+               obs(iv) < soglie(ith+1))THEN
+                no=no+1
+                err=pred(iv)-obs(iv)
+                err=err + (SIGN(1.,flat-err)+SIGN(1.,-flat-err))*flat
+                mserr=mserr+(err)**2
+                b=b+err
+              ENDIF
+              IF(pred(iv) >= soglie(ith) .AND. &
+               pred(iv) < soglie(ith+1))THEN
+                nf=nf+1
+                IF(obs(iv) >= soglie(ith) .AND. &
+                 obs(iv) < soglie(ith+1)) nc=nc+1
+              END IF
+            END IF
+          END DO
+        ENDIF
+      ENDIF
+      
     ! calcolo degli scores statistici
-
-        if(no > 0)then
-
-            mserr=mserr/real(no)
-            rmserr=sqrt(mserr)
-            b=b/real(no)
-
-            if(nf > 0 .AND. npo /= 0) then
-
-                write(10,'(a,f6.1/)')'cont. table ',soglie(ith)
-                ia=nc
-                ib=nf-ia
-                ic=no-ia
-                id=npo-ia-ib-ic
-                write(10,'(11x,a)')'obs'
-                write(10,'(9x,a,6x,a/)')'y','n'
-                write(10,'(4x,a,1x,i6,2x,i6)')'y',ia,ib
-                write(10,'(1x,a)')'fc'
-                write(10,'(4x,a,1x,i6,2x,i6/)')'n',ic,id
-
-            ! li trasformo in reali prima di fare i conti perche' ottengo numeri
-            ! troppo grandi per essere contenuti in un intero
-                rno=no
-                rnf=nf
-                rnc=nc
-                rnpo=npo
-
-                bs=rnf/rno
-                fa=(rnf-rnc)/rnf
-                ts=rnc/(rnf+rno-rnc)
-                pod=rnc/rno
-                po=rno/rnpo
-                pf=rnf/rnpo
-                pc=po*pf
-                rts=pc/(pf+po-pc)
-                rfa=(pf-pc)/pf
-                hr=(rnpo-rnf-rno+2*rnc)/rnpo
-
-                write(77,*)rnpo,rno,rnf,rnc
-                if((npo-no) /= 0 .OR. (npo-nf) /= 0)then
-                    hss=2*(rnc*(rnpo-rnf-rno+rnc)-(rnf-rnc)*(rno-rnc))/ &
-                    (rno*(rnpo-rnf)+rnf*(rnpo-rno))
-                else
-                    hss=rmd
-                endif
-
-                write(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-                soglie(ith),npo,no,bs,hr,ts,pod,fa,rts,rfa,hss, &
-                rmserr,b
-            else
-                write(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-                soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
-                rmserr,b
-            end if
-
-        else
-
-            mserr=rmd
-            rmserr=rmd
-            b=rmd
-
-            write(20,'((1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-            soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
-            rmd,rmd
-
-        endif
-    end do                    !nsoglie
-
-    111 continue
-
-    return
-    end subroutine score_con_table
+      
+      IF(no > 0)THEN
+        
+        mserr=mserr/REAL(no)
+        rmserr=SQRT(mserr)
+        b=b/REAL(no)
+        
+        IF(nf > 0 .AND. npo /= 0) THEN
+          
+          WRITE(10,'(a,f6.1/)')'cont. table ',soglie(ith)
+          ia=nc
+          ib=nf-ia
+          ic=no-ia
+          id=npo-ia-ib-ic
+          WRITE(10,'(11x,a)')'obs'
+          WRITE(10,'(9x,a,6x,a/)')'y','n'
+          WRITE(10,'(4x,a,1x,i6,2x,i6)')'y',ia,ib
+          WRITE(10,'(1x,a)')'fc'
+          WRITE(10,'(4x,a,1x,i6,2x,i6/)')'n',ic,id
+          
+          ! li trasformo in reali prima di fare i conti perche' ottengo numeri
+          ! troppo grandi per essere contenuti in un intero
+          rno=no
+          rnf=nf
+          rnc=nc
+          rnpo=npo
+          
+          bs=rnf/rno
+          fa=(rnf-rnc)/rnf
+          ts=rnc/(rnf+rno-rnc)
+          pod=rnc/rno
+          po=rno/rnpo
+          pf=rnf/rnpo
+          pc=po*pf
+          rts=pc/(pf+po-pc)
+          rfa=(pf-pc)/pf
+          hr=(rnpo-rnf-rno+2*rnc)/rnpo
+          
+          WRITE(77,*)rnpo,rno,rnf,rnc
+          IF((npo-no) /= 0 .OR. (npo-nf) /= 0)THEN
+            hss=2*(rnc*(rnpo-rnf-rno+rnc)-(rnf-rnc)*(rno-rnc))/ &
+             (rno*(rnpo-rnf)+rnf*(rnpo-rno))
+          ELSE
+            hss=rmd
+          ENDIF
+          
+          WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+           soglie(ith),npo,no,bs,hr,ts,pod,fa,rts,rfa,hss, &
+           rmserr,b
+        ELSE
+          WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+           soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
+           rmserr,b
+        END IF
+        
+      ELSE
+        
+        mserr=rmd
+        rmserr=rmd
+        b=rmd
+        
+        WRITE(20,'((1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+         soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
+         rmd,rmd
+        
+      ENDIF
+    END DO                    !nsoglie
+    
+111 CONTINUE
+    
+    RETURN
+    END SUBROUTINE score_con_table
 
 !****************************************************************
 
