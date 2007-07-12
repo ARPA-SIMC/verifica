@@ -285,10 +285,12 @@
 ! dichiarazioni database
     integer :: dataval(nd),oraval(no),level(3),scad(nd),scaddb(4)
     integer :: icodice,handle,repcod,p1,p2
-    real :: rlat,rlon,h
+    real :: rlat,rlon
+    integer :: h
     character descr*20,cvar*6,btable*10
 ! Equatore della rotazione
     real :: rxeq,ryeq
+    logical :: c_e_i
 
     print*,'util.f - leggioss_db'
 
@@ -374,7 +376,7 @@
         call idba_elencamele (handleana)
         call idba_enqr (handleana,"lat",rlat)
         call idba_enqr (handleana,"lon",rlon)
-        call idba_enqr (handleana,"height",h)
+        CALL idba_enqi (handleana,"height",h)
 
         nv=nv+1
         call idba_enqr (handle,btable,dato)
@@ -387,7 +389,11 @@
         endif
         x(icodice)=rlon
         y(icodice)=rlat
-        alt(icodice)=h
+        IF (c_e_i(h)) THEN
+          alt(icodice)=real(h)
+        ELSE
+          alt(icodice)=rmdo
+        ENDIF
 
         30 continue
 
@@ -890,22 +896,29 @@
 
                 obs(ib)=0.
                 altbox(ib)=0.
+                npoalt=0
                 do ist=1,MNSTAZ
                     if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb)then
                         obs(ib)=obs(ib)+obsst(ist)
-                        altbox(ib)=altbox(ib)+alt(ist)
+                        IF((alt(ist)-rmdo)>0.1)THEN
+                          altbox(ib)=altbox(ib)+alt(ist)
+                          npoalt=npoalt+1
+                        ENDIF
                     endif
                 enddo
-                if(npo /= 0)then
-                    obs(ib)=obs(ib)/real(npo)
-                    altbox(ib)=altbox(ib)/real(npo)
+                IF(npo /= 0)THEN
+                  obs(ib)=obs(ib)/REAL(npo)
                 ! write(99,*)obs(ib),altbox(ib)
-                else
-                    obs(ib)=rmddb
-                    altbox(ib)=rmdo
-                endif
+                ELSE
+                  obs(ib)=rmddb
+                ENDIF
+                IF(npoalt /= 0) THEN
+                  altbox(ib)=altbox(ib)/REAL(npoalt)
+                ELSE
+                  altbox(ib)=rmdo
+                ENDIF
                 do irm=1,nrm
                     npp=0
                     pred(ib,irm)=0.
@@ -941,20 +954,24 @@
 
                 obs(ib)=-999.9
                 altbox(ib)=0.
+                npoalt=0
                 do ist=1,MNSTAZ
                     if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb)then
                         obs(ib)=max(obs(ib),obsst(ist))
-                        altbox(ib)=altbox(ib)+alt(ist)
+                        IF((alt(ist)-rmdo)>0.1)THEN
+                          altbox(ib)=altbox(ib)+alt(ist)
+                          npoalt=npoalt+1
+                        ENDIF
                     endif
                 enddo
-                if(npo /= 0)then
-                    altbox(ib)=altbox(ib)/real(npo)
-                else
-                    altbox(ib)=rmdo
-                    obs(ib)=rmddb
-                endif
+                IF(npo == 0)obs(ib)=rmddb
+                IF(npoalt /= 0)THEN
+                  altbox(ib)=altbox(ib)/REAL(npoalt)
+                ELSE
+                  altbox(ib)=rmdo
+                ENDIF
                 do irm=1,nrm
                     pred(ib,irm)=-999.9
                     ncont=0
@@ -986,22 +1003,29 @@
 
                 obs(ib)=0.
                 altbox(ib)=0.
+                npoalt=0
                 do ist=1,MNSTAZ
                     if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb &
                      .AND. obsst(ist) >= thr)then
                         obs(ib)=obs(ib)+1.
-                        altbox(ib)=altbox(ib)+alt(ist)
+                        IF((alt(ist)-rmdo)>0.1)THEN
+                          altbox(ib)=altbox(ib)+alt(ist)
+                          npoalt=npoalt+1
+                        ENDIF
                     endif
                 enddo
-                if(npo /= 0)then
-                    obs(ib)=(obs(ib)/real(npo))*10.
-                    altbox(ib)=altbox(ib)/real(npo)
-                else
-                    obs(ib)=rmddb
-                    altbox(ib)=rmdo
-                endif
+                IF(npo /= 0)THEN
+                  obs(ib)=(obs(ib)/REAL(npo))*10.
+                ELSE
+                  obs(ib)=rmddb
+                ENDIF
+                IF(npoalt /= 0)THEN
+                  altbox(ib)=altbox(ib)/REAL(npoalt)
+                ELSE
+                  altbox(ib)=rmdo
+                ENDIF
                 do irm=1,nrm
                     npp=0
                     pred(ib,irm)=0.

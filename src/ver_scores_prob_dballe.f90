@@ -48,27 +48,29 @@
     REAL :: bs,bss,roca,clarea,outr,rps,rpss
     logical :: lwght
     integer :: nowght(MNRM),pesi(MNRM)
-    integer :: temp_wght(MNRM),distrib(MNRM)
     LOGICAL :: loutput,lselect
+    INTEGER :: h,sum_nowght
 
     real, ALLOCATABLE :: oss(:,:),prev(:,:,:),osse(:),previ(:,:)
     integer, ALLOCATABLE :: anaid(:)
-    integer, ALLOCATABLE :: wght(:,:)
+    INTEGER, ALLOCATABLE :: wght(:,:),temp_wght(:),distrib(:)
 
     character(LEN=19) :: database,user,password
 
     character btable*10
-    INTEGER :: handle,handle_err
+    INTEGER :: handle,handle_err,handleana,USTAZ
     integer :: debug = 1
+    logical :: c_e_i
 
     DATA rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
-    DATA loutput/.TRUE./,lselect/.FALSE./
+    DATA loutput/.TRUE./
     NAMELIST /parameters/nora,ngio,nscad,scad1,scad2,inc, &
      nvar,nrm,nore,ore
     NAMELIST /stat/model,itipo,iana,imet,imod,ls,ruota, &
      nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
      thr,perc
-    NAMELIST /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght,nelsupens
+    NAMELIST /lista/cvar,iquota,hlimite,nsoglie,soglie,lwght,nowght, &
+     nelsupens,lselect
     NAMELIST /date/DATA
     NAMELIST /scadenza/scadenze
     NAMELIST /pesirm/pesi
@@ -93,6 +95,20 @@
     close(1)
     open(1,file='lista_ens.nml',status='old',readonly)
     read(1,nml=lista,err=9003)
+    sum_nowght=0
+    DO irm=1,nrm
+      sum_nowght=sum_nowght+nowght(irm)
+    ENDDO
+    IF(sum_nowght /= nelsupens)THEN
+      PRINT*,'-----------------------------------'
+      PRINT*,'ATTENZIONE!!!'
+      PRINT*,'la somma dei pesi costanti (nowght)'
+      PRINT*,'per i primi nrm= ',nrm,'elementi'
+      PRINT*,'e'' diversa da nelsupens'
+      PRINT*,'sum_nowght= ',sum_nowght
+      PRINT*,'nelsupens= ',nelsupens
+      PRINT*,'-----------------------------------'
+    ENDIF
     close(1)
     open(1,file='scadenze.nml',status='old',readonly)
     read(1,nml=scadenza,err=9003)
@@ -121,6 +137,7 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handle,"read","read","read")
+    call idba_preparati(idbhandle,handleana,"read","read","read")
 
 ! leggo tutte le stazioni presenti in archivio
     call idba_quantesono(handle,nstaz)
@@ -131,6 +148,7 @@
 ! llocazione matrici anagrafica
     ALLOCATE(anaid(1:nstaz))
 
+    PRINT*,'lselect= ',lselect
     call leggiana_db_scores(iana,anaid, &
     itipost,rmdo,nstaz,handle,lselect)
     print*,'numero massimo stazioni ',nstaz
@@ -143,6 +161,8 @@
 
 ! llocazione matrice pesi
     ALLOCATE(wght(1:ngio, 1:nrm))
+    ALLOCATE(temp_wght(1:nrm))
+    ALLOCATE(distrib(1:nrm))
 
     open(11,file='scores_prob.dat',status='unknown')
 
@@ -167,7 +187,7 @@
         oss = rmddb
 
         ng=0
-        do igio=1,ngio
+        DO igio=1,ngio
 
             osse = rmddb
             previ = rmddb
@@ -226,7 +246,7 @@
                     print*,dataval,oraval
                     goto 66
                 else
-            !      PRINT*,"pre - numero di dati trovati ",N
+                 ! PRINT*,"pre - numero di dati trovati ",N
                 endif
 
                 do idati=1,N
@@ -242,21 +262,34 @@
 
                     call idba_enq (handle,"ana_id",icodice)
 
+!mst  interrogo sezione anagrafica per avere l'altezza
+                    CALL idba_set (handleana,"ana_id",icodice)
+                    CALL idba_quantesono(handleana,USTAZ)
+                    CALL idba_elencamele (handleana)
+                    CALL idba_enq (handleana,"height",h)
+                    
+                    IF(iquota >= 0)THEN
+                      IF(c_e_i(h))THEN
+                        IF(iquota == 0)THEN !pianura
+                          IF(h >= hlimite)goto20
+                        ELSEIF(iquota == 1)THEN !montagna
+                          IF(h < hlimite)goto20
+                        ELSEIF(iquota > 1)THEN
+                          PRINT*,'iquota non gestito ',iquota
+                        ENDIF
+                      ELSE
+                        goto20
+                      ENDIF
+                    ENDIF
+
                     do i=1,nstaz
                         if(icodice == anaid(i))then
                             ipos=i
                         endif
                     enddo
 
-                    if(iquota == 0)then !pianura
-                        if(h >= hlimite)goto20
-                    elseif(iquota == 1)then !montagna
-                        if(h < hlimite)goto20
-                    elseif(iquota > 1)then
-                        print*,'iquota non gestito ',iquota
-                    endif
-
                     call idba_enq (handle,btable,dato)
+
                     prev(ipos,igio,irm)=dato
                     previ(ipos,irm)=dato
 
@@ -316,7 +349,7 @@
                 print*,dataval,oraval
                 goto 66
               ELSE
-          !      PRINT*,"oss - numero di dati trovati ",N
+               !PRINT*,"oss - numero di dati trovati ",N
             endif
 
             do idati=1,N
@@ -330,6 +363,26 @@
 
                 call idba_enq (handle,"ana_id",icodice)
 
+!mst  interrogo sezione anagrafica per avere l'altezza
+                CALL idba_set (handleana,"ana_id",icodice)
+                CALL idba_quantesono(handleana,USTAZ)
+                CALL idba_elencamele (handleana)
+                CALL idba_enq (handleana,"height",h)
+
+                IF(iquota >= 0)THEN
+                  IF(c_e_i(h))THEN
+                    IF(iquota == 0)THEN !pianura
+                      IF(h >= hlimite .OR. h < -900.)goto30
+                    ELSEIF(iquota == 1)THEN !montagna
+                      IF(h < hlimite .OR. h == REAL(imd))goto30
+                    ELSEIF(iquota > 1)THEN
+                      PRINT*,'iquota non gestito ',iquota
+                    ENDIF
+                  ELSE
+                    goto30
+                  ENDIF
+                ENDIF
+
                 do i=1,nstaz
                     if(icodice == anaid(i))then
                         ipos=i
@@ -337,14 +390,6 @@
                 enddo
 
                 call idba_enq (handle,btable,dato)
-
-                if(iquota == 0)then !pianura
-                    if(h >= hlimite .OR. h < -900.)goto30
-                elseif(iquota == 1)then !montagna
-                    if(h < hlimite .OR. h == real(imd))goto30
-                elseif(iquota > 1)then
-                    print*,'iquota non gestito ',iquota
-                endif
 
                 oss(ipos,igio)=dato
                 osse(ipos)=dato
@@ -354,27 +399,28 @@
             enddo               ! idati
 
         ! attribuizione dei pesi
-            if(lwght)then
-            ! se ho un mini-ensemble leggo i pesi
-                read(2,nml=pesirm,err=9005)
-                do irm=1,nrm
-                    wght(igio,irm)=pesi(irm)
-                enddo
-            else
-            ! se non voglio pesare li eguaglio a nowght
-                do irm=1,nrm
-                    wght(igio,irm)=nowght(irm)
-                enddo
-            endif
         ! non si pesa l'ensemble completo!
-            if(nrm == 51)then
-                do irm=1,nrm
-                    wght(igio,irm)=1
-                enddo
-            endif
-            do irm=1,nrm
-                temp_wght(irm)=wght(igio,irm)
-            enddo
+            IF(nrm == 51)THEN
+              DO irm=1,nrm
+                wght(igio,irm)=1
+              ENDDO
+            ELSE
+              IF(lwght)THEN
+                ! se ho un mini-ensemble leggo i pesi
+                READ(2,nml=pesirm,err=9005)
+                DO irm=1,nrm
+                  wght(igio,irm)=pesi(irm)
+                ENDDO
+              ELSE
+                ! se non voglio pesare li eguaglio a nowght
+                DO irm=1,nrm
+                  wght(igio,irm)=nowght(irm)
+                ENDDO
+              ENDIF
+            ENDIF
+            DO irm=1,nrm
+              temp_wght(irm)=wght(igio,irm)
+            ENDDO
 
         ! calcolo l'errore assoluto per giorno e per elemento
             write(22,'(a,i3)')' giorno= ',igio
@@ -390,14 +436,14 @@
             write(22,'(a,f8.3)')' ossmed= ',ossmed
             if(ossmed > 0.2)then
                 call terr(nstaz,nrm,osse,previ,nstaz,nrm, &
-                nelsupens,rmddb,rmdo,temp_wght,loutput,ipos)
-                distrib(ipos)=distrib(ipos)+1
+                nelsupens,rmddb,rmdo,temp_wght,loutput,iposiz)
+                distrib(iposiz)=distrib(iposiz)+1
                 ng=ng+1
             endif
 
             66 continue
-
-        enddo                  !ngio
+            
+          ENDDO                  !ngio
         close(1)               !naml date
         close(2)               !naml pesirm
 
@@ -456,6 +502,7 @@
 
 ! chiusura database
     call idba_fatto(handle)
+    call idba_fatto(handleana)
     call idba_arrivederci(idbhandle)
 
     close(55)

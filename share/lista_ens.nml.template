@@ -7,6 +7,7 @@
    lwght=.F.,
    nowght=11,11,10,10,10,10,10,10,10,10,
    nelsupens=102,
+   lselect=.F.,
  $end
 
 ### cvar = codice variable secondo la Btable
@@ -26,4 +27,7 @@
 ### nelsupens = numero elementi dell'ensemble completo di cui quello in verifica
 ###             e' una riduzione; se qusto non e' il caso, porlo uguale al numero
 ###             di elementi dell'ensemble
+### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
+###               delle stazioni presenti in db, le cui coordinate devono
+###               essere specificate nel file locale selstaz.dat (rlon rlat)
 ### scrivere una namelist per ciascuna variabile!!!

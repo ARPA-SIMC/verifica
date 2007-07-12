@@ -1,4 +1,4 @@
-AC_INIT(verifica, 1.19, [cmarsigli@arpa.emr.it])
+AC_INIT(verifica, 1.20, [cmarsigli@arpa.emr.it])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign])
 AC_LANG([C])

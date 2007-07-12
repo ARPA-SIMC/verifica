@@ -112,10 +112,11 @@
     INTEGER ::   DATA(3),ora(2),var(3),scad(4),level(3)
     INTEGER ::   dataval(3),oraval(2),scaddb(4),p1,p2
     INTEGER ::   icodice,itipost,ntot
-    REAL ::      dato,h
+    REAL ::      dato
     CHARACTER descr*20,descrfisso*20,model*10,cvar*6,cel*3
     REAL ::      maerr,mserr,rmserr,bi
-    
+    integer :: h
+
     REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
     INTEGER, ALLOCATABLE :: anaid(:)
     CHARACTER(LEN=19) :: database,user,password
@@ -123,6 +124,7 @@
     CHARACTER btable*10
     INTEGER :: handle,handle_err,handleana,USTAZ
     INTEGER :: debug = 1
+    logical :: c_e_i
 
     DATA      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
     NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
@@ -395,19 +397,25 @@
                         CALL idba_elencamele (handleana)
                         CALL idba_enq (handleana,"height",h)
 
+                        IF(iquota >= 0)THEN
+                          IF(c_e_i(h))THEN
+                            IF(iquota == 0)THEN !pianura
+                              IF(h >= hlimite)goto20
+                            ELSEIF(iquota == 1)THEN !montagna
+                              IF(h < hlimite)goto20
+                            ELSEIF(iquota > 1)THEN
+                              PRINT*,'iquota non gestito ',iquota
+                            ENDIF
+                          ELSE
+                            goto20
+                          ENDIF
+                        ENDIF
+
                         do i=1,nstaz
                             if(icodice == anaid(i))then
                                 ipos=i
                             endif
                         enddo
-
-                        if(iquota == 0)then !pianura
-                            IF(h >= hlimite .OR. h == -999.9)goto20
-                        elseif(iquota == 1)then !montagna
-                            if(h < hlimite)goto20
-                        elseif(iquota > 1)then
-                            print*,'iquota non gestito ',iquota
-                        endif
 
                         call idba_enq (handle,btable,dato)
 
@@ -485,10 +493,24 @@
                     call idba_enq (handle,"ana_id",icodice)
 
 !mst  interrogo sezione anagrafica per avere l'altezza
-                       CALL idba_set (handleana,"ana_id",icodice)
-                       call idba_quantesono(handleana,USTAZ)
-                       CALL idba_elencamele (handleana)
-                       CALL idba_enq (handleana,"height",h)
+                    CALL idba_set (handleana,"ana_id",icodice)
+                    CALL idba_quantesono(handleana,USTAZ)
+                    CALL idba_elencamele (handleana)
+                    CALL idba_enq (handleana,"height",h)
+                    
+                    IF(iquota >= 0)THEN
+                      IF(c_e_i(h))THEN
+                        IF(iquota == 0)THEN !pianura
+                          IF(h >= hlimite .OR. h < -900.)goto30
+                        ELSEIF(iquota == 1)THEN !montagna
+                          IF(h < hlimite .OR. h == REAL(imd))goto30
+                        ELSEIF(iquota > 1)THEN
+                          PRINT*,'iquota non gestito ',iquota
+                        ENDIF
+                      ELSE
+                        goto30
+                      ENDIF
+                    ENDIF
 
                     do i=1,nstaz
                         if(icodice == anaid(i))then
@@ -497,14 +519,6 @@
                     enddo
 
                     call idba_enq (handle,btable,dato)
-
-                    if(iquota == 0)then !pianura
-                        if(h >= hlimite .OR. h < -900.)goto30
-                    elseif(iquota == 1)then !montagna
-                        if(h < hlimite .OR. h == real(imd))goto30
-                    elseif(iquota > 1)then
-                        print*,'iquota non gestito ',iquota
-                    endif
 
                     iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
                     if(iv > nv)then
@@ -605,6 +619,7 @@
 
 ! chiusura database
     call idba_fatto(handle)
+    call idba_fatto(handleana)
     call idba_arrivederci(idbhandle)
 
     stop

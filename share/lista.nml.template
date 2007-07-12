@@ -7,7 +7,7 @@
    soglie=285.,290.,
    daily=.F.,
    ldir=.F.,
-   lselect=.F.
+   lselect=.F.,
  $end
 
 ### ATTENZIONE!!!

@@ -404,9 +404,12 @@
     INTEGER, INTENT(in) :: nstaz,nrm,nelsupens
     REAL, INTENT(in) :: rmddb,rmdo
     INTEGER, INTENT(inout) :: wght(MNRM)
-    INTEGER :: num(nelsupens)
+!    INTEGER :: num(nelsupens)
+    INTEGER, ALLOCATABLE :: num(:)
     INTEGER, INTENT(out) :: ipos
     LOGICAL :: loutput
+    
+    ALLOCATE(num(1:nelsupens))
     
     npu=0
     err=0.
@@ -435,7 +438,7 @@
          ' terr= ',err
     enddo
 
-    IF(loutput)WRITE(22,'(a,f8.3,a,i1,a,i2)') &
+    IF(loutput)WRITE(22,'(a,f8.3,a,i2,a,i2)') &
      'errmin= ',errmin,' irmmin= ',irmmin,' num ',num(irmmin)
 
     do irm=1,nrm
@@ -455,12 +458,12 @@
         if(irmmin == num(irm))ipos=irm
     enddo
 
-    IF(loutput)WRITE(22,'(a,f8.3,a,i1,a,i2)') &
+    IF(loutput)WRITE(22,'(a,f8.3,a,i2,a,i2)') &
      'errmin= ',errmin,' irmmin= ',irmmin,' num ',ipos
 
-    return
-    end subroutine terr
-
+    RETURN
+    END SUBROUTINE terr
+    
 !***********************************************************************************
 
     SUBROUTINE costloss(MNSTAZ,MNGIO,MNRM,obs,pred,ngio,nstaz,nfc, &
