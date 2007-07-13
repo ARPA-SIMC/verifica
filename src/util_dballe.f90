@@ -862,6 +862,9 @@
 
     print*,'util.f - medbox ',nminobs
 
+    OPEN(77,file='stato_box.dat',status='unknown')
+    OPEN(22,file='distrib_box.dat',status='unknown')
+
 ! Computation of average value in a box
     ib=0
     do ibox=1,nbox
@@ -879,7 +882,6 @@
                 npo=npo+1
             endif
         enddo
-    ! write(77,*)'box ',ibox,xb(ibox),yb(ibox),' npo ',npo
     ! procedo solo se ci sono sufficienti osservazioni per box
         if(npo >= nminobs)then
             ib=ib+1
@@ -889,8 +891,6 @@
             endif
             xbox(ib)=xb(ibox)
             ybox(ib)=yb(ibox)
-
-        ! write(99,*)'box ',ib,xbox(ib),ybox(ib),' npo ',npo
 
             if(media)then       ! MEDIA
 
@@ -938,16 +938,18 @@
                                 else
                                     npp=npp+1
                                     pred(ib,irm)=pred(ib,irm)+rmgrid(ip,irm)
-                                ! write(99,*)pred(ib,irm)
                                 endif
                             endif
                         endif
                     enddo
-                    if(npp /= 0)then
+                    IF(npp /= 0)THEN
                         pred(ib,irm)=pred(ib,irm)/real(npp)
                     else
                         pred(ib,irm)=rmddb
-                    endif
+                      ENDIF
+                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                     'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
+                     'npo',npo,'npp',npp
                 enddo            ! nrm
 
             elseif(massimo)then ! MASSIMO
@@ -996,6 +998,9 @@
                             endif
                         endif
                     enddo
+                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                     'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
+                     'npo',npo,'npp',ncont
                     if(ncont == 0)pred(ib,irm)=rmddb
                 enddo            ! nrm
 
@@ -1057,6 +1062,9 @@
                     else
                         pred(ib,irm)=rmddb
                     endif
+                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                     'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
+                     'npo',npo,'npp',npp
                 enddo            ! nrm
 
             elseif(distr)then   ! DISTR
@@ -1091,9 +1099,9 @@
                             endif
                         endif
                     enddo
-                    if(nvp >= 3)then
+                    IF(nvp >= 3)THEN
                         call percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
-                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f10.6)') &
+                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6)') &
                         'box',ib,'nvo',nvo,'irm',irm,'nvp',nvp, &
                         'medo',medo,'medp',medp
                         obs(ib)=medo
@@ -1101,10 +1109,13 @@
                     else
                         obs(ib)=rmddb
                         pred(ib,irm)=rmddb
-                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f10.6)') &
+                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6)') &
                         'box',ib,'nvo',nvo,'irm',irm,'nvp',nvp, &
                         'o',obs(ib),'p',pred(ib,irm)
-                    endif
+                      ENDIF
+                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                     'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
+                     'npo',npo,'npp',nvp
                 enddo            ! nrm
 
             endif               !media o massimo o probabilita'
@@ -1114,6 +1125,9 @@
     nb=ib
     print*,'numero box buone ',nb
     write(23,*)'numero box buone ',nb
+
+    CLOSE(77)
+    CLOSE(22)
 
     return
     end subroutine medbox
