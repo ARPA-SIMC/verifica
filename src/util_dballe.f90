@@ -333,9 +333,15 @@
         p1=0
         p2=0
     endif
+
+! in time range indicator speciale per le preci analizzate e' 13, ma in database
+! deve essere comunque 4 
+    wpind=scaddb(4)
+    IF(scaddb(4) == 13)wpind=4
+
     call idba_seti (handle,"p1",p1)
     call idba_seti (handle,"p2",p2)
-    call idba_seti (handle,"pindicator",scad(4))
+    call idba_seti (handle,"pindicator",wpind)
 
     call idba_setc (handle,"var",cvar)
 

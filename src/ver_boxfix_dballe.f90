@@ -320,10 +320,20 @@
           ENDDO
           PRINT*,'scadenza ',scad
           WRITE(88,*)scad
+
+! gestione scadenze
+! scad(4) (ksec1(18)) e' posto pari a 13 per esprimere le scadenze relative 
+! a piogge analizzate: p1 e p2 vanno considerati all'indietro a partire da
+! data e ora del GRIB (es: p1=0 e p2=1 significa andare indietro di 1 ora)
+          IF(scad(4) == 13)THEN
+            iscaddb=0
+          ELSE
           ! fisso la scadenza cui chiedere le osservazioni (data e ora di validita')
           ! la scadenza puo' essere al secondo o al terzo posto, nell'altro
           ! o c'e' 0 o c'e' l'estremo inferiore dell'intervallo di cumulazione
-          iscaddb=MAX(scadenze(2,iscad),scadenze(3,iscad))
+            iscaddb=MAX(scadenze(2,iscad),scadenze(3,iscad))
+          ENDIF
+
           CALL JELADATA5(DATA(1),DATA(2),DATA(3), &
            ora(1),ora(2),iminuti)
           iminuti=iminuti+iscaddb*60
@@ -416,10 +426,19 @@
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
             CALL converti_scadenze(4,scad,scaddb)
             
-            CALL idba_set (handle,"p1",scaddb(2))
-            CALL idba_set (handle,"p2",scaddb(3))
-            CALL idba_set (handle,"pindicator",scaddb(4))
-            
+            IF(scaddb(4) == 13) THEN
+              wp1=0-scaddb(3)
+              wp2=0
+              wpind=4
+              CALL idba_set (handle,"p1",wp1)
+              CALL idba_set (handle,"p2",wp2)
+              CALL idba_set (handle,"pindicator",wpind)
+            ELSE
+              CALL idba_set (handle,"p1",scaddb(2))
+              CALL idba_set (handle,"p2",scaddb(3))
+              CALL idba_set (handle,"pindicator",scaddb(4))
+            ENDIF
+
             CALL idba_set (handle,"year",dataval(3))
             CALL idba_set (handle,"month",dataval(2))
             CALL idba_set (handle,"day",dataval(1))
@@ -521,6 +540,11 @@
                   p2=0
                 ENDIF
                 
+! in time range indicator speciale per le preci analizzate e' 13, ma in database
+! deve essere comunque 4 
+                wpind=scaddb(4)
+                IF(scaddb(4) == 13)wpind=4
+
                 ! imposto tutta l'anagrafica
                 
                 ! prima faccio unset di ana_id senno' ricopre sempre!!!
@@ -542,7 +566,8 @@
                 CALL idba_enq (handleanaw, "ana_id", id_ana)
                 
                 CALL idba_set (handle, "ana_id", id_ana)
-                CALL idba_set (handle,"pindicator",scaddb(4))
+
+                CALL idba_set (handle,"pindicator",wpind)
                 CALL idba_set (handle,"p1",p1)
                 CALL idba_set (handle,"p2",p2)
                 
