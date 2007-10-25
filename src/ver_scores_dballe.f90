@@ -348,9 +348,23 @@
 
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                 call converti_scadenze(4,scad,scaddb)
-                call idba_set (handle,"p1",scaddb(2))
-                call idba_set (handle,"p2",scaddb(3))
-                call idba_set (handle,"pindicator",scaddb(4))
+
+! gestione scadenze
+! scad(4) (ksec1(18)) e' posto pari a 13 per esprimere le scadenze relative 
+! a piogge analizzate: p1 e p2 vanno considerati all'indietro a partire da
+! data e ora del GRIB (es: p1=0 e p2=1 significa andare indietro di 1 ora)
+                IF(scaddb(4) == 13)THEN
+                  wp1=0-scaddb(3)
+                  wp2=0
+                  wpind=4
+                  CALL idba_set (handle,"p1",wp1)
+                  CALL idba_set (handle,"p2",wp2)
+                  CALL idba_set (handle,"pindicator",wpind)  
+                ELSE
+                  CALL idba_set (handle,"p1",scaddb(2))
+                  CALL idba_set (handle,"p2",scaddb(3))
+                  CALL idba_set (handle,"pindicator",scaddb(4))
+                ENDIF
 
                 call idba_set (handle,"var",cvar)
 
@@ -464,9 +478,14 @@
                     p2=0
                 endif
 
-                call idba_set (handle,"p1",p1)
+! in time range indicator speciale per le preci analizzate e' 13, ma in database
+! deve essere comunque 4 
+                wpind=scaddb(4)
+                IF(scaddb(4) == 13)wpind=4
+
+                CALL idba_set (handle,"p1",p1)
                 call idba_set (handle,"p2",p2)
-                call idba_set (handle,"pindicator",scaddb(4))
+                call idba_set (handle,"pindicator",wpind)
 
                 call idba_set (handle,"var",cvar)
 
