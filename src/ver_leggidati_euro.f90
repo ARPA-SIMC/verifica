@@ -28,7 +28,7 @@
 
     INCLUDE "dballe/dballef.h"
 
-    parameter (nstaz=6000,nmesi=100)
+    parameter (nstaz=20000,nmesi=100)
 
     real :: lonoss(nstaz),latoss(nstaz)
     integer :: alte(nstaz)
@@ -84,7 +84,7 @@
 
         numestaz=0
         DO istaz=1,nstaz
-          READ(1,'(2(2x,f6.2),1x,i4,31(1x,f6.1))',END=111) &
+           READ(1,*,END=111) &
            lonoss(istaz),latoss(istaz),ialt, &
            (preci(istaz,igio),igio=1,giomax)
           
