@@ -8,7 +8,7 @@
 
     namelist  /odbc/database,user,password
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)
     close(1)
 

@@ -79,12 +79,12 @@ program leggidati_mare
   
   ! --------
   
-  open(1,file='odbc.nml',status='old',readonly)
+  open(1,file='odbc.nml',status='old')
   read(1,nml=odbc)
   close(1)
     
     
-  open(1,file='boe.nml',status='old',readonly)
+  open(1,file='boe.nml',status='old')
   read(1,nml=boe)
   close(1)
 

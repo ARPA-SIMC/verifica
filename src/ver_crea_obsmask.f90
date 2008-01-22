@@ -62,10 +62,10 @@
 
     data rmdo/-999.9/
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
-    open(1,file='obsmask.nml',status='old',readonly)
+    open(1,file='obsmask.nml',status='old')
     read(1,nml=obsmask,err=9002)
     close(1)
 

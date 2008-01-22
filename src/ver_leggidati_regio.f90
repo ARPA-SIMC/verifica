@@ -50,11 +50,11 @@
 
     data imd/9999/,rmdo/-999.9/
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)
     close(1)
 
-    open(1,file='region.nml',status='old',readonly)
+    open(1,file='region.nml',status='old')
     read(1,nml=regioni)
     close(1)
 

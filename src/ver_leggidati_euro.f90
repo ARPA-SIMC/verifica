@@ -48,11 +48,11 @@
 
     data imd/9999/
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)
     close(1)
 
-    open(1,file='euro.nml',status='old',readonly)
+    open(1,file='euro.nml',status='old')
     read(1,nml=euro)
     close(1)
 
@@ -79,7 +79,7 @@
         giomax=ngiorni_mese(imese,ianno)
 
         OPEN(1,file=path(1:nlenvera(path))//reg//canno(3:4)//cmese// &
-        '.txt',status='old',readonly)
+        '.txt',status='old')
         READ(1,*)
 
         numestaz=0

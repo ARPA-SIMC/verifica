@@ -59,7 +59,7 @@
 ! RTA è 180/pi
 
 ! Read parameters
-    open(8,file='ffdd.nml',status='old',readonly)
+    open(8,file='ffdd.nml',status='old')
     read(8,nml=parameters,err=9000)
     close(8)
 

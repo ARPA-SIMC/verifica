@@ -11,7 +11,7 @@
     namelist  /ds/model,itipo,imod,ls, &
     media,massimo,prob,distr,dxb,dyb
 
-    open(1,file='caldescr.nml',status='old',readonly)
+    open(1,file='caldescr.nml',status='old')
     read(1,nml=ds,err=9005)
     close(1)
 

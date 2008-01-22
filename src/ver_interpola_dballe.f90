@@ -102,10 +102,10 @@
 
     PRINT*,'program interpola'
 
-    OPEN(1,file='odbc.nml',status='old',readonly)
+    OPEN(1,file='odbc.nml',status='old')
     READ(1,nml=odbc,err=9001)
     CLOSE(1)
-    OPEN(1,file='stat.nml',status='old',readonly)
+    OPEN(1,file='stat.nml',status='old')
     READ(1,nml=stat,err=9002)
     CLOSE(1)
 
@@ -210,7 +210,7 @@
     endif
 
 ! Read parameters
-    open(1,file='parameters.nml',status='old',readonly)
+    open(1,file='parameters.nml',status='old')
     read(1,nml=parameters,err=9001)
     close(1)
     ora(1)=nora/100.
@@ -222,12 +222,12 @@
     ALLOCATE(xstaz(1:nstaz,1:nrm))
     ALLOCATE(xstazv(1:nstaz,1:nrm))
 
-    open(1,file='scadenze.nml',status='old',readonly)
+    open(1,file='scadenze.nml',status='old')
     read(1,nml=scadenza,err=9003)
     close(1)
 
     call cleankey(2,3,4,level,var,est,scad,data,dum)
-    open(1,file='parametro.nml',status='old',readonly)
+    open(1,file='parametro.nml',status='old')
     read(1,nml=parametro,err=9012)
     close(1)
     do i=1,3
@@ -244,7 +244,7 @@
       wind=.FALSE.
       
       ! Read date
-      OPEN(3,file='date.nml',status='old',readonly)
+      OPEN(3,file='date.nml',status='old')
       DO igio=1,ngio
         READ(3,nml=date,err=9004)
         ora(1)=nora/100.
@@ -475,7 +475,7 @@
       ENDDO
       CALL variabile(3,varv,cvarv,a,b,.TRUE.)
       
-      OPEN(3,file='date.nml',status='old',readonly)
+      OPEN(3,file='date.nml',status='old')
       DO igio=1,ngio
         READ(3,nml=date,err=9004)
         ora(1)=nora/100.

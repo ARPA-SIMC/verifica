@@ -104,13 +104,13 @@
 
     print*,'program boxfix'
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
-    open(1,file='stat.nml',status='old',readonly)
+    open(1,file='stat.nml',status='old')
     read(1,nml=stat,err=9002)
     close(1)
-    open(1,file='areabox.nml',status='old',readonly)
+    open(1,file='areabox.nml',status='old')
     read(1,nml=areabox,err=9013)
     close(1)
 
@@ -276,7 +276,7 @@
     endif
 
 ! Read parameters
-    open(1,file='parameters.nml',status='old',readonly)
+    open(1,file='parameters.nml',status='old')
     read(1,nml=parameters,err=9001)
     close(1)
     if(nrm > MNRM)then
@@ -288,12 +288,12 @@
 
     write(*,*)'nrm ',nrm
 
-    open(1,file='scadenze.nml',status='old',readonly)
+    open(1,file='scadenze.nml',status='old')
     read(1,nml=scadenza,err=9003)
     close(1)
 
     call cleankey(2,3,4,level,var,est,scad,data,idummy)
-    open(1,file='parametro.nml',status='old',readonly)
+    open(1,file='parametro.nml',status='old')
     read(1,nml=parametro,err=9012)
     close(1)
     do i=1,3
@@ -307,7 +307,7 @@
     IF(imet == 0 .OR. imet == 1)THEN         ! scalare
 
     ! Read date
-      OPEN(3,file='date.nml',status='old',readonly)
+      OPEN(3,file='date.nml',status='old')
       DO igio=1,ngio
         READ(3,nml=date,err=9004)
         ora(1)=nora/100.

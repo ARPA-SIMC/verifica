@@ -80,20 +80,20 @@
 
     PRINT*,'program scores_prob'
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
 ! Read parameters
-    open(1,file='parameters.nml',status='old',readonly)
+    open(1,file='parameters.nml',status='old')
     read(1,nml=parameters,err=9001)
     close(1)
 ! ora di inizio dei runs
     ora(1)=nora/100.
     ora(2)=mod(nora,100)
-    open(1,file='stat.nml',status='old',readonly)
+    open(1,file='stat.nml',status='old')
     read(1,nml=stat,err=9002)
     close(1)
-    open(1,file='lista_ens.nml',status='old',readonly)
+    open(1,file='lista_ens.nml',status='old')
     read(1,nml=lista,err=9003)
     sum_nowght=0
     DO irm=1,nrm
@@ -110,7 +110,7 @@
       PRINT*,'-----------------------------------'
     ENDIF
     close(1)
-    open(1,file='scadenze.nml',status='old',readonly)
+    open(1,file='scadenze.nml',status='old')
     read(1,nml=scadenza,err=9003)
     close(1)
     if(nsoglie > MNSOG)then
@@ -179,8 +179,8 @@
         write(11,'(a,i3)')' scadenza= ',iscaddb
         write(22,'(a,i3)')' scadenza= ',iscaddb
 
-        open(1,file='date.nml',status='old',readonly)
-        open(2,file='pesi.nml',status='old',readonly)
+        open(1,file='date.nml',status='old')
+        open(2,file='pesi.nml',status='old')
 
         distrib = 0
         prev = rmddb

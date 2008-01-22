@@ -71,17 +71,17 @@
     namelist  /areaoss/area,slon1,slon2,slat1,slat2
     namelist  /odbc/database,user,password
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9003)
     close(1)
 
     factz=1./9.81
 
-    open(1,file='analisi.nml',status='old',readonly)
+    open(1,file='analisi.nml',status='old')
     read(1,nml=analisi,err=9001)
     close(1)
 
-    open(1,file='areaoss.nml',status='old',readonly)
+    open(1,file='areaoss.nml',status='old')
     read(1,nml=areaoss,err=9002)
     close(1)
 

@@ -59,11 +59,11 @@
     data rmdo/-999.9/
     data cvar/'B13011'/
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)
     close(1)
 
-    open(1,file='cumula.nml',status='old',readonly)
+    open(1,file='cumula.nml',status='old')
     read(1,nml=cumula)
     close(1)
 

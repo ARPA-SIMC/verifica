@@ -139,21 +139,21 @@
     
     print*,'program scores'
 
-    open(1,file='odbc.nml',status='old',readonly)
+    open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
 ! Read parameters
-    open(1,file='parameters.nml',status='old',readonly)
+    open(1,file='parameters.nml',status='old')
     read(1,nml=parameters,err=9001)
     close(1)
 ! ora di inizio dei runs
     ora(1)=nora/100.
     ora(2)=mod(nora,100)
-    open(1,file='stat.nml',status='old',readonly)
+    open(1,file='stat.nml',status='old')
     read(1,nml=stat,err=9002)
     close(1)
 
-    open(2,file='lista.nml',status='old',readonly)
+    open(2,file='lista.nml',status='old')
 
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &
     distr,dxb,dyb,descr)
@@ -227,7 +227,7 @@
 
     print*,'numero di elementi dei vettori ',nv
 
-    OPEN(1,file='date.nml',status='old',readonly)
+    OPEN(1,file='date.nml',status='old')
     DO igio=1,ngio
       READ(1,nml=date,err=9004)
       IF(igio == 1)THEN
@@ -251,7 +251,7 @@
     open(20,file='scores_per_scad.dat',status='unknown')
     open(13,file='andam.dat',status='unknown')
 
-    open(1,file='scadenze.nml',status='old',readonly)
+    open(1,file='scadenze.nml',status='old')
     read(1,nml=scadenza,err=9003)
     write(11,*)' descrittore= ',descrfisso
     write(66,*)' descrittore= ',descrfisso
@@ -303,7 +303,7 @@
         'gio','ora','npo','maerr','mserr','rmserr','bias'
         print*,'scadenza ',iscaddb
 
-        open(1,file='date.nml',status='old',readonly)
+        open(1,file='date.nml',status='old')
         do igio=1,ngio
             read(1,nml=date,err=9004)
         ! ora di inizio
