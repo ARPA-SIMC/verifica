@@ -35,11 +35,9 @@
     integer :: pos(MNBOX)
     integer :: scaddb(4),p1,p2
     integer :: block,station
-    character name*20,cb*5
+    character :: name*20,cb*5
     logical :: forever
-
-    character cvar*6,fileorog*80,vfile*80
-    logical :: ruota,area
+    character :: cvar*6
 
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
@@ -47,7 +45,12 @@
     REAL :: psec2(384),psec3(2),dummy(1)
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     real :: alat(4),alon(4)
-    character(19) :: database,user,password
+
+! namelist variables
+    character(len=80) :: fileorog='',vfile=''
+    logical :: ruota=.false.,area=.false.
+    real :: slon1=10.,slon2=10.,slat1=45.,slat2=45.
+    character(19) :: database='',user='',password=''
 
     data ksec0/2*0/
     data ksec1/104*0/
@@ -64,7 +67,7 @@
 
 ! database
     integer :: handler,handle
-    integer :: debug = 1
+    integer :: debug=1
     integer :: handle_err
 
     namelist  /analisi/fileorog,vfile,ruota

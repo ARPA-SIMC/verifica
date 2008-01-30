@@ -32,19 +32,23 @@
     parameter (MNSTAZ=10000)
 
     real :: rlon,rlat,h
-    INTEGER :: giornoi,mesei,annoi,orai,mini,giornof,mesef,annof,oraf,minf
-    INTEGER :: incr,ncum,nstep,nsog,nstaz
-    real :: perc
+! namelist variables
+    INTEGER :: giornoi=01,mesei=01,annoi=2000,orai=00,mini=00
+    integer :: giornof=01,mesef=01,annof=2000,oraf=00,minf=00
+    INTEGER :: incr=60,ncum=60,interval=60
+    real :: perc=1.
+    character(19) :: database='',user='',password=''
+
+    integer :: nstep,nsog,nstaz
     integer :: data(3),ora(2),p1,p2,repcod
     integer :: dataval(3),oraval(2)
-    character cvar*6
-    character btable*10
+    character(len=6) :: cvar
+    character(len=10) :: btable
 
     integer, ALLOCATABLE :: anaid(:)
 
-    character(19) :: database,user,password
     INTEGER :: handle,handler,rewrite
-    integer :: debug = 1
+    integer :: debug=1
     integer :: handle_err
 
     namelist  /odbc/database,user,password

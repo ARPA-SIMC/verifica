@@ -33,11 +33,17 @@
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
-    character(80) :: rfile,ofile
-    character(19) :: database,user,password
-    REAL :: obm,rmdo,dist,alorot,alarot,slon1,slon2,slat1,slat2
-    integer :: iana,nstaz,nbox
-    logical :: ruota,area
+    character(80) :: ofile='obsmask.grib'
+    REAL :: obm,rmdo,alorot,alarot,slon1,slon2,slat1,slat2
+    integer :: nstaz,nbox
+! namelist variables
+    character(80) :: rfile=''
+    real :: dist=0
+    integer :: iana=0
+    logical :: ruota=.false.
+    character(19) :: database='',user='',password=''
+
+    logical :: area=.false.
     real, ALLOCATABLE :: x(:),y(:),alt(:)
     real :: xb(MNBOX),yb(MNBOX)
 ! grib fields
@@ -77,10 +83,6 @@
 
 ! apertura database in lettura
     call idba_preparati(idbhandle,handle,"read","read","read")
-
-    ofile='obsmask.grib'
-
-    area=.false.
 
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
     iug=0

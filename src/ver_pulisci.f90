@@ -2,9 +2,9 @@
 
     INCLUDE "dballe/dballef.h"
 
-    character(LEN=19) :: database,user,password
+    character(LEN=19) :: database='',user='',password=''
     INTEGER :: handle,handle_err
-    integer :: debug = 1
+    integer :: debug=1
 
     namelist  /odbc/database,user,password
 

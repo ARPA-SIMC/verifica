@@ -47,23 +47,28 @@
     real :: rlon,rlat,h
     real :: obsst(MNSTAZ)   ! sulle stazioni
     real :: obs(MNSTAZ),pred(MNSTAZ,MNRM) ! nelle box
-    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    integer :: level(3),var(3),est(3),scad(4),ora(2)
     integer :: dataval(3),oraval(2),p1,p2
-    real :: a,b
+    real :: a,b,dato
     INTEGER :: iscaddb,scaddb(4),idummy(2)
     real :: alat(4),alon(4)
-    character vfile*60,obmfile*60
-    character cvar*6,cel*3,descrfisso*20
-    character descr*20
-! namelists
-    INTEGER :: kvar(3,2),nore,ore(24)
-    integer :: scadenze(4,MNSCAD)
-    integer :: imod,ls,itipo,iana,imet
-    logical :: ruota,media,massimo,prob,distr,diffh
-    logical :: area
-    real :: dxb,dyb,diffmax,hdiff,thr,perc
-    character model*10
-    character(19) :: database,user,password
+    character(len=60) :: vfile,obmfile
+    character :: cvar*6,cel*3,descrfisso*20
+    character(len=20) :: descr
+    real :: hdiff,dum
+    integer :: lsvar,ivor
+! namelist variables
+    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
+    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
+    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1,kvar(3,2)=-1
+    character(len=10) :: model=''
+    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
+    logical :: ruota=.false.,diffh=.false.
+    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
+    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
+    character(19) :: database='',user='',password=''
+    real :: pblon=10.,pblat=45.
+    integer :: ni=1,nj=1
 
     integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
     REAL :: psec2(384),psec3(2),dummy(1)
@@ -80,7 +85,7 @@
 
 ! database
     INTEGER :: handler,handle,handleana,handleanaw,id_ana
-    integer :: debug = 1
+    integer :: debug=1
     integer :: handle_err
 
     namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
@@ -98,7 +103,7 @@
     namelist  /odbc/database,user,password
 
     data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
-    scad/-1,-1,-1,-1/, data/-1,-1,-1/, ora/-1,-1/
+    scad/-1,-1,-1,-1/, ora/-1,-1/
     data rmdo/-999.9/,rmddb/32767./,block/80/
 ! block vale 80 per le pseudostazioni box
 

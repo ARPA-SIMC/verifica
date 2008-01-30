@@ -42,23 +42,28 @@
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:),lsm(:),oro(:)
     REAL, ALLOCATABLE :: xgridu(:),xgridv(:)
-    integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
+    integer :: level(3),var(3),est(3),scad(4),ora(2)
     integer :: dataval(3),oraval(2),scaddb(4)
-    integer :: varv(3),ore(24)
+    integer :: varv(3)
     real :: a,b,dato
     integer :: iscaddb
     real :: alat(4),alon(4)
-    character vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
-    character descr*20
+    character :: vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
+    character(len=20) :: descr
     real :: xpmod(MNBOX),ypmod(MNBOX)
-! namelists
-    INTEGER :: kvar(3,2),lsvar,nore
-    integer :: scadenze(4,MNSCAD),dum(2)
-    integer :: imet,imod,ls,itipo,iana,ivor
-    logical :: ruota,media,massimo,prob,distr,diffh,wind
-    real :: dxb,dyb,diffmax,hdiff,thr,perc
-    character model*10
-    character(19) :: database,user,password
+    real :: hdiff,rdum
+    logical :: wind
+    INTEGER :: lsvar,ivor,dum(2)
+! namelist variables
+    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
+    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
+    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1,kvar(3,2)=-1
+    character(len=10) :: model=''
+    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
+    logical :: ruota=.false.,diffh=.false.
+    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
+    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
+    character(19) :: database='',user='',password=''
 
     REAL, ALLOCATABLE :: x(:),y(:),alt(:)
     REAL, ALLOCATABLE :: xstaz(:,:),xstazv(:,:)
@@ -79,7 +84,7 @@
 
 ! database
     INTEGER :: handler,handle
-    INTEGER :: debug = 1
+    INTEGER :: debug=1
     INTEGER :: handle_err
 
     COMMON /point/ij1,ij2,ij3,ij4
@@ -95,8 +100,7 @@
     NAMELIST  /odbc/database,user,password
 
     DATA level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
-     scad/-1,-1,-1,-1/, DATA/-1,-1,-1/, ora/-1,-1/, &
-     varv/-1,-1,-1/
+     scad/-1,-1,-1,-1/, ora/-1,-1/, varv/-1,-1,-1/
     DATA rmdo/-999.9/
 
     PRINT*,'program interpola'

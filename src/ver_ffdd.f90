@@ -32,7 +32,7 @@
     REAL, ALLOCATABLE :: xgridf(:),xgridd(:)
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     real :: alat(4),alon(4)
-    character uvfile*20,ifile*20,dfile*20
+    character :: uvfile*20,ifile*20,dfile*20
 ! grib fields
     integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
     REAL :: psec2(10),psec3(2),dummy(1)
