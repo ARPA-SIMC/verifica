@@ -28,7 +28,7 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     parameter (MIDIMG=1200000)
     parameter (MNSTAZ=5000,MNSCAD=72,MNGIO=150,MNRM=102)
@@ -50,7 +50,7 @@
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     integer :: dataval(3),oraval(2),p1,p2
     real :: a,b
-    INTEGER :: iscaddb,scaddb(4)
+    INTEGER :: iscaddb,scaddb(4),idummy(2)
     real :: alat(4),alon(4)
     character vfile*60,obmfile*60
     character cvar*6,cel*3,descrfisso*20
@@ -467,31 +467,33 @@
                   name='_box'//cb
                   station=ib
                   
-                  ! imposto tutta l'anagrafica
-                  
-                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                  !    call idba_unset (handle,"ana_id")
-                  ! prima faccio unset di ana_id senno' non riesce a fissare rep_memo!!!
-                  !    call idba_unset (handle,"rep_cod")
-                  
+! imposto tutta l'anagrafica                  
+
                   CALL idba_setcontextana(handleanaw)
-                  ! call idba_seti (handleanaw,"!ana","scrivo anagrafica")
+
+                  CALL idba_set (handleanaw,"rep_memo",descr)
+
+                  CALL idba_set (handleanaw,"lat",rlat)
+                  CALL idba_set (handleanaw,"lon",rlon)
+                  CALL idba_set (handleanaw,"mobile",0)
+
                   CALL idba_set (handleanaw,"name",name)
                   CALL idba_set (handleanaw,"block",BLOCK)
                   CALL idba_set (handleanaw,"station",station)
                   CALL idba_set (handleanaw,"height",h)
-                  CALL idba_set (handleanaw,"lat",rlat)
-                  CALL idba_set (handleanaw,"lon",rlon)
-                  CALL idba_set (handleanaw,"mobile",0)
+
                   CALL idba_prendilo (handleanaw)
-                  CALL idba_enq (handleanaw, "ana_id", id_ana)
-                  
-                  CALL idba_set (handle, "ana_id", id_ana)
-                  CALL idba_set (handle,"leveltype", &
-                   level(1))
+
+                  CALL idba_enq (handleanaw,"ana_id",id_ana)
+
+! ora scrivo i dati previsti
+
+                  CALL idba_set (handle,"rep_memo",descr)
+                  CALL idba_set (handle,"ana_id",id_ana)
+
+                  CALL idba_set (handle,"leveltype",level(1))
                   CALL idba_set (handle,"l1",level(2))
                   CALL idba_set (handle,"l2",level(3))
-                  CALL idba_set (handle,"rep_memo",descr)
                   
                   IF(imet == 0)THEN ! scalare
                     
@@ -545,40 +547,37 @@
                 wpind=scaddb(4)
                 IF(scaddb(4) == 13)wpind=4
 
-                ! imposto tutta l'anagrafica
-                
-                ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                !    call idba_unset (handle,"ana_id")
-                ! prima faccio unset di rep_cod senno' non riesce a fissare rep_memo!!!
-                !    call idba_unset (handle,"rep_cod")
+! imposto tutta l'anagrafica
                 
                 CALL idba_setcontextana (handleanaw)
-                !!                        CALL idba_set (handleanaw,"!ana","scrivo anagrafica")
-                CALL idba_set (handleanaw,"name",name)
-                CALL idba_set (handleanaw,"block",BLOCK)
-                CALL idba_set (handleanaw,"station",station)
-                
-                CALL idba_set (handleanaw,"height",h)
+
+                CALL idba_set (handleanaw,"rep_memo",descr)
+
                 CALL idba_set (handleanaw,"lat",rlat)
                 CALL idba_set (handleanaw,"lon",rlon)
                 CALL idba_set (handleanaw,"mobile",0)
+
+                CALL idba_set (handleanaw,"name",name)
+                CALL idba_set (handleanaw,"block",BLOCK)
+                CALL idba_set (handleanaw,"station",station)                
+                CALL idba_set (handleanaw,"height",h)
+
                 CALL idba_prendilo (handleanaw)
                 CALL idba_enq (handleanaw, "ana_id", id_ana)
                 
+! ora scrivo i dati osservati
+
+                CALL idba_set (handle,"rep_memo",descr)
                 CALL idba_set (handle, "ana_id", id_ana)
 
                 CALL idba_set (handle,"pindicator",wpind)
                 CALL idba_set (handle,"p1",p1)
                 CALL idba_set (handle,"p2",p2)
                 
-                CALL idba_set (handle,"leveltype", &
-                 level(1))
+                CALL idba_set (handle,"leveltype",level(1))
                 CALL idba_set (handle,"l1",level(2))
                 CALL idba_set (handle,"l2",level(3))
-                
-                
-                CALL idba_set (handle,"rep_memo",descr)
-                
+                                                
                 IF(imet == 0)THEN ! scalare
                   
                   ! attenzione!!!!!! ho bisogno che il minimo sia 0????

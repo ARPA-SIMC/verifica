@@ -1,14 +1,12 @@
     program leggi
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     character(LEN=10) :: btable,starbtable(12)
     character(LEN=10) :: dati(12)
 ! character*10 dato
     real :: dato
     logical :: found,starfound
-
-! --------
 
     character(19) :: database,user,password
     INTEGER :: handle,handleana,handle_err
@@ -28,9 +26,6 @@
 
     DATA imd/9999/
 
-! --------
-
-
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
     close(1)
@@ -47,15 +42,17 @@
 ! call idba_set (handle,"query","best")
 
 ! call idba_set (handle,"var",'B12001')
-! call idba_set (handle,"rep_cod",1)
+! call idba_set (handle,"rep_cod",50)
 ! call idba_set (handle,"station",1)
-! call idba_set (handle,"year",2004)
-! call idba_set (handle,"month",9)
-! call idba_set (handle,"day",15)
+! call idba_set (handle,"year",2006)
+! call idba_set (handle,"month",3)
+! call idba_set (handle,"day",2)
 ! call idba_set (handle,"hour",12)
 ! call idba_set (handle,"min",0)
 ! call idba_set (handle,"sec",0)
-
+! CALL idba_set (handle,"p1",0)
+! CALL idba_set (handle,"p2",0)
+! CALL idba_set (handle,"pindicator",0)
 
 ! Definiamo il box 7D
 
@@ -143,7 +140,7 @@
         write(11,12) &
              name,lat,lon,height,rep_cod,year,month,day,hour, &
              min,sec,pindicator,p1,p2,leveltype,l1,l2,btable,dato
-        
+
      enddo
      call idba_fatto(handle)
      call idba_arrivederci(idbhandle)
@@ -157,5 +154,3 @@
 9001 print *,"Errore durante la lettura della namelist odbc"
      call exit (1)
 end program leggi
-
-

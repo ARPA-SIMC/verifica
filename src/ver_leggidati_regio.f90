@@ -26,7 +26,7 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     parameter (nstaz=2000,nmesi=100,MNRE=12)
 
@@ -172,7 +172,10 @@
 
 ! anagrafica
             CALL idba_setcontextana (handle)
-            ! obbligatori
+! obbligatori
+! setto la rete dei dati con questa anagrafica
+            call idba_set (handle,"rep_cod",50) !rete=regioni
+
             CALL idba_set (handle,"lat",latoss(nsts))
             CALL idba_set (handle,"lon",lonoss(nsts))
             CALL idba_set (handle,"mobile",0)

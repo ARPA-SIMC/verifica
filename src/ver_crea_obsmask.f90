@@ -27,7 +27,7 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     parameter (MNBOX=150000)
     parameter (MIDIMG=1200000)

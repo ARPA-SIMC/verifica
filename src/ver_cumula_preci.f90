@@ -27,13 +27,13 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     parameter (MNSTAZ=10000)
 
     real :: rlon,rlat,h
     INTEGER :: giornoi,mesei,annoi,orai,mini,giornof,mesef,annof,oraf,minf
-    INTEGER :: incr,ncum,nstep,nsog
+    INTEGER :: incr,ncum,nstep,nsog,nstaz
     real :: perc
     integer :: data(3),ora(2),p1,p2,repcod
     integer :: dataval(3),oraval(2)
@@ -107,7 +107,7 @@
     ALLOCATE(anaid(1:nstaz))
     call leggiana_db_all(anaid,nstaz,handler)
 
-    NSTAZ: DO ist=1,nstaz
+    STATIONS: DO ist=1,nstaz
 
       CALL idba_unsetall (handler)
 
@@ -121,7 +121,7 @@
       CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2), &
        iminuti)
       ! INIZIO CICLO SUI GIORNI
-      IMINUTI: DO WHILE (iminuti.LE.iminmax)
+      MINUTES: DO WHILE (iminuti.LE.iminmax)
 
         CALL idba_set (handler,"year",dataval(3))
         CALL idba_set (handler,"month",dataval(2))
@@ -133,7 +133,7 @@
         iminutiw=iminuti
         ndati=0
         prec=0.
-        NSTEP: DO i=1,nstep
+        STEPS: DO i=1,nstep
           CALL JELADATA6(idayw,imonthw,iyearw,ihourw,iminw, &
            iminutiw)
           CALL idba_set (handler,"year",iyearw)
@@ -180,7 +180,7 @@
           
           iminutiw=iminutiw-incr
 
-        ENDDO NSTEP
+        ENDDO STEPS
 
         IF (ndati < nsog) THEN
           PRINT*,'butto la cumulata perche'' ci sono solo ',ndati,' dati'
@@ -236,9 +236,9 @@
         dataval(3)=iyear
         oraval(1)=ihour
         oraval(2)=imin
-      ENDDO IMINUTI
+      ENDDO MINUTES
       
-    ENDDO NSTAZ
+    ENDDO STATIONS
 
     call idba_fatto(handler)
     call idba_fatto(handle)

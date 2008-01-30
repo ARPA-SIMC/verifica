@@ -25,6 +25,14 @@
 ! Internet: http://www.arpa.emr.it/sim/
 !*****************************************************************************
 
+  MODULE util_dballe
+
+    INCLUDE "dballe/dballef.h"
+    
+    CONTAINS
+
+!*****************************************************************************
+
     subroutine leggiana_db(iana,x,y,alt,rmdo,nstaz,handle)
 
 ! c VERIFICA - util.f
@@ -35,57 +43,64 @@
 ! c =90 (valore fittizio) per punti di griglia su cui e' definita l'analisi (prima era itipostaz=2)
 ! c autore: Chiara Marsigli
 
-    integer :: handle,nstaz,iana
+    integer :: handle,nstaz,iana,h
     character(20) :: namest
-    logical :: c_e_c
+    logical :: c_e_c,c_e_i
 
     real :: x(nstaz),y(nstaz),alt(nstaz)
 
-! nizializzazione matrici
+! inizializzazione matrici
     x = rmdo
     y = rmdo
     alt = rmdo
 
     print*,'stazioni ',nstaz
     do ist=1,nstaz
-
-        call idba_elencamele(handle)
-
-        call idba_enqi (handle,"ana_id",icodice)
-        call idba_enqr (handle,"lat",rlat)
-        call idba_enqr (handle,"lon",rlon)
-        call idba_enqr (handle,"height",h)
-        call idba_enqc (handle,"name",namest)
-
-        if(.not. c_e_c(namest))namest=''
-
-        IF (nstaz.LT.icodice) THEN
+       
+       call idba_elencamele(handle)
+       
+       call idba_enq (handle,"ana_id",icodice)
+       call idba_enq (handle,"lat",rlat)
+       call idba_enq (handle,"lon",rlon)
+       call idba_enq (handle,"height",h)
+       call idba_enq (handle,"name",namest)
+       
+       if(.not.c_e_c(namest))namest=''
+       if(.not.c_e_i(h))h=9999
+       
+       IF (nstaz.LT.icodice) THEN
           PRINT*,"ATTENTION !!!!"
           PRINT*,"FATAL ERROR"
           PRINT*,"sono state cancellate alcune stazioni"
           PRINT*,"opzione non prevista: ",nstaz,"<",icodice
           CALL EXIT(1)
-        END IF
+       END IF
 
-        if(iana == 0)then
-        ! voglio solo le stazioni vere (nome stazione non inizia per '_')
-            if(namest(1:1) /= '_')then
-                print*,ist,icodice,rlat,rlon,h,namest
-                x(icodice)=rlon
-                y(icodice)=rlat
+       if(iana == 0)then
+          ! voglio solo le stazioni vere (nome stazione non inizia per '_')
+          if(namest(1:1) /= '_')then
+             print*,ist,icodice,rlat,rlon,h,namest
+             x(icodice)=rlon
+             y(icodice)=rlat
+             if(h == 9999)then
+                alt(icodice)=rmdo
+             else
                 alt(icodice)=h
-
-            endif
-        elseif(iana == 1)then
-        ! voglio solo le analisi (nome inizia per '_ana')
-            if(namest(1:3) == '_gp')then
-                write(33,*)ist,icodice,rlat,rlon,h,namest
-                x(icodice)=rlon
-                y(icodice)=rlat
+             endif
+          endif
+       elseif(iana == 1)then
+          ! voglio solo le analisi (nome inizia per '_ana')
+          if(namest(1:3) == '_gp')then
+             write(33,*)ist,icodice,rlat,rlon,h,namest
+             x(icodice)=rlon
+             y(icodice)=rlat
+             if(h == 9999)then
+                alt(icodice)=rmdo
+             else
                 alt(icodice)=h
-
-            endif
-        endif
+             endif
+          endif
+       endif
     enddo
 
     return
@@ -119,74 +134,74 @@
     alt = rmdo
 
     IF(lselect)THEN
-      nread=0
-      OPEN(1,file='selstaz.dat',status='old')
-      DO ist=1,nstaz
-        READ(1,*,END=200)rlon,rlat
-        nread=nread+1
-        x(nread)=rlon
-        y(nread)=rlat
-      ENDDO
-200   CONTINUE
-      CLOSE(1)
-      PRINT*,'lette ',nread,' stazioni'
+       nread=0
+       OPEN(1,file='selstaz.dat',status='old')
+       DO ist=1,nstaz
+          READ(1,*,END=200)rlon,rlat
+          nread=nread+1
+          x(nread)=rlon
+          y(nread)=rlat
+       ENDDO
+200    CONTINUE
+       CLOSE(1)
+       PRINT*,'lette ',nread,' stazioni'
     ENDIF
-
+    
     i=0
     DO ist=1,nstaz
-      
-      CALL idba_elencamele(handle)
-      
-      CALL idba_enqi (handle,"ana_id",icodice)
-      CALL idba_enqi (handle,"block",itipostaz)
-      CALL idba_enqr (handle,"lat",rlat)
-      CALL idba_enqr (handle,"lon",rlon)
-      
-      IF(.NOT. c_e_i(itipostaz))itipostaz=0
-      
-      IF(lselect)THEN
-
-        DO jst=1,nread
-          IF(ABS(rlon-x(jst))<toll .AND. ABS(rlat-y(jst))<toll)THEN
-            i=i+1
-            PRINT*,ist,icodice,rlon,rlat
-            anaid(i)=icodice
-          ENDIF
-        ENDDO
-
-      ELSE
-
-        IF(iana == 0)THEN
-          IF(itipost == 0)THEN
-            ! voglio solo le stazioni vere (itipostaz<70)
-            IF(itipostaz < 70)THEN
-              i=i+1
-              !              PRINT*,ist,icodice,itipostaz
-              anaid(i)=icodice
-            ENDIF
-          ELSEIF(itipost == 80)THEN
-            ! voglio solo le box (itipost=80)
-            IF(itipostaz == 80)THEN
-              i=i+1
-              PRINT*,ist,icodice,itipostaz
-              anaid(i)=icodice
-            ENDIF
-          ENDIF
-        ELSEIF(iana == 1)THEN
-          ! voglio solo le analisi (itipostaz=200)
-          IF(itipostaz == 90)THEN
-            i=i+1
-            WRITE(33,*)ist,icodice,itipostaz
-            anaid(i)=icodice
-          ENDIF
-        ELSE
-          PRINT*,"ERRORE"
-          PRINT*,"iana, opzione non gestita"
+       
+       CALL idba_elencamele(handle)
+       
+       CALL idba_enq (handle,"ana_id",icodice)
+       CALL idba_enq (handle,"block",itipostaz)
+       CALL idba_enq (handle,"lat",rlat)
+       CALL idba_enq (handle,"lon",rlon)
+       
+       IF(.NOT.c_e_i(itipostaz))itipostaz=0
+       
+       IF(lselect)THEN
           
-        ENDIF
-
-      ENDIF
-      
+          DO jst=1,nread
+             IF(ABS(rlon-x(jst))<toll .AND. ABS(rlat-y(jst))<toll)THEN
+                i=i+1
+                PRINT*,ist,icodice,rlon,rlat
+                anaid(i)=icodice
+             ENDIF
+          ENDDO
+          
+       ELSE
+          
+          IF(iana == 0)THEN
+             IF(itipost == 0)THEN
+                ! voglio solo le stazioni vere (itipostaz<70)
+                IF(itipostaz < 70)THEN
+                   i=i+1
+                   !              PRINT*,ist,icodice,itipostaz
+                   anaid(i)=icodice
+                ENDIF
+             ELSEIF(itipost == 80)THEN
+                ! voglio solo le box (itipost=80)
+                IF(itipostaz == 80)THEN
+                   i=i+1
+                   PRINT*,ist,icodice,itipostaz
+                   anaid(i)=icodice
+                ENDIF
+             ENDIF
+          ELSEIF(iana == 1)THEN
+             ! voglio solo le analisi (itipostaz=200)
+             IF(itipostaz == 90)THEN
+                i=i+1
+                WRITE(33,*)ist,icodice,itipostaz
+                anaid(i)=icodice
+             ENDIF
+          ELSE
+             PRINT*,"ERRORE"
+             PRINT*,"iana, opzione non gestita"
+             
+          ENDIF
+          
+       ENDIF
+       
     ENDDO
     
     nstaz=i
@@ -214,12 +229,12 @@
 
       READ(1,*,end=100)rlon,rlat
       
-      CALL idba_setr (handle,"lat",rlat)
-      CALL idba_setr (handle,"lon",rlon)
+      CALL idba_set (handle,"lat",rlat)
+      CALL idba_set (handle,"lon",rlon)
 
 ! esiste una API che permette di ottenere ana_id da lon e lat??????
 
-      CALL idba_enqi (handle,"ana_id",icodice)
+      CALL idba_enq (handle,"ana_id",icodice)
 
       i=i+1
       anaid(i)=icodice
@@ -256,10 +271,10 @@
 
         call idba_elencamele(handle)
 
-        call idba_enqi (handle,"ana_id",icodice)
-        call idba_enqr (handle,"lat",rlat)
-        call idba_enqr (handle,"lon",rlon)
-        call idba_enqc (handle,"name",namest)
+        call idba_enq (handle,"ana_id",icodice)
+        call idba_enq (handle,"lat",rlat)
+        call idba_enq (handle,"lon",rlon)
+        call idba_enq (handle,"name",namest)
 
         PRINT*,ist,icodice,rlat,rlon,namest
         anaid(ist)=icodice
@@ -284,7 +299,7 @@
     logical :: ruota
 ! dichiarazioni database
     integer :: dataval(nd),oraval(no),level(3),scad(nd),scaddb(4)
-    integer :: icodice,handle,repcod,p1,p2
+    integer :: icodice,handle,handleana,repcod,p1,p2,wpind
     real :: rlat,rlon
     integer :: h
     character descr*20,cvar*6,btable*10
@@ -313,16 +328,16 @@
 
     call idba_unsetall(handle)
 
-    call idba_seti (handle,"priomin",0)
+    call idba_set (handle,"priomin",0)
     call idba_unset (handle,"priomax")
-    CALL idba_setc (handle,"query","best")
+    CALL idba_set (handle,"query","best")
 
-    call idba_seti (handle,"year",dataval(3))
-    call idba_seti (handle,"month",dataval(2))
-    call idba_seti (handle,"day",dataval(1))
-    call idba_seti (handle,"hour",oraval(1))
-    call idba_seti (handle,"min",oraval(2))
-    call idba_seti (handle,"sec",0)
+    call idba_set (handle,"year",dataval(3))
+    call idba_set (handle,"month",dataval(2))
+    call idba_set (handle,"day",dataval(1))
+    call idba_set (handle,"hour",oraval(1))
+    call idba_set (handle,"min",oraval(2))
+    call idba_set (handle,"sec",0)
 
 ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
     call converti_scadenze(4,scad,scaddb)
@@ -339,11 +354,11 @@
     wpind=scaddb(4)
     IF(scaddb(4) == 13)wpind=4
 
-    call idba_seti (handle,"p1",p1)
-    call idba_seti (handle,"p2",p2)
-    call idba_seti (handle,"pindicator",wpind)
+    call idba_set (handle,"p1",p1)
+    call idba_set (handle,"p2",p2)
+    call idba_set (handle,"pindicator",wpind)
 
-    call idba_setc (handle,"var",cvar)
+    call idba_set (handle,"var",cvar)
 
     call idba_voglioquesto (handle,N)
     if(N == 0)then
@@ -358,34 +373,34 @@
 
         call idba_dammelo (handle,btable)
     ! sara' da impostare mentre per ora e' solo richiesto
-        call idba_enqi (handle,"leveltype", &
+        call idba_enq (handle,"leveltype", &
         level(1))
-        call idba_enqi (handle,"l1",level(2))
-        call idba_enqi (handle,"l2",level(3))
+        call idba_enq (handle,"l1",level(2))
+        call idba_enq (handle,"l2",level(3))
 
-        call idba_enqi (handle,"rep_cod",repcod)
-        call idba_enqi (handle,"ana_id",icodice)
+        call idba_enq (handle,"rep_cod",repcod)
+        call idba_enq (handle,"ana_id",icodice)
 
         if(repcod >= 100)goto30
 
 ! per chiedere i dati dell'anagrafica
      
-        call idba_seti (handleana,"ana_id",icodice)
+        call idba_set (handleana,"ana_id",icodice)
         CALL idba_quantesono (handleana,N)
         IF (N.NE.1) THEN
-          PRINT "ERRORE !!!"
-          PRINT "ERRORE !!!"
-          PRINT "qualche cosa non quadra",N," <> 1"
+          PRINT*,"ERRORE !!!"
+          PRINT*,"ERRORE !!!"
+          PRINT*,"qualche cosa non quadra",N," <> 1"
           call exit (1)
         END IF
 
         call idba_elencamele (handleana)
-        call idba_enqr (handleana,"lat",rlat)
-        call idba_enqr (handleana,"lon",rlon)
-        CALL idba_enqi (handleana,"height",h)
+        call idba_enq (handleana,"lat",rlat)
+        call idba_enq (handleana,"lon",rlon)
+        CALL idba_enq (handleana,"height",h)
 
         nv=nv+1
-        call idba_enqr (handle,btable,dato)
+        call idba_enq (handle,btable,dato)
         obs(icodice)=dato
     ! print*,'ecco ',ipos,iv,dato
         if(ruota)then
@@ -469,17 +484,13 @@
         endif
         d2=c2//c3
     elseif(itipo == 2)then
-        if(media == .TRUE. .AND. massimo == .FALSE. &
-         .AND. prob == .FALSE. .AND. distr == .FALSE. )then
+       if(media .AND. .NOT.massimo .AND. .NOT.prob .AND. .NOT.distr)then
             c3='med'
-        elseif(massimo == .TRUE. .AND. media == .FALSE. &
-             .AND. prob == .FALSE. .AND. distr == .FALSE. )then
+        elseif(massimo .AND. .NOT.media .AND. .NOT.prob .AND. .NOT.distr)then
             c3='max'
-        elseif(prob == .TRUE. .AND. distr == .FALSE. .AND. &
-            massimo == .FALSE. .AND. media == .FALSE. )then
+        elseif(prob .AND. .NOT.distr .AND. .NOT.massimo .AND. .NOT.media)then
             c3='prb'
-        elseif(distr == .TRUE. .AND. prob == .FALSE. .AND. &
-            massimo == .FALSE. .AND. media == .FALSE. )then
+        elseif(distr .AND. .NOT.prob .AND. .NOT.massimo .AND. .NOT.media)then
             c3='dst'
         endif
         write(c2,'(i2.2)')int(dxb*10.)
@@ -641,7 +652,7 @@
 ! MEND
     FUNCTION TRUG(UMID,T)
 
-    PARAMETER ABZ=273.16,D=237.3,C=17.2693882,B=6.1078
+    PARAMETER(ABZ=273.16,D=237.3,C=17.2693882,B=6.1078)
 
     IF(UMID < 0)GO TO 9999
     IF(T < 0)GO TO 9999
@@ -843,11 +854,11 @@
 !********************************************************************************
 
     subroutine medbox(MIDIMV,MNRM,MNSTAZ,MNBOX, &
-    xb,yb,nbox,dxb,dyb,x,y,alt,obsst,rmgrid, &
-    npmod,xpmod,ypmod, &
-    nminobs,rmddb,rmd,rmdo,nrm,media,massimo,prob, &
-    distr,perc, &
-    lsm,ls,obm,thr,obs,pred,nb,xbox,ybox,altbox)
+         xb,yb,nbox,dxb,dyb,x,y,alt,obsst,rmgrid, &
+         npmod,xpmod,ypmod, &
+         nminobs,rmddb,rmd,rmdo,nrm,media,massimo,prob, &
+         distr,perc, &
+         lsm,ls,obm,thr,obs,pred,nb,xbox,ybox,altbox)
 
 ! c VERIFICA - util.f
 ! c calcola i valori medi, i valori massimi o le frequenze/probabilita'
@@ -867,277 +878,277 @@
     logical ::   media,massimo,prob,distr
 
     print*,'util.f - medbox ',nminobs
-
+    
     OPEN(77,file='stato_box.dat',status='unknown')
     OPEN(22,file='distrib_box.dat',status='unknown')
 
 ! Computation of average value in a box
     ib=0
     do ibox=1,nbox
-        eblon1=xb(ibox)-dxb/2.
-        eblon2=eblon1+dxb
-        eblat1=yb(ibox)-dyb/2.
-        eblat2=eblat1+dyb
-        npo=0
+       eblon1=xb(ibox)-dxb/2.
+       eblon2=eblon1+dxb
+       eblat1=yb(ibox)-dyb/2.
+       eblat2=eblat1+dyb
+       npo=0
     ! il ciclo va sempre fatto su tutte le stazioni,
     ! perche' sono riempite lasciando i buchi
-        do ist=1,MNSTAZ
-            if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
-             .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
-             .AND. obsst(ist) /= rmddb)then
-                npo=npo+1
-            endif
-        enddo
+       do ist=1,MNSTAZ
+          if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
+               .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
+               .AND. obsst(ist) /= rmddb)then
+             npo=npo+1
+          endif
+       enddo
     ! procedo solo se ci sono sufficienti osservazioni per box
-        if(npo >= nminobs)then
-            ib=ib+1
-            if(ib > MNSTAZ)then
-                print*,'ERRORE! ib MAGGIORE DI MNSTAZ!'
-                call exit (1)
-            endif
-            xbox(ib)=xb(ibox)
-            ybox(ib)=yb(ibox)
-
-            if(media)then       ! MEDIA
-
-                obs(ib)=0.
-                altbox(ib)=0.
-                npoalt=0
-                do ist=1,MNSTAZ
-                    if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
+       if(npo >= nminobs)then
+          ib=ib+1
+          if(ib > MNSTAZ)then
+             print*,'ERRORE! ib MAGGIORE DI MNSTAZ!'
+             call exit (1)
+          endif
+          xbox(ib)=xb(ibox)
+          ybox(ib)=yb(ibox)
+          
+          if(media)then       ! MEDIA
+             
+             obs(ib)=0.
+             altbox(ib)=0.
+             npoalt=0
+             do ist=1,MNSTAZ
+                if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb)then
-                        obs(ib)=obs(ib)+obsst(ist)
-                        IF((alt(ist)-rmdo)>0.1)THEN
-                          altbox(ib)=altbox(ib)+alt(ist)
-                          npoalt=npoalt+1
-                        ENDIF
-                    endif
-                enddo
-                IF(npo /= 0)THEN
-                  obs(ib)=obs(ib)/REAL(npo)
+                   obs(ib)=obs(ib)+obsst(ist)
+                   IF((alt(ist)-rmdo)>0.1)THEN
+                      altbox(ib)=altbox(ib)+alt(ist)
+                      npoalt=npoalt+1
+                   ENDIF
+                endif
+             enddo
+             IF(npo /= 0)THEN
+                obs(ib)=obs(ib)/REAL(npo)
                 ! write(99,*)obs(ib),altbox(ib)
-                ELSE
-                  obs(ib)=rmddb
-                ENDIF
-                IF(npoalt /= 0) THEN
-                  altbox(ib)=altbox(ib)/REAL(npoalt)
-                ELSE
-                  altbox(ib)=rmdo
-                ENDIF
-                do irm=1,nrm
-                    npp=0
-                    pred(ib,irm)=0.
-                    do ip=1,npmod
-                        if(xpmod(ip) >= eblon1 &
-                         .AND. xpmod(ip) < eblon2 &
-                         .AND. ypmod(ip) >= eblat1 &
-                         .AND. ypmod(ip) < eblat2 &
-                         .AND. rmgrid(ip,irm) /= rmd)then
-                            if(nint(obm(ip)) == 1)then
-                                if(ls >= 0)then
-                                    if(nint(lsm(ip)) == ls)then
-                                        npp=npp+1
-                                        pred(ib,irm)=pred(ib,irm)+ &
-                                        rmgrid(ip,irm)
-                                    endif
-                                else
-                                    npp=npp+1
-                                    pred(ib,irm)=pred(ib,irm)+rmgrid(ip,irm)
-                                endif
+             ELSE
+                obs(ib)=rmddb
+             ENDIF
+             IF(npoalt /= 0) THEN
+                altbox(ib)=altbox(ib)/REAL(npoalt)
+             ELSE
+                altbox(ib)=rmdo
+             ENDIF
+             do irm=1,nrm
+                npp=0
+                pred(ib,irm)=0.
+                do ip=1,npmod
+                   if(xpmod(ip) >= eblon1 &
+                        .AND. xpmod(ip) < eblon2 &
+                        .AND. ypmod(ip) >= eblat1 &
+                        .AND. ypmod(ip) < eblat2 &
+                        .AND. rmgrid(ip,irm) /= rmd)then
+                      if(nint(obm(ip)) == 1)then
+                         if(ls >= 0)then
+                            if(nint(lsm(ip)) == ls)then
+                               npp=npp+1
+                               pred(ib,irm)=pred(ib,irm)+ &
+                                    rmgrid(ip,irm)
                             endif
-                        endif
-                    enddo
-                    IF(npp /= 0)THEN
-                        pred(ib,irm)=pred(ib,irm)/real(npp)
-                    else
-                        pred(ib,irm)=rmddb
-                      ENDIF
-                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                         else
+                            npp=npp+1
+                            pred(ib,irm)=pred(ib,irm)+rmgrid(ip,irm)
+                         endif
+                      endif
+                   endif
+                enddo
+                IF(npp /= 0)THEN
+                   pred(ib,irm)=pred(ib,irm)/real(npp)
+                else
+                   pred(ib,irm)=rmddb
+                ENDIF
+                WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
                      'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
                      'npo',npo,'npp',npp
-                enddo            ! nrm
-
-            elseif(massimo)then ! MASSIMO
-
-                obs(ib)=-999.9
-                altbox(ib)=0.
-                npoalt=0
-                do ist=1,MNSTAZ
-                    if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
+             enddo            ! nrm
+             
+          elseif(massimo)then ! MASSIMO
+             
+             obs(ib)=-999.9
+             altbox(ib)=0.
+             npoalt=0
+             do ist=1,MNSTAZ
+                if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb)then
-                        obs(ib)=max(obs(ib),obsst(ist))
-                        IF((alt(ist)-rmdo)>0.1)THEN
-                          altbox(ib)=altbox(ib)+alt(ist)
-                          npoalt=npoalt+1
-                        ENDIF
-                    endif
-                enddo
-                IF(npo == 0)obs(ib)=rmddb
-                IF(npoalt /= 0)THEN
-                  altbox(ib)=altbox(ib)/REAL(npoalt)
-                ELSE
-                  altbox(ib)=rmdo
-                ENDIF
-                do irm=1,nrm
-                    pred(ib,irm)=-999.9
-                    ncont=0
-                    do ip=1,npmod
-                        if(xpmod(ip) >= eblon1 &
-                         .AND. xpmod(ip) < eblon2 &
-                         .AND. ypmod(ip) >= eblat1 &
-                         .AND. ypmod(ip) < eblat2 &
-                         .AND. rmgrid(ip,irm) /= rmd)then
-                            if(nint(obm(ip)) == 1)then
-                                if(ls >= 0)then
-                                    if(nint(lsm(ip)) == ls)then
-                                        ncont=ncont+1
-                                        pred(ib,irm)= &
-                                        max(pred(ib,irm),rmgrid(ip,irm))
-                                    endif
-                                else
-                                    ncont=ncont+1
-                                    pred(ib,irm)= &
+                   obs(ib)=max(obs(ib),obsst(ist))
+                   IF((alt(ist)-rmdo)>0.1)THEN
+                      altbox(ib)=altbox(ib)+alt(ist)
+                      npoalt=npoalt+1
+                   ENDIF
+                endif
+             enddo
+             IF(npo == 0)obs(ib)=rmddb
+             IF(npoalt /= 0)THEN
+                altbox(ib)=altbox(ib)/REAL(npoalt)
+             ELSE
+                altbox(ib)=rmdo
+             ENDIF
+             do irm=1,nrm
+                pred(ib,irm)=-999.9
+                ncont=0
+                do ip=1,npmod
+                   if(xpmod(ip) >= eblon1 &
+                        .AND. xpmod(ip) < eblon2 &
+                        .AND. ypmod(ip) >= eblat1 &
+                        .AND. ypmod(ip) < eblat2 &
+                        .AND. rmgrid(ip,irm) /= rmd)then
+                      if(nint(obm(ip)) == 1)then
+                         if(ls >= 0)then
+                            if(nint(lsm(ip)) == ls)then
+                               ncont=ncont+1
+                               pred(ib,irm)= &
                                     max(pred(ib,irm),rmgrid(ip,irm))
-                                endif
                             endif
-                        endif
-                    enddo
-                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                         else
+                            ncont=ncont+1
+                            pred(ib,irm)= &
+                                 max(pred(ib,irm),rmgrid(ip,irm))
+                         endif
+                      endif
+                   endif
+                enddo
+                WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
                      'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
                      'npo',npo,'npp',ncont
-                    if(ncont == 0)pred(ib,irm)=rmddb
-                enddo            ! nrm
-
-            elseif(prob)then    ! PROB
-
-                obs(ib)=0.
-                altbox(ib)=0.
-                npoalt=0
-                do ist=1,MNSTAZ
-                    if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
+                if(ncont == 0)pred(ib,irm)=rmddb
+             enddo            ! nrm
+             
+          elseif(prob)then    ! PROB
+             
+             obs(ib)=0.
+             altbox(ib)=0.
+             npoalt=0
+             do ist=1,MNSTAZ
+                if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb &
                      .AND. obsst(ist) >= thr)then
-                        obs(ib)=obs(ib)+1.
-                        IF((alt(ist)-rmdo)>0.1)THEN
-                          altbox(ib)=altbox(ib)+alt(ist)
-                          npoalt=npoalt+1
-                        ENDIF
-                    endif
-                enddo
-                IF(npo /= 0)THEN
-                  obs(ib)=(obs(ib)/REAL(npo))*10.
-                ELSE
-                  obs(ib)=rmddb
-                ENDIF
-                IF(npoalt /= 0)THEN
-                  altbox(ib)=altbox(ib)/REAL(npoalt)
-                ELSE
-                  altbox(ib)=rmdo
-                ENDIF
-                do irm=1,nrm
-                    npp=0
-                    pred(ib,irm)=0.
-                    do ip=1,npmod
-                        if(xpmod(ip) >= eblon1 &
-                         .AND. xpmod(ip) < eblon2 &
-                         .AND. ypmod(ip) >= eblat1 &
-                         .AND. ypmod(ip) < eblat2 &
-                         .AND. rmgrid(ip,irm) /= rmd)then
-                            if(nint(obm(ip)) == 1)then
-                                if(ls >= 0)then
-                                    if(nint(lsm(ip)) == ls)then
-                                        npp=npp+1
-                                        if(rmgrid(ip,irm) >= thr)then
-                                            pred(ib,irm)=pred(ib,irm)+1.
-                                        endif
-                                    endif
-                                else
-                                    npp=npp+1
-                                    if(rmgrid(ip,irm) >= thr)then
-                                        pred(ib,irm)=pred(ib,irm)+1.
-                                    endif
-                                endif
+                   obs(ib)=obs(ib)+1.
+                   IF((alt(ist)-rmdo)>0.1)THEN
+                      altbox(ib)=altbox(ib)+alt(ist)
+                      npoalt=npoalt+1
+                   ENDIF
+                endif
+             enddo
+             IF(npo /= 0)THEN
+                obs(ib)=(obs(ib)/REAL(npo))*10.
+             ELSE
+                obs(ib)=rmddb
+             ENDIF
+             IF(npoalt /= 0)THEN
+                altbox(ib)=altbox(ib)/REAL(npoalt)
+             ELSE
+                altbox(ib)=rmdo
+             ENDIF
+             do irm=1,nrm
+                npp=0
+                pred(ib,irm)=0.
+                do ip=1,npmod
+                   if(xpmod(ip) >= eblon1 &
+                        .AND. xpmod(ip) < eblon2 &
+                        .AND. ypmod(ip) >= eblat1 &
+                        .AND. ypmod(ip) < eblat2 &
+                        .AND. rmgrid(ip,irm) /= rmd)then
+                      if(nint(obm(ip)) == 1)then
+                         if(ls >= 0)then
+                            if(nint(lsm(ip)) == ls)then
+                               npp=npp+1
+                               if(rmgrid(ip,irm) >= thr)then
+                                  pred(ib,irm)=pred(ib,irm)+1.
+                               endif
                             endif
-                        endif
-                    enddo
-                    if(npp /= 0)then
-                        pred(ib,irm)=(pred(ib,irm)/real(npp))*10.
-                    else
-                        pred(ib,irm)=rmddb
-                    endif
-                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                         else
+                            npp=npp+1
+                            if(rmgrid(ip,irm) >= thr)then
+                               pred(ib,irm)=pred(ib,irm)+1.
+                            endif
+                         endif
+                      endif
+                   endif
+                enddo
+                if(npp /= 0)then
+                   pred(ib,irm)=(pred(ib,irm)/real(npp))*10.
+                else
+                   pred(ib,irm)=rmddb
+                endif
+                WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
                      'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
                      'npo',npo,'npp',npp
-                enddo            ! nrm
-
-            elseif(distr)then   ! DISTR
-
-                nvo=0
-                do ist=1,MNSTAZ
-                    if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
+             enddo            ! nrm
+             
+          elseif(distr)then   ! DISTR
+             
+             nvo=0
+             do ist=1,MNSTAZ
+                if(x(ist) >= eblon1 .AND. x(ist) < eblon2 &
                      .AND. y(ist) >= eblat1 .AND. y(ist) < eblat2 &
                      .AND. obsst(ist) /= rmddb)then
-                        nvo=nvo+1
-                        vecto(nvo)=obsst(ist)
-                    endif
-                enddo
-                do irm=1,nrm
-                    nvp=0
-                    do ip=1,npmod
-                        if(xpmod(ip) >= eblon1 &
-                         .AND. xpmod(ip) < eblon2 &
-                         .AND. ypmod(ip) >= eblat1 &
-                         .AND. ypmod(ip) < eblat2 &
-                         .AND. rmgrid(ip,irm) /= rmd)then
-                            if(nint(obm(ip)) == 1)then
-                                if(ls >= 0)then
-                                    if(nint(lsm(ip)) == ls)then
-                                        nvp=nvp+1
-                                        vectp(nvp)=rmgrid(ip,irm)
-                                    endif
-                                else
-                                    nvp=nvp+1
-                                    vectp(nvp)=rmgrid(ip,irm)
-                                endif
+                   nvo=nvo+1
+                   vecto(nvo)=obsst(ist)
+                endif
+             enddo
+             do irm=1,nrm
+                nvp=0
+                do ip=1,npmod
+                   if(xpmod(ip) >= eblon1 &
+                        .AND. xpmod(ip) < eblon2 &
+                        .AND. ypmod(ip) >= eblat1 &
+                        .AND. ypmod(ip) < eblat2 &
+                        .AND. rmgrid(ip,irm) /= rmd)then
+                      if(nint(obm(ip)) == 1)then
+                         if(ls >= 0)then
+                            if(nint(lsm(ip)) == ls)then
+                               nvp=nvp+1
+                               vectp(nvp)=rmgrid(ip,irm)
                             endif
-                        endif
-                    enddo
-                    IF(nvp >= 3)THEN
-                        call percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
-                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6)') &
+                         else
+                            nvp=nvp+1
+                            vectp(nvp)=rmgrid(ip,irm)
+                         endif
+                      endif
+                   endif
+                enddo
+                IF(nvp >= 3)THEN
+                   call percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
+                   write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6))') &
                         'box',ib,'nvo',nvo,'irm',irm,'nvp',nvp, &
                         'medo',medo,'medp',medp
-                        obs(ib)=medo
-                        pred(ib,irm)=medp
-                    else
-                        obs(ib)=rmddb
-                        pred(ib,irm)=rmddb
-                        write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6)') &
+                   obs(ib)=medo
+                   pred(ib,irm)=medp
+                else
+                   obs(ib)=rmddb
+                   pred(ib,irm)=rmddb
+                   write(22,'(4(1x,a,1x,i4),2(1x,a,1x,f11.6))') &
                         'box',ib,'nvo',nvo,'irm',irm,'nvp',nvp, &
                         'o',obs(ib),'p',pred(ib,irm)
-                      ENDIF
-                    WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
+                ENDIF
+                WRITE(77,'(a,i4,2(1x,a,1x,f8.3),2(1x,a,1x,i4))') &
                      'box:',ibox,'lon',xb(ibox),'lat',yb(ibox), &
                      'npo',npo,'npp',nvp
-                enddo            ! nrm
-
-            endif               !media o massimo o probabilita'
-
-        endif                  !nminobs
+             enddo            ! nrm
+             
+          endif               !media o massimo o probabilita'
+          
+       endif                  !nminobs
     enddo                     !nbox
     nb=ib
     print*,'numero box buone ',nb
     write(23,*)'numero box buone ',nb
-
+    
     CLOSE(77)
     CLOSE(22)
 
     return
     end subroutine medbox
-
+  
 !*****************************************************************************
 
     subroutine percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
@@ -1162,94 +1173,94 @@
     real :: a(n)
 
     inc=1
-    1 inc=3*inc+1
+1   inc=3*inc+1
     if(inc <= n)goto1
-    2 continue
+2   continue
     inc=inc/3
     do i=inc+1,n
-        v=a(i)
-        j=i
-        3 if(a(j-inc) > v)then
-            a(j)=a(j-inc)
-            j=j-inc
-            if(j <= inc)goto4
-            goto3
-        endif
-        4 a(j)=v
+       v=a(i)
+       j=i
+3      if(a(j-inc) > v)then
+          a(j)=a(j-inc)
+          j=j-inc
+          if(j <= inc)goto4
+          goto3
+       endif
+4      a(j)=v
     enddo
     if(inc > 1)goto2
     return
-    end subroutine shell
+  end subroutine shell
 
 !************************************************************************
 
     function selip(k,n,arr)
 
-    parameter(M=100)
-    integer :: k,n,M,isel(M+2)
+    integer, parameter :: M=100
+    integer :: k,n,isel(M+2)
     real :: selip,arr(n),sel(M+2)
 
     kk=k
     ahi=1.E15
     alo=-1.E15
-    1 continue
+1   continue
     mm=0
     nlo=0
     sum=0.
     nxtmm=M+1
     do i=1,n
-        if(arr(i) >= alo .AND. arr(i) <= ahi)then
-            mm=mm+1
-            if(arr(i) == alo)nlo=nlo+1
-            if(mm <= M)then
-                sel(mm)=arr(i)
-            elseif(mm == nxtmm)then
-                nxtmm=mm+mm/M
-                sel(1+mod(i+mm+kk,M))=arr(i)
-            endif
-            sum=sum+arr(i)
-        endif
+       if(arr(i) >= alo .AND. arr(i) <= ahi)then
+          mm=mm+1
+          if(arr(i) == alo)nlo=nlo+1
+          if(mm <= M)then
+             sel(mm)=arr(i)
+          elseif(mm == nxtmm)then
+             nxtmm=mm+mm/M
+             sel(1+mod(i+mm+kk,M))=arr(i)
+          endif
+          sum=sum+arr(i)
+       endif
     enddo
     if(kk <= nlo)then
-        selip=alo
-        return
+       selip=alo
+       return
     elseif(mm <= M)then
-        call shell(mm,sel)
-        selip=sel(kk)
-        return
+       call shell(mm,sel)
+       selip=sel(kk)
+       return
     endif
     sel(M+1)=sum/mm
     call shell(M+1,sel)
     sel(M+2)=ahi
     do j=1,M+2
-        isel(j)=0
+       isel(j)=0
     enddo
     do i=1,n
-        if(arr(i) >= alo .AND. arr(i) <= ahi)then
-            jl=0
-            ju=M+2
-            2 if(ju-jl > 1)then
-                jm=(ju+jl)/2
-                if(arr(i) >= sel(jm))then
-                    jl=jm
-                else
-                    ju=jm
-                endif
-                goto2
-            endif
-            isel(ju)=isel(ju)+1
-        endif
+       if(arr(i) >= alo .AND. arr(i) <= ahi)then
+          jl=0
+          ju=M+2
+2         if(ju-jl > 1)then
+             jm=(ju+jl)/2
+             if(arr(i) >= sel(jm))then
+                jl=jm
+             else
+                ju=jm
+             endif
+             goto2
+          endif
+          isel(ju)=isel(ju)+1
+       endif
     enddo
     j=1
-    3 if(kk > isel(j))then
-        alo=sel(j)
-        kk=kk-isel(j)
-        j=j+1
-        goto3
+3   if(kk > isel(j))then
+       alo=sel(j)
+       kk=kk-isel(j)
+       j=j+1
+       goto3
     endif
     ahi=sel(j)
     goto1
-
+    
     end function selip
 
 !************************************************************************
@@ -1290,7 +1301,6 @@
 !       OUTPUT:
 !       C_E_i   LOGICAL .TRUE.se il dato e` presente
 
-    INCLUDE "dballe/dballef.h"
 
     integer  var
 
@@ -1312,7 +1322,6 @@
 !       OUTPUT:
 !       C_E_c   LOGICAL         .TRUE.se il dato e` presente
 
-    INCLUDE "dballe/dballef.h"
 
     CHARACTER (len=*) var
     
@@ -1320,3 +1329,7 @@
     IF (var /= dba_mvc )c_e_c=.TRUE.
     RETURN
     END FUNCTION c_e_c
+
+!*****************************************************************************
+
+  END MODULE util_dballe

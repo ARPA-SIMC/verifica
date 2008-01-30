@@ -3,6 +3,8 @@
 ! programma che genera automaticamente il descrittore
 ! del campo che si vuole verificare
 
+    USE util_dballe
+
     integer ::   imod,ls,itipo
     logical ::   media,massimo,prob,distr
     real ::      dxb,dyb

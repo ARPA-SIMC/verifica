@@ -13,7 +13,6 @@
 ! c 9 dicembre 2005 - tolto il ciclo sulle variabili (aggiunto in verifica_batch)
 ! c e inserito imet
 
-
 ! Copyright (C) 2004
 
 ! Questo programma è software libero; è lecito ridistribuirlo e/o
@@ -35,7 +34,7 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     parameter (MIDIMG=1200000)
     parameter (MNSCAD=72,MNGIO=150,MNRM=102)
@@ -56,7 +55,7 @@
     INTEGER :: kvar(3,2),lsvar,nore
     integer :: scadenze(4,MNSCAD),dum(2)
     integer :: imet,imod,ls,itipo,iana,ivor
-    logical :: ruota,media,massimo,prob,distr,diffh
+    logical :: ruota,media,massimo,prob,distr,diffh,wind
     real :: dxb,dyb,diffmax,hdiff,thr,perc
     character model*10
     character(19) :: database,user,password
@@ -128,7 +127,7 @@
 
 ! leggo tutte le stazioni disponibili
     call leggiana_db(iana,x,y,alt,rmdo,nstaz,handler)
-    
+
     IF(diffh .OR. (ls >= 0))THEN
       CALL modello(model,ivlsm,ivor,ls,diffh)
       PRINT*,' ivlsm ',ivlsm,' ivor ',ivor
@@ -174,7 +173,7 @@
 
 ! leggo le coordinate del modello
     CALL leggibox(vfile,MNBOX,xpmod,ypmod,npmod,alorot,alarot, &
-     ruota,.FALSE.,dum,dum,dum,dum)
+     ruota,.FALSE.,rdum,rdum,rdum,rdum)
     print*,'numero totale punti modello ',npmod
 
 ! leggo la land-sea mask
@@ -348,7 +347,7 @@
               ENDIF
               
            ! Interpolation of predicted data on (lat,lon) station points
-              IF(ruota == .TRUE. )THEN
+              IF(ruota)THEN
                 CALL rot_grib_LAMBO(alorot,alarot, &
                  tlm0d,tph0d)
               ENDIF
@@ -422,9 +421,6 @@
                   h=alt(ist)
                   
                   ! imposto tutta l'anagrafica
-                  
-                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                  !!                                call idba_unset (handle,"ana_id")
                   
                   CALL idba_set (handle,"lat",rlat)
                   CALL idba_set (handle,"lon",rlon)
@@ -609,7 +605,7 @@
             ENDDO
             
             ! Interpolation of predicted data on (lat,lon) station points
-            IF(ruota == .TRUE. )THEN
+            IF(ruota)THEN
               CALL rot_grib_LAMBO(alorot,alarot, &
                tlm0d,tph0d)
             ENDIF
@@ -655,9 +651,6 @@
                   h=alt(ist)
                   
                   ! imposto tutta l'anagrafica
-                  
-                  ! prima faccio unset di ana_id senno' ricopre sempre!!!
-                  !!                                call idba_unset (handle,"ana_id")
                   
                   CALL idba_set (handle,"lat",rlat)
                   CALL idba_set (handle,"lon",rlon)

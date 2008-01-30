@@ -5,19 +5,31 @@ bin_PROGRAMS =  ver_calcola_descrittore  ver_interpola_dballe  ver_lettura \
                 ver_pulisci              ver_leggidati_euro
 
 
-ver_calcola_descrittore_SOURCES =  ver_calcola_descrittore.f90 util_dballe.f90
-ver_interpola_dballe_SOURCES =  ver_interpola_dballe.f90 util_dballe.f90
-ver_lettura_SOURCES =  ver_lettura.f90 util_dballe.f90
-ver_crea_obsmask_SOURCES =         ver_crea_obsmask.f90 util_dballe.f90
-ver_leggidati_ana_SOURCES =     ver_leggidati_ana.f90 util_dballe.f90
-ver_scores_dballe_SOURCES =  ver_scores_dballe.f90 util_dballe.f90 scores_util_dballe.f90
-ver_cumula_preci_SOURCES =  ver_cumula_preci.f90 util_dballe.f90
-ver_leggidati_mare_SOURCES =  ver_leggidati_mare.f90  util_dballe.f90
+ver_calcola_descrittore_SOURCES = ver_calcola_descrittore.f90 util_dballe.f90
+ver_calcola_descrittore.o: util_dballe.o
+ver_interpola_dballe_SOURCES = ver_interpola_dballe.f90 util_dballe.f90
+ver_interpola_dballe.o: util_dballe.o
+ver_lettura_SOURCES = ver_lettura.f90 util_dballe.f90
+ver_lettura.o: util_dballe.o
+ver_crea_obsmask_SOURCES = ver_crea_obsmask.f90 util_dballe.f90
+ver_crea_obsmask.o: util_dballe.o
+ver_leggidati_ana_SOURCES = ver_leggidati_ana.f90 util_dballe.f90
+ver_leggidati_ana.o: util_dballe.o
+ver_scores_dballe_SOURCES = ver_scores_dballe.f90 util_dballe.f90 scores_util_dballe.f90
+ver_scores_dballe.o: util_dballe.o
+ver_cumula_preci_SOURCES = ver_cumula_preci.f90 util_dballe.f90
+ver_cumula_preci.o: util_dballe.o
+ver_leggidati_mare_SOURCES = ver_leggidati_mare.f90  util_dballe.f90
+ver_leggidati_mare.o: util_dballe.o
 ver_scores_prob_dballe_SOURCES = ver_scores_prob_dballe.f90 util_dballe.f90 scores_prob_util_dballe.f90
+ver_scores_prob_dballe.o: util_dballe.o
 ver_boxfix_dballe_SOURCES = ver_boxfix_dballe.f90 util_dballe.f90
+ver_boxfix_dballe.o: util_dballe.o
 ver_ffdd_SOURCES = ver_ffdd.f90
 ver_leggidati_regio_SOURCES = ver_leggidati_regio.f90 util_dballe.f90
+ver_leggidati_regio.o: util_dballe.o
 ver_leggidati_euro_SOURCES = ver_leggidati_euro.f90 util_dballe.f90
+ver_leggidati_euro.o: util_dballe.o
 ver_pulisci_SOURCES = ver_pulisci.f90 util_dballe.f90
 
 

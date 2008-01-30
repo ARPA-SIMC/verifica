@@ -5,11 +5,9 @@
 ! autore: Chiara Marsigli
 ! ultima modifica: 22 Settembre 2005 (passaggio a dballe)
 
-
 ! ATTENZIONE!!! ora le soglie vanno nell'unita' di misura prevista dalla
 ! Blocale, per omogeneita' tra le variabili!!! E per ora lascio cosi'
 ! anche l'output, poi vediamo!
-
 
 ! valori indicativi:
 ! MSNTAZ par massimo numero di stazioni e pseudo-stazioni
@@ -95,7 +93,7 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
-    INCLUDE "dballe/dballef.h"
+    USE util_dballe
 
     PARAMETER (MNSTAZ=5000,MNSCAD=72,MNGIO=366,MNORE=1)
     PARAMETER (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)

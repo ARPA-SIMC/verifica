@@ -287,12 +287,10 @@
           ENDIF
           
           WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-           soglie(ith),npo,no,bs,hr,ts,pod,fa,rts,rfa,hss, &
-           rmserr,b
+           soglie(ith),npo,no,bs,hr,ts,pod,fa,rts,rfa,hss,rmserr,b
         ELSE
           WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-           soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
-           rmserr,b
+           soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmserr,b
         END IF
         
       ELSE
@@ -301,9 +299,8 @@
         rmserr=rmd
         b=rmd
         
-        WRITE(20,'((1x,f7.1,2(2x,i6),10(1x,f8.3))') &
-         soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd, &
-         rmd,rmd
+        WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+         soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd
         
       ENDIF
     END DO                    !nsoglie

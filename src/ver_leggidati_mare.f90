@@ -30,7 +30,7 @@ program leggidati_mare
 ! QUESTO PROGRAMMA  LEGGE I DATI DELLE BOE
 ! E LI CARICA NEL DATABASE DB-all.e
 
-  INCLUDE "dballe/dballef.h"
+  USE util_dballe
 
   parameter (nstaz=20)
   
@@ -50,8 +50,6 @@ program leggidati_mare
       
   integer :: idata(3),versione(nstaz)
   
-  ! ------
-  
   data rmd/-999./
   
   character nome(nstaz)*20,nomefile(nstaz)*20,stringa*80
@@ -61,8 +59,6 @@ program leggidati_mare
   namelist  /boe/path,nomefile,versione,nboe,nome,block,station,rlat,rlon,hstaz, &
        rwdata
 
-  ! --------
-  
   character(19) :: database,user,password
   INTEGER :: handle,handle_ana,rewrite
   logical :: init,rwdata
@@ -77,13 +73,10 @@ program leggidati_mare
   
   namelist  /odbc/database,user,password
   
-  ! --------
-  
   open(1,file='odbc.nml',status='old')
   read(1,nml=odbc)
   close(1)
-    
-    
+        
   open(1,file='boe.nml',status='old')
   read(1,nml=boe)
   close(1)
@@ -118,7 +111,6 @@ program leggidati_mare
      call idba_preparati(idbhandle,handle_ana, &
           "write","write","write")
 
-  
   ! INIZIO CICLO SUL NUMERO DI BOE
   do ns=1,nboe
      
@@ -158,8 +150,7 @@ program leggidati_mare
      call idba_set (handle,"rep_memo","boe")
      call idba_setlevel (handle,1,0,0)
      call idba_settimerange (handle,0,0,0)
-     
-     
+          
      print *,"apro file", path(1:istr_lunghezza(path))//"/" &
           //nomefile(ns)(1:istr_lunghezza(nomefile(ns)))
      open(1,file=path(1:istr_lunghezza(path))//"/" &
@@ -208,7 +199,6 @@ program leggidati_mare
         field=field*fact
      end where
      
-     
      ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
      
      call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,isec)
@@ -246,5 +236,3 @@ program leggidati_mare
   stop
   
 end program leggidati_mare
-
-
