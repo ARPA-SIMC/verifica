@@ -1,4 +1,4 @@
-    program boxfix_dballe
+    PROGRAM boxfix_dballe
 
 ! c VERIFICA - boxfix_dballe.f
 ! c programma per il calcolo di medie, massimi, percentili e distribuzioni
@@ -66,9 +66,9 @@
     logical :: ruota=.false.,diffh=.false.
     logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
     real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
-    character(19) :: database='',user='',password=''
     real :: pblon=10.,pblat=45.
     integer :: ni=1,nj=1
+    character(19) :: database='',user='',password=''
 
     integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
     REAL :: psec2(384),psec3(2),dummy(1)
@@ -88,19 +88,19 @@
     integer :: debug=1
     integer :: handle_err
 
-    namelist  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
+    namelist /parameters/nora,ngio,nscad,scad1,scad2,inc, &
     nvar,nrm,nore,ore
-    namelist  /date/data
-    namelist  /scadenza/scadenze
-    namelist  /parametro/kvar
-    namelist  /stat/model,itipo,iana,imet,imod,ls, &
+    namelist /date/data
+    namelist /scadenza/scadenze
+    namelist /parametro/kvar
+    namelist /stat/model,itipo,iana,imet,imod,ls, &
     ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
     diffh,diffmax,thr,perc
 ! namelist dove si specificano il punto in basso a sinistra (pblon,pblat)
 ! e il numero di punti in x ed in y (ni,nj) dell'area da coprire di box
 ! il passo e' dxb,dyb
-    namelist  /areabox/pblon,pblat,ni,nj
-    namelist  /odbc/database,user,password
+    namelist /areabox/pblon,pblat,ni,nj
+    namelist /odbc/database,user,password
 
     data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
     scad/-1,-1,-1,-1/, ora/-1,-1/
@@ -651,4 +651,4 @@
     stop
     9800 print *,"Errore durante la pbgrib ",ier
     stop
-    end program
+    END PROGRAM boxfix_dballe

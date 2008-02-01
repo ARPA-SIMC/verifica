@@ -74,6 +74,8 @@
     namelist  /areaoss/area,slon1,slon2,slat1,slat2
     namelist  /odbc/database,user,password
 
+    PRINT*,'program leggidati_ana'
+
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9003)
     close(1)

@@ -30,23 +30,29 @@
 
     parameter (nstaz=20000,nmesi=100)
 
-    real :: lonoss(nstaz),latoss(nstaz)
-    integer :: alte(nstaz)
+    REAL :: lonoss(nstaz),latoss(nstaz)
+    INTEGER :: alte(nstaz)
     REAL :: preci(nstaz,31)
-    INTEGER :: data(3),ora(2)
-    INTEGER :: giomax,nme,ialt
-    CHARACTER mese(nmesi)*2,anno(nmesi)*4,canno*4,cmese*2
-    CHARACTER path*80,reg*2
-
-    character(19) :: database,user,password
+    INTEGER :: DATA(3),ora(2)
+    INTEGER :: giomax,ialt
+    CHARACTER :: canno*4,cmese*2
+! namelist variables
+    CHARACTER(len=80) :: path=''
+    CHARACTER(len=2) :: reg='',mese(nmesi)=''
+    CHARACTER(len=4) :: anno(nmesi)=''
+    INTEGER :: nme=0
+    CHARACTER(19) :: database='',user='',password=''
+    
     integer :: handle
-    integer :: debug = 1
+    integer :: debug=1
     integer :: handle_err
 
-    NAMELIST  /euro/path,reg,nme,mese,anno
-    namelist  /odbc/database,user,password
+    NAMELIST /euro/path,reg,nme,mese,anno
+    namelist /odbc/database,user,password
 
     data imd/9999/
+
+    print*,'program leggidati_euro'
 
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)

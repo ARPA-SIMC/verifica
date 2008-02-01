@@ -51,8 +51,8 @@
     integer :: debug=1
     integer :: handle_err
 
-    namelist  /odbc/database,user,password
-    NAMELIST  /cumula/giornoi,mesei,annoi,orai,mini, &
+    namelist /odbc/database,user,password
+    NAMELIST /cumula/giornoi,mesei,annoi,orai,mini, &
     giornof,mesef,annof,oraf,minf,incr,ncum,interval,perc
 
 ! incr = intervallo di cumulazione delle preci nel database (minuti)
@@ -63,6 +63,8 @@
     data rmdo/-999.9/
     data cvar/'B13011'/
 
+    PRINT*,'program cumula_preci'
+    
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)
     close(1)

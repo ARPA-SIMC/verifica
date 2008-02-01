@@ -48,22 +48,26 @@ program leggidati_mare
   ! (4) dir =direzione media di prop. dell'onda
   ! (5) tma =temp ogni tre ore boa mare
       
-  integer :: idata(3),versione(nstaz)
-  
-  data rmd/-999./
-  
-  character nome(nstaz)*20,nomefile(nstaz)*20,stringa*80
-  real :: block(nstaz),station(nstaz),rlat(nstaz),rlon(nstaz),hstaz(nstaz)
-  character path*80,var(5)*6
-    
+  INTEGER :: idata(3)
+  CHARACTER(len=80) :: stringa
+  CHARACTER(len=6) :: var(5)
+! namelist variables
+  CHARACTER(len=80) :: path=''
+  CHARACTER(len=20) :: nomefile(nstaz)='',nome(nstaz)=''
+  INTEGER :: versione(nstaz)=0,nboe=0
+  REAL :: BLOCK(nstaz)=0.,station(nstaz)=0.
+  REAL :: rlat(nstaz)=0.,rlon(nstaz)=0.,hstaz(nstaz)=0.
+  CHARACTER(19) :: database='',user='',password=''
+
   namelist  /boe/path,nomefile,versione,nboe,nome,block,station,rlat,rlon,hstaz, &
        rwdata
 
-  character(19) :: database,user,password
+  data rmd/-999./
+  
   INTEGER :: handle,handle_ana,rewrite
   logical :: init,rwdata
   character(1000) :: messaggio
-  integer :: debug = 1
+  integer :: debug=1
   integer :: handle_err
   data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
   data fact/ 1.,1.,1.,1.,1./
@@ -72,6 +76,8 @@ program leggidati_mare
   data init,rwdata/.false.,.false./
   
   namelist  /odbc/database,user,password
+
+  PRINT*,'program leggidati_mare'
   
   open(1,file='odbc.nml',status='old')
   read(1,nml=odbc)

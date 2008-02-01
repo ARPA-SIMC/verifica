@@ -35,20 +35,26 @@
     integer :: idata(3),block,station
     character(LEN=7) :: scode,code(nstaz)
     character(LEN=20) :: nomest(nstaz),nome
-    character reg(MNRE)*2,mese(nmesi)*2,anno(nmesi)*4
-    character path*80,pathana*80,cdum*2
+    CHARACTER(len=2) :: cdum
     integer :: imd ! valore mancante che si trova nei file delle regioni
     REAL :: rmdo ! valore interno al programma, non scrivo il valore in db se e' dato mancante!
+! namelist variables
+    CHARACTER(len=80) :: path='',pathana=''
+    INTEGER :: nre=1,nme=1
+    CHARACTER(len=2) :: reg(MNRE)='',mese(nmesi)=''
+    CHARACTER(len=4) :: anno(nmesi)=''
+    CHARACTER(19) :: database='',user='',password=''
 
-    character(19) :: database,user,password
     integer :: handle
-    integer :: debug = 1
+    integer :: debug=1
     integer :: handle_err
 
     namelist  /regioni/path,pathana,nre,reg,nme,mese,anno
     namelist  /odbc/database,user,password
 
     data imd/9999/,rmdo/-999.9/
+
+    print*,'program leggidati_regio'
 
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)

@@ -2,11 +2,15 @@
 
     INCLUDE "dballe/dballef.h"
 
+! namelist variables
     character(LEN=19) :: database='',user='',password=''
+
     INTEGER :: handle,handle_err
     integer :: debug=1
 
     namelist  /odbc/database,user,password
+
+    PRINT*,'program pulisci'
 
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc)

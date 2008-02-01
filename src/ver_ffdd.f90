@@ -40,7 +40,7 @@
     integer :: genproc,tabella,ucomp,vcomp,scadenza
     integer :: intensita,direzione
     integer :: giorno(3)
-    namelist      /parameters/genproc,tabella,giorno,ucomp,vcomp, &
+    namelist /parameters/genproc,tabella,giorno,ucomp,vcomp, &
     scadenza,intensita,direzione
 
     data ksec0/2*0/
@@ -54,6 +54,8 @@
 
     data level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
     scad/-1,-1,-1,-1/, data/-1,-1,-1/, ora/-1,-1/
+
+    PRINT*,'program ffdd'
 
     pi=acos(-1.)
 ! RTA è 180/pi

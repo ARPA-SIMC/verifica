@@ -32,35 +32,40 @@
     parameter (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE,MNRM=102)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    INTEGER :: nora,ngio,nscad,nvar,nrm,nsoglie,nminobs,nelsupens
-    integer :: scad1,scad2,inc
-    integer :: scadenze(4,MNSCAD)
-    integer :: itipo,iana,imod,ls,iquota
-    logical :: ruota,media,massimo,prob,distr,diffh
-    real :: dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
-    integer :: nore,ore(24)
-    integer :: data(3),ora(2),var(3),scad(4),level(3)
+    integer :: ora(2),var(3),scad(4),level(3)
     integer :: dataval(3),oraval(2),scaddb(4),p1,p2
-    integer :: icodice,itipost,ntot
+    INTEGER :: icodice,itipost,ntot,h,sum_nowght
     real :: dato
-    character descr*20,descrfisso*20,model*10
-    character cvar*6,cel*3
+    character(len=20) :: descr,descrfisso
+    character(len=3) :: cel
     REAL :: bs,bss,roca,clarea,outr,rps,rpss
-    logical :: lwght
-    integer :: nowght(MNRM),pesi(MNRM)
-    LOGICAL :: loutput,lselect
-    INTEGER :: h,sum_nowght
+    integer :: pesi(MNRM)
+    LOGICAL :: loutput
+! namelist variables
+    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
+    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
+    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1
+    character(len=10) :: model=''
+    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
+    logical :: ruota=.false.,diffh=.false.
+    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
+    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
+    CHARACTER(len=6) :: cvar=''
+    INTEGER :: iquota=-1
+    INTEGER :: nsoglie=1
+    REAL :: hlimite=100.,soglie(MNSOG)=0.
+    LOGICAL :: lselect=.FALSE.,lwght=.false.
+    integer :: nowght(MNRM)=1
+    INTEGER :: nelsupens=102
+    CHARACTER(LEN=19) :: database='',user='',password=''
 
-    real, ALLOCATABLE :: oss(:,:),prev(:,:,:),osse(:),previ(:,:)
-    integer, ALLOCATABLE :: anaid(:)
+    REAL, ALLOCATABLE :: oss(:,:),prev(:,:,:),osse(:),previ(:,:)
+    INTEGER, ALLOCATABLE :: anaid(:)
     INTEGER, ALLOCATABLE :: wght(:,:),temp_wght(:),distrib(:)
 
-    character(LEN=19) :: database,user,password
-
-    character btable*10
+    CHARACTER(len=10) :: btable
     INTEGER :: handle,handle_err,handleana,USTAZ
-    integer :: debug = 1
-    logical :: c_e_i
+    integer :: debug=1
 
     DATA rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
     DATA loutput/.TRUE./

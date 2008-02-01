@@ -89,15 +89,15 @@
 
     COMMON /point/ij1,ij2,ij3,ij4
     
-    NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
+    NAMELIST /parameters/nora,ngio,nscad,scad1,scad2,inc, &
      nvar,nrm,nore,ore
-    NAMELIST  /date/DATA
-    NAMELIST  /scadenza/scadenze
-    NAMELIST  /parametro/kvar
-    NAMELIST  /stat/model,itipo,iana,imet,imod,ls, &
+    NAMELIST /date/DATA
+    NAMELIST /scadenza/scadenze
+    NAMELIST /parametro/kvar
+    NAMELIST /stat/model,itipo,iana,imet,imod,ls, &
      ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
      diffh,diffmax,thr,perc
-    NAMELIST  /odbc/database,user,password
+    NAMELIST /odbc/database,user,password
 
     DATA level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
      scad/-1,-1,-1,-1/, ora/-1,-1/, varv/-1,-1,-1/

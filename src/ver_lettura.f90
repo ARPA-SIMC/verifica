@@ -1,17 +1,17 @@
-    program leggi
+    PROGRAM lettura
 
     USE util_dballe
 
     character(LEN=10) :: btable,starbtable(12)
     character(LEN=10) :: dati(12)
-! character*10 dato
     real :: dato
     logical :: found,starfound
+! namelist variables
+    character(19) :: database='',user='',password=''
 
-    character(19) :: database,user,password
     INTEGER :: handle,handleana,handle_err
     character(1000) :: messaggio
-    integer :: debug = 1
+    integer :: debug=1
 
     namelist  /odbc/database,user,password
 
@@ -22,9 +22,10 @@
     integer :: year,month,day,hour,min,sec
 
     integer :: imd
-    LOGICAL :: c_e_c,c_e_i
 
     DATA imd/9999/
+
+    PRINT*,'program lettura'
 
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)
@@ -153,4 +154,4 @@
      
 9001 print *,"Errore durante la lettura della namelist odbc"
      call exit (1)
-end program leggi
+     END PROGRAM lettura

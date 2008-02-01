@@ -33,7 +33,7 @@
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
-    character(80) :: ofile='obsmask.grib'
+    character(len=80) :: ofile='obsmask.grib'
     REAL :: obm,rmdo,alorot,alarot,slon1,slon2,slat1,slat2
     integer :: nstaz,nbox
 ! namelist variables
@@ -50,11 +50,11 @@
     integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
     REAL :: psec2(384),psec3(2),dummy(1)
 
-    integer :: debug = 1
+    integer :: debug=1
     INTEGER :: handle,handle_err
 
-    namelist  /obsmask/rfile,iana,ruota,dist
-    namelist  /odbc/database,user,password
+    namelist /obsmask/rfile,iana,ruota,dist
+    namelist /odbc/database,user,password
 
     data ksec0/2*0/
     data ksec1/104*0/
@@ -67,6 +67,8 @@
     data psec3/2*0./
 
     data rmdo/-999.9/
+
+    PRINT*,'program crea_obsmask'
 
     open(1,file='odbc.nml',status='old')
     read(1,nml=odbc,err=9001)

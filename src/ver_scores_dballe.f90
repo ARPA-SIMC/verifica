@@ -99,30 +99,34 @@
     PARAMETER (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    INTEGER ::   nora,ngio,nscad,nvar,nrm,nsoglie,nminobs
-    INTEGER ::   scad1,scad2,inc
-    INTEGER ::   scadenze(4,MNSCAD)
-    INTEGER ::   itipo,iana,imod,ls,iquota,lthr
-    LOGICAL ::   ruota,media,massimo,prob,distr,diffh
-    REAL ::      dxb,dyb,diffmax,thr,hlimite,soglie(MNSOG),perc
-    LOGICAL ::   daily,ldir,lselect
-    INTEGER ::   nore,ore(24)
-    INTEGER ::   DATA(3),ora(2),var(3),scad(4),level(3)
-    INTEGER ::   dataval(3),oraval(2),scaddb(4),p1,p2
-    INTEGER ::   icodice,itipost,ntot
-    REAL ::      dato
-    CHARACTER descr*20,descrfisso*20,model*10,cvar*6,cel*3
-    REAL ::      maerr,mserr,rmserr,bi
-    integer :: h
+    INTEGER :: ora(2),var(3),scad(4),level(3)
+    INTEGER :: dataval(3),oraval(2),scaddb(4),p1,p2
+    INTEGER :: icodice,itipost,ntot,h
+    REAL :: dato
+    CHARACTER :: descr*20,descrfisso*20,cel*3
+    REAL :: maerr,mserr,rmserr,bi
+! namelist variables
+    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
+    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
+    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1
+    character(len=10) :: model=''
+    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
+    logical :: ruota=.false.,diffh=.false.
+    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
+    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
+    CHARACTER(len=6) :: cvar=''
+    INTEGER :: iquota=-1,lthr=0
+    INTEGER :: nsoglie=1
+    REAL :: hlimite=100.,soglie(MNSOG)=0.
+    LOGICAL :: daily=.FALSE.,ldir=.FALSE.,lselect=.FALSE.
+    CHARACTER(LEN=19) :: database='',user='',password=''
 
     REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
     INTEGER, ALLOCATABLE :: anaid(:)
-    CHARACTER(LEN=19) :: database,user,password
     
-    CHARACTER btable*10
+    CHARACTER(LEN=10) :: btable
     INTEGER :: handle,handle_err,handleana,USTAZ
-    INTEGER :: debug = 1
-    logical :: c_e_i
+    INTEGER :: debug=1
 
     DATA      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
     NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &

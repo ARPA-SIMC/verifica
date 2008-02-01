@@ -30,8 +30,8 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean absolute error
 
-    real ::   maerr
-    real ::   obs(MNV),pred(MNV)
+    real :: maerr
+    real :: obs(MNV),pred(MNV)
 
     maerr=0.
     npo=0
@@ -57,8 +57,8 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean square error
 
-    real ::   mserr,rmserr
-    real ::   obs(MNV),pred(MNV)
+    real :: mserr,rmserr
+    real :: obs(MNV),pred(MNV)
 
     mserr=0.
     npo=0
@@ -86,8 +86,9 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del bias (mean error)
 
-    real ::   b,p,o
-    real ::   obs(MNV),pred(MNV)
+    REAL :: obs(MNV),pred(MNV),b
+
+    real :: p,o
 
     b=0.
     p=0.
@@ -313,7 +314,8 @@
 !****************************************************************
 
     subroutine splot(MNV,obs,pred,nv,rmddb,rmd,npo)
-    real ::   obs(MNV),pred(MNV)
+
+    real :: obs(MNV),pred(MNV)
 
 ! c VERIFICA - scores_util.f
 ! c subroutine per la realizzazione di uno scatter plot
@@ -341,12 +343,13 @@
 
     parameter (NCL=1000)
 
+    real :: obs(MNV),pred(MNV)
+
     integer :: nobs(2),na,nb
-    real ::    hit,far,ks
-    real ::    obs(MNV),pred(MNV)
-    real ::    omed
-    real ::    me,mecli,mep
-    real ::    enve(0:NCL)
+    real :: hit,far,ks
+    real :: omed
+    real :: me,mecli,mep
+    real :: enve(0:NCL)
 
 !    print*,'subroutine cost-loss_det '
 
@@ -433,9 +436,12 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean absolute error della direzione (0-360)
 
-      real ::  maerr
-      real ::  obs(MNV),pred(MNV),err
       parameter (flat=180.)
+
+      real :: maerr
+      real :: obs(MNV),pred(MNV)
+
+      real :: err
 
       maerr=0.
       npo=0
@@ -463,9 +469,12 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean square error della direzione (0-360)
 
-      real ::  mserr,rmserr
-      real ::  obs(MNV),pred(MNV),err
       parameter (flat=180.)
+
+      real :: mserr,rmserr
+      real :: obs(MNV),pred(MNV)
+
+      real :: err
 
       mserr=0.
       npo=0
@@ -495,9 +504,11 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del bias (mean error) della direzione (0-360)
 
-      real ::  b,p,o
-      real ::  obs(MNV),pred(MNV),err
       parameter (flat=180.)
+
+      REAL :: obs(MNV),pred(MNV),b
+
+      REAL :: p,o,err
 
       b=0.
       p=0.

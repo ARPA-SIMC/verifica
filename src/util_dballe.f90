@@ -45,7 +45,6 @@
 
     integer :: handle,nstaz,iana,h
     character(20) :: namest
-    logical :: c_e_c,c_e_i
 
     real :: x(nstaz),y(nstaz),alt(nstaz)
 
@@ -121,10 +120,10 @@
 ! c autore: Chiara Marsigli
 
     integer :: handle,iana,nstaz
+    integer :: anaid(nstaz)
+    LOGICAL :: lselect
 
     REAL :: x(nstaz),y(nstaz),alt(nstaz),toll
-    integer :: anaid(nstaz)
-    LOGICAL :: c_e_i,lselect
 
     DATA toll/0.0001/
 
@@ -219,7 +218,6 @@
 ! autore: Chiara Marsigli
 
     integer :: handle,nstaz
-
     integer :: anaid(nstaz)
 
     OPEN(1,file='selstaz.dat',status='old')
@@ -259,9 +257,9 @@
 ! c autore: Chiara Marsigli
 
     integer :: handle,nstaz
-    character(20) :: namest
-
     integer :: anaid(nstaz)
+
+    character(20) :: namest
 
 ! inizializzazione matrici
     anaid = 0
@@ -297,15 +295,17 @@
 
     real :: x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ),obs(MNSTAZ)
     logical :: ruota
-! dichiarazioni database
-    integer :: dataval(nd),oraval(no),level(3),scad(nd),scaddb(4)
-    integer :: icodice,handle,handleana,repcod,p1,p2,wpind
+    integer :: dataval(nd),oraval(no),scad(nd)
+    integer :: handle,handleana
+    character(len=6) :: cvar
+
+    integer :: level(3),scaddb(4)
+    integer :: icodice,repcod,p1,p2,wpind
     real :: rlat,rlon
     integer :: h
-    character descr*20,cvar*6,btable*10
+    character descr*20,btable*10
 ! Equatore della rotazione
     real :: rxeq,ryeq
-    logical :: c_e_i
 
     print*,'util.f - leggioss_db'
 
@@ -429,6 +429,7 @@
 !*****************************************************************************
 
     subroutine cleankey(n2,n3,n4,level,var,est,scad,data,ora)
+
     integer :: level(n3),var(n3),est(n3),scad(n4),data(n3),ora(n2)
 
 ! c VERIFICA - util.f
@@ -470,7 +471,8 @@
     integer ::   imod,ls,itipo
     logical ::   media,massimo,prob,distr
     real ::      dxb,dyb
-    character model*10,descr*20
+    CHARACTER(*) :: model,descr
+
     character d2*5,c2*2,c3*3
 
     if(itipo == 1)then
@@ -510,9 +512,10 @@
     SUBROUTINE modello(model,ivlsm,ivor,ls,diffh)
 
     INTEGER :: ivlsm,ivor,ls
-    character model*10,profile*20
-    character cdum*10,civor*3,civlsm*3
-    logical diffh
+    LOGICAL :: diffh
+    CHARACTER(len=10) :: model
+
+    character :: cdum*10,civor*3,civlsm*3,profile*20
 
 ! c VERIFICA - util.f
 ! c assegna i valori dei parametri orografia e lsm
@@ -564,10 +567,12 @@
 ! c valore in Blocale e rappresentazione
 ! c autore: Chiara Marsigli
 
-    character cvar*6,cvarl*6,mnem*10
+    character(len=6) :: cvar
     integer :: var(n3)
     real :: a,b
     logical :: lgrib
+
+    character :: cvarl*6,mnem*10
 
     open(1,file='griBlocale.txt',status='old')
 
@@ -668,17 +673,20 @@
 
 !************************************************************************
 
-    function nlenvera(stringa)
+    INTEGER FUNCTION nlenvera(stringa)
 
 ! mstart
 ! VERIFICA - util.f
 ! function intera per calcolare la lunghezza effettiva (senza bianchi)
 ! di una stringa carattere
+! appunto: esistono la funzione implicita trim per isolare la stringa
+! senza bianchi e la funzione implicita len_trim per avere la lunghezza 
+! della stringa bianchi esclusi!!!
 ! autore: Chiara Marsigli
 ! stringa  character*80
 ! mend
 
-    character(80) :: stringa
+    CHARACTER(*) :: stringa
 
     nbianco=index(stringa,' ')
     if(nbianco == 0)then
@@ -692,7 +700,7 @@
 
 !**************************************************************************
 
-    integer function istr_lunghezza (stringa )
+    INTEGER FUNCTION istr_lunghezza (stringa )
 
     character stringa*(*)
 
@@ -712,6 +720,7 @@
     subroutine converti_scadenze(ns,scad,scaddb)
 
     integer :: scad(ns),scaddb(ns)
+
     integer :: fact(0:12)
     data fact/60,3600,86400,2592000,31536000, &
     315360000,946080000,3153600000, &
@@ -752,17 +761,18 @@
 ! c autore: Chiara Marsigli
 
     real :: xb(MNBOX),yb(MNBOX)
-    character vfile*60
+    character(len=60) :: vfile
+    logical :: ruota,area
+
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
-    logical :: ruota,area
 ! grib fields
     integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
     REAL :: psec2(10),psec3(2),dummy(1)
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     real :: alat(4),alon(4)
 
-    print*,'subroutine leggibox'
+    PRINT*,'util - subroutine leggibox'
 
 ! leggo un grib tanto per gradire, per conoscerne la griglia
     iug=0
@@ -866,16 +876,17 @@
 ! c autore: Chiara Marsigli
 
     parameter (mnpo=1000)
-    real ::      obsst(MNSTAZ),rmgrid(MIDIMV,MNRM)
-    real ::      lsm(MIDIMV),obm(MIDIMV)
-    real ::      x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ)
-    real ::      xb(MNBOX),yb(MNBOX)
-    real ::      xpmod(npmod),ypmod(npmod)
-    real ::      xbox(MNSTAZ),ybox(MNSTAZ),altbox(MNSTAZ)
-    real ::      obs(MNSTAZ),pred(MNSTAZ,MNRM)
-    real ::      thr,perc,medo,medp
-    real ::      vecto(mnpo),vectp(mnpo)
-    logical ::   media,massimo,prob,distr
+    real :: obsst(MNSTAZ),rmgrid(MIDIMV,MNRM)
+    real :: lsm(MIDIMV),obm(MIDIMV)
+    real :: x(MNSTAZ),y(MNSTAZ),alt(MNSTAZ)
+    real :: xb(MNBOX),yb(MNBOX)
+    real :: xpmod(npmod),ypmod(npmod)
+    real :: xbox(MNSTAZ),ybox(MNSTAZ),altbox(MNSTAZ)
+    real :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
+    real :: thr,perc
+    logical :: media,massimo,prob,distr
+
+    real :: vecto(mnpo),vectp(mnpo),medo,medp
 
     print*,'util.f - medbox ',nminobs
     
@@ -1265,10 +1276,9 @@
 
 !************************************************************************
 
-    FUNCTION ngiorni_mese(nm,na)
+    INTEGER FUNCTION ngiorni_mese(nm,na)
 
-    INTEGER ngiorni_mese
-    INTEGER giomax(12)
+    INTEGER :: giomax(12)
     
     DATA giomax/31,28,31,30,31,30,31,31,30,31,30,31/
 
@@ -1302,7 +1312,7 @@
 !       C_E_i   LOGICAL .TRUE.se il dato e` presente
 
 
-    integer  var
+    integer :: var
 
     c_e_i=.TRUE.
     IF (var == dba_mvi )c_e_i= .FALSE. 
@@ -1323,7 +1333,7 @@
 !       C_E_c   LOGICAL         .TRUE.se il dato e` presente
 
 
-    CHARACTER (len=*) var
+    CHARACTER(len=*) :: var
     
     c_e_c=.FALSE.
     IF (var /= dba_mvc )c_e_c=.TRUE.
