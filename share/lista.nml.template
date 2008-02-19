@@ -8,6 +8,7 @@
    daily=.F.,
    ldir=.F.,
    lselect=.F.,
+   distmean=1.,
  $end
 
 ### ATTENZIONE!!!
@@ -36,4 +37,6 @@
 ### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
 ###               delle stazioni presenti in db, le cui coordinate devono
 ###               essere specificate nel file locale selstaz.dat (rlon rlat)
+### distmean = parametro per il calcolo dello score "Centre of Gravity" di un bacino
+###            mean distance to outflow within a catchment (km)
 ### param=t 

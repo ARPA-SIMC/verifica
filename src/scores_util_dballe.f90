@@ -117,6 +117,69 @@
 
 !*****************************************************************
 
+    SUBROUTINE cgravity(MNV,obs,pred,lon,lat,nv,rmddb,rmd,npo,distmean,cog)
+
+! c VERIFICA - scores_util.f
+! c subroutine per il calcolo del centre of gravity (PREVIEW-PLAINFLOOD)
+
+    REAL, PARAMETER :: r_earth=6378.
+    REAL :: pi ! non prende la funzione atan in un parameter
+
+    REAL :: obs(MNV),pred(MNV),lon(MNV),lat(MNV)
+    REAL :: cog
+    REAL :: distmean ! dist in km dal centro all'outlet
+
+    REAL :: xc_f,yc_f,xc_o,yc_o,F,O,diff_cog_lon,diff_cog_lat,cog_diff
+
+    pi=4.0*ATAN(1.)
+
+    xc_f=0.
+    yc_f=0.
+    xc_o=0.
+    yc_o=0.
+    F=0.
+    O=0.
+
+    DO iv=1,nv
+      IF(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)THEN
+        npo=npo+1
+        xc_f=xc_f+(pred(iv)*lon(iv))
+        yc_f=yc_f+(pred(iv)*lat(iv))
+        xc_o=xc_o+(obs(iv)*lon(iv))
+        yc_o=yc_o+(obs(iv)*lat(iv))
+        F=F+pred(iv)
+        O=O+obs(iv)
+      ENDIF
+    ENDDO
+
+    PRINT*,'sum_F=',F,' sum_O=',O
+    PRINT*,'sum_lon_f=',xc_f,' sum_lat_f=',yc_f
+    PRINT*,'sum_lon_o=',xc_o,' sum_lat_o=',yc_o
+
+    IF(npo > 0)THEN
+      xc_f=xc_f/F
+      yc_f=yc_f/F
+      xc_o=xc_o/O
+      yc_o=yc_o/O
+    ENDIF
+
+    diff_cog_lat=(yc_f-yc_o)*r_earth*pi/180.
+    diff_cog_lon=(xc_f-xc_o)*r_earth*pi/180.
+
+    cog_diff=SQRT(diff_cog_lat**2+diff_cog_lon**2)
+
+    if(distmean <> 0.)cog=cog_diff/distmean
+
+    PRINT*,'lon_f=',xc_f,' lat_f=',yc_f
+    PRINT*,'lon_o=',xc_o,' lat_o=',yc_o
+    PRINT*,'cog_diff= ',cog_diff
+    PRINT*,'cog= ',cog
+
+    return
+    END SUBROUTINE cgravity
+
+!*****************************************************************
+
     SUBROUTINE score_con_table(MNV,obs,pred,nv, &
      nsoglie,soglie,iscaddb,rmddb,rmd,lthr)
     

@@ -105,6 +105,7 @@
     REAL :: dato
     CHARACTER :: descr*20,descrfisso*20,cel*3
     REAL :: maerr,mserr,rmserr,bi
+    REAL :: cog
 ! namelist variables
     integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
     integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
@@ -117,11 +118,11 @@
     CHARACTER(len=6) :: cvar=''
     INTEGER :: iquota=-1,lthr=0
     INTEGER :: nsoglie=1
-    REAL :: hlimite=100.,soglie(MNSOG)=0.
+    REAL :: hlimite=100.,soglie(MNSOG)=0.,distmean=1.
     LOGICAL :: daily=.FALSE.,ldir=.FALSE.,lselect=.FALSE.
     CHARACTER(LEN=19) :: database='',user='',password=''
 
-    REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:)
+    REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:),lon(:),lat(:)
     INTEGER, ALLOCATABLE :: anaid(:)
     
     CHARACTER(LEN=10) :: btable
@@ -134,7 +135,7 @@
     NAMELIST  /stat/model,itipo,iana,imet,imod,ls,ruota, &
      nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
      thr,perc
-    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect
+    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect,distmean
     NAMELIST  /date/DATA
     NAMELIST  /scadenza/scadenze
     NAMELIST  /odbc/database,user,password
@@ -252,6 +253,7 @@
     open(10,file='cont_table.dat',status='unknown')
     open(20,file='scores_per_scad.dat',status='unknown')
     open(13,file='andam.dat',status='unknown')
+    open(15,file='CentreOfGravity.dat',status='unknown')
 
     open(1,file='scadenze.nml',status='old')
     read(1,nml=scadenza,err=9003)
@@ -260,6 +262,7 @@
     write(10,*)' descrittore= ',descrfisso
     write(20,*)' descrittore= ',descrfisso
     write(13,*)' descrittore= ',descrfisso
+    write(15,*)' descrittore= ',descrfisso
 
     WRITE(11,'(a,2(1x,i2),1x,i4,1x,a,2(1x,i2),1x,i4,a,2(1x,i2))')&
      &' periodo= ',igioi,imesei,iannoi,'-',igiof,imesef,iannof,' ora= ',iorai,imini
@@ -277,11 +280,14 @@
     write(10,*)' variabile= ',cvar
     write(20,*)' variabile= ',cvar
     write(13,*)' variabile= ',cvar
+    write(15,*)' variabile= ',cvar
     write(13,'(2a)')' o ',' p '
     print*,'variabile ',cvar
 
 ! allocazione matrici
     ALLOCATE(oss(1:nv))
+    ALLOCATE(lon(1:nv))
+    ALLOCATE(lat(1:nv))
     ALLOCATE(prev(1:nv, 1:nrm))
     ALLOCATE(previ(1:nv))
 
@@ -300,6 +306,8 @@
         write(11,'(a,i3)')' scadenza= ',iscaddb
         write(11,'(4x,a3,6x,a5,6x,a5,5x,a6,7x,a4)') &
         'npo','maerr','mserr','rmserr','bias'
+        write(15,'(a,i3)')' scadenza= ',iscaddb
+        WRITE(15,'(4x,a3,6x,a3,6x,a8)')'npo','cog','distmean'
         write(66,'(a,i3)')' scadenza= ',iscaddb
         write(66,'(3(1x,a3),2(6x,a5),5x,a6,7x,a4)') &
         'gio','ora','npo','maerr','mserr','rmserr','bias'
@@ -539,6 +547,8 @@
                         endif
                     enddo
 
+                    CALL idba_enq (handleana,"lon",rlon)
+                    CALL idba_enq (handleana,"lat",rlat)
                     call idba_enq (handle,btable,dato)
 
                     iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
@@ -548,6 +558,8 @@
                     endif
 
                     oss(iv)=dato
+                    lon(iv)=rlon
+                    lat(iv)=rlat
 
                     30 continue
 
@@ -612,6 +624,7 @@
               CALL mae(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
               CALL mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
               CALL bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
+              CALL cgravity(nv,oss,previ,lon,lat,nv,rmddb,rmdo,npo,distmean,cog)
             ELSE
               CALL mae_dd(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
               CALL mse_dd(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
@@ -619,6 +632,7 @@
             ENDIF
             write(11,'(1x,i6,4(1x,f10.3))') &
             npo,maerr,mserr,rmserr,bi
+            WRITE(15,'(1x,i6,2(1x,f10.3))')npo,cog,distmean
             write(20,'(a11,i3)')' scadenza= ',iscaddb
             if(lthr /= 0)then
                 call score_con_table(nv,oss,previ,nv, &
@@ -636,6 +650,7 @@
     close(11)
     close(20)
     close(13)
+    close(15)
     close(66)
 
 ! chiusura database
