@@ -33,7 +33,7 @@ fi
 
 echo ' $ds' > caldescr.nml
 echo '   model='$model',' >> caldescr.nml
-echo '   itipo=1,' >> caldescr.nml
+echo '   itipo='$itipo',' >> caldescr.nml
 echo '   imod='$imod',' >> caldescr.nml
 echo '   ls='$ls',' >> caldescr.nml
 echo '   media='$media',' >> caldescr.nml

@@ -1,5 +1,5 @@
  $lista
-   cvar='B12001',
+   cvar='B12101',
    iquota=-1,
    hlimite=500.,
    lthr=1,
@@ -11,15 +11,12 @@
    distmean=1.,
  $end
 
-### ATTENZIONE!!!
-### scrivere una namelist per ciascuna variabile!!!
-
 ### cvar = codice variabile (come in Btable)
 ### iquota = per verificare solo punti sopra o sotto ad una certa quota
 ###          -1 se le voglio tutte
 ###          0 solo pianura (sotto hlimite)
 ###          1 solo montagna (sopra hlimite)
-### lthr = 0 se non si vogliono calcolare gli scores per soglia
+### lthr = 0 se non si vogliono calcolare gli scores per soglia (non attivo per ens)
 ###      = 1 per calcolare gli scores sopra le soglie
 ###      =-1 per calcolare gli scores sotto le soglie
 ###      = 2 per calcolare gli scores tra le soglie (classi chiuse);
@@ -32,6 +29,7 @@
 ###           pari al numero di elementi del vettore soglie
 ### soglie = elenco soglie per gli score per soglia, l'unita' di misura
 ###          deve essere quella della variabile nella Btable
+### da qui in poi, opzioni non attive per l'ensemble
 ### daily = .T. per avere anche gli score giorno per giorno
 ### ldir = .T. solo per variabili tipo direzione vento o onda (tra 0 e 360)
 ### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
@@ -39,4 +37,3 @@
 ###               essere specificate nel file locale selstaz.dat (rlon rlat)
 ### distmean = parametro per il calcolo dello score "Centre of Gravity" di un bacino
 ###            mean distance to outflow within a catchment (km)
-### param=t 

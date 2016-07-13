@@ -30,6 +30,7 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean absolute error
 
+    integer :: npo
     real :: maerr
     real :: obs(MNV),pred(MNV)
 
@@ -57,6 +58,7 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean square error
 
+    integer :: npo
     real :: mserr,rmserr
     real :: obs(MNV),pred(MNV)
 
@@ -86,6 +88,7 @@
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del bias (mean error)
 
+    INTEGER :: npo
     REAL :: obs(MNV),pred(MNV),b
 
     real :: p,o
@@ -125,6 +128,7 @@
     REAL, PARAMETER :: r_earth=6378.
     REAL :: pi ! non prende la funzione atan in un parameter
 
+    INTEGER :: npo
     REAL :: obs(MNV),pred(MNV),lon(MNV),lat(MNV)
     REAL :: cog
     REAL :: distmean ! dist in km dal centro all'outlet
@@ -152,9 +156,9 @@
       ENDIF
     ENDDO
 
-    PRINT*,'sum_F=',F,' sum_O=',O
-    PRINT*,'sum_lon_f=',xc_f,' sum_lat_f=',yc_f
-    PRINT*,'sum_lon_o=',xc_o,' sum_lat_o=',yc_o
+    WRITE(15,*)'sum_F=',F,' sum_O=',O
+    WRITE(15,*)'sum_lon_f=',xc_f,' sum_lat_f=',yc_f
+    WRITE(15,*)'sum_lon_o=',xc_o,' sum_lat_o=',yc_o
 
     IF(npo > 0)THEN
       xc_f=xc_f/F
@@ -168,12 +172,12 @@
 
     cog_diff=SQRT(diff_cog_lat**2+diff_cog_lon**2)
 
-    if(distmean <> 0.)cog=cog_diff/distmean
+    IF(distmean /= 0.)cog=cog_diff/distmean
 
-    PRINT*,'lon_f=',xc_f,' lat_f=',yc_f
-    PRINT*,'lon_o=',xc_o,' lat_o=',yc_o
-    PRINT*,'cog_diff= ',cog_diff
-    PRINT*,'cog= ',cog
+    WRITE(15,*)'lon_f=',xc_f,' lat_f=',yc_f
+    WRITE(15,*)'lon_o=',xc_o,' lat_o=',yc_o
+    WRITE(15,*)'cog_diff= ',cog_diff
+    WRITE(15,*)'cog= ',cog
 
     return
     END SUBROUTINE cgravity
@@ -188,13 +192,13 @@
     
     REAL :: soglie(nsoglie)
     REAL :: obs(MNV),pred(MNV)
+    INTEGER :: npo
     REAL :: mserr,rmserr,b
     INTEGER :: lthr
     PARAMETER (flat=180.)
     
     WRITE(10,'(//a9,i3/)')'scadenza=',iscaddb
-    WRITE(20,'(1x,a5,6x,a3,5x,a3,6x,a2,6x,a2, &
-     7x,a2,7x,a3,6x,a2,5x,a6,3x,a6,5x,a3,4x,a6,4x,a4)') &
+    WRITE(20,'(2(6x,a3),5x,a3,2(6x,a2),7x,a2,7x,a3,6x,a2,5x,a6,3x,a6,5x,a3,4x,a6,4x,a4)') &
      'thr','npo','nos','bs','hr','ts','pod','fa', &
      'rnd ts','rnd fa','hss','rmserr','bias'
     
@@ -326,10 +330,10 @@
           
           ! li trasformo in reali prima di fare i conti perche' ottengo numeri
           ! troppo grandi per essere contenuti in un intero
-          rno=no
-          rnf=nf
-          rnc=nc
-          rnpo=npo
+          rno=real(no)
+          rnf=real(nf)
+          rnc=real(nc)
+          rnpo=real(npo)
           
           bs=rnf/rno
           fa=(rnf-rnc)/rnf
@@ -350,10 +354,10 @@
             hss=rmd
           ENDIF
           
-          WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+          WRITE(20,'(1x,f10.4,2(2x,i6),10(1x,f8.3))') &
            soglie(ith),npo,no,bs,hr,ts,pod,fa,rts,rfa,hss,rmserr,b
         ELSE
-          WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+          WRITE(20,'(1x,f10.4,2(2x,i6),10(1x,f8.3))') &
            soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmserr,b
         END IF
         
@@ -363,7 +367,7 @@
         rmserr=rmd
         b=rmd
         
-        WRITE(20,'(1x,f7.1,2(2x,i6),10(1x,f8.3))') &
+        WRITE(20,'(1x,f10.4,2(2x,i6),10(1x,f8.3))') &
          soglie(ith),npo,no,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd,rmd
         
       ENDIF
@@ -378,6 +382,7 @@
 
     subroutine splot(MNV,obs,pred,nv,rmddb,rmd,npo)
 
+    integer :: npo
     real :: obs(MNV),pred(MNV)
 
 ! c VERIFICA - scores_util.f
@@ -501,6 +506,7 @@
 
       parameter (flat=180.)
 
+      integer :: npo
       real :: maerr
       real :: obs(MNV),pred(MNV)
 
@@ -534,6 +540,7 @@
 
       parameter (flat=180.)
 
+      integer :: npo
       real :: mserr,rmserr
       real :: obs(MNV),pred(MNV)
 
@@ -570,6 +577,7 @@
       parameter (flat=180.)
 
       REAL :: obs(MNV),pred(MNV),b
+      INTEGER :: npo
 
       REAL :: p,o,err
 

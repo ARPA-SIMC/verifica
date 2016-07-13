@@ -1,4 +1,4 @@
-AC_INIT(verifica, 1.22-1, [cmarsigli@arpa.emr.it])
+AC_INIT(verifica, 4.0, [cmarsigli@arpa.emr.it])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign])
 AC_LANG([C])
@@ -8,7 +8,7 @@ profileddir='${sysconfdir}/profile.d'
 AC_SUBST(profileddir)
 
 
-AC_PROG_FC([pgf90 ifort gfortran])
+AC_PROG_FC([gfortran pgf90 ifort])
 
 F77=$FC
 FFLAGS=$FCFLAGS
@@ -25,9 +25,14 @@ AC_CHECK_LIB([hibu], [ngetpoint], , AC_MSG_ERROR([hibu library not found]), )
 AC_CHECK_LIB([emos], [gribex], , AC_MSG_ERROR([emos library not found]), )
 AC_CHECK_LIB([grib_util], [findgrib], , AC_MSG_ERROR([gributil library not found]), )
 
+dnl AC_CHECK_LIB([sim_base], [...], , AC_MSG_ERROR([simbase library not found]), )
+dnl AC_CHECK_LIB([sim_grib], [...], , AC_MSG_ERROR([simgrib library not found]), )
+
 AC_LANG_POP
 
-LIBS="${LIBDBALLEF_LIBS} $LIBS"
+LIBS="${LIBDBALLEF_LIBS} $LIBS -lsim_volgrid6d -lsim_base"
+
+AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES([
 Makefile

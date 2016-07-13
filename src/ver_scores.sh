@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/bash
 
 ### VERIFICA - ver_scores.sh
 ### script per l'esecuzione del calcolo degli scores deterministici

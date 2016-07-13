@@ -26,16 +26,24 @@
 ! E-mail: urpsim@smr.arpa.emr.it
 ! Internet: http://www.arpa.emr.it/sim/
 
+!!$gfortran -I/home/marsigli/svn_new/verifica/branches/dballe4/src/ 
+!!$-o ver_leggidati_regio 
+!!$/home/marsigli/svn_new/verifica/branches/dballe4/src/ver_leggidati_regio.f90  
+!!$/home/marsigli/svn_new/verifica/branches/dballe4/src/util_dballe.o 
+!!$-lhibu -lmega -lgrib_util -lemos -ldballef -lcnf -lodbc -lpopt -lm 
+!!$-lsim_base -lsim_grib 
+
     USE util_dballe
 
-    parameter (nstaz=2000,nmesi=100,MNRE=12)
+    IMPLICIT NONE
+
+    integer, parameter :: nstaz=2000,nmesi=100,MNRE=12
 
     real :: lonoss(nstaz),latoss(nstaz)
-    integer :: alte(nstaz)
-    integer :: idata(3),block,station
+    real :: alte(nstaz)
+    integer :: idata(3)
     character(LEN=7) :: scode,code(nstaz)
     character(LEN=20) :: nomest(nstaz),nome
-    CHARACTER(len=2) :: cdum
     integer :: imd ! valore mancante che si trova nei file delle regioni
     REAL :: rmdo ! valore interno al programma, non scrivo il valore in db se e' dato mancante!
 ! namelist variables
@@ -43,11 +51,18 @@
     INTEGER :: nre=1,nme=1
     CHARACTER(len=2) :: reg(MNRE)='',mese(nmesi)=''
     CHARACTER(len=4) :: anno(nmesi)=''
-    CHARACTER(19) :: database='',user='',password=''
+    CHARACTER(512) :: database='',user='',password=''
+
+    integer :: nsts,ns,nm,nstana,numestaz
+    integer :: ialt,id_ana,idbhandle,imin,iora,istan
+    integer :: itemp,ipreci,iumrel,ivelv,idirv
+    real :: dirv,velv,td,temp,umrel,preci,wlon,wlat
 
     integer :: handle
     integer :: debug=1
     integer :: handle_err
+
+    integer :: ier
 
     namelist  /regioni/path,pathana,nre,reg,nme,mese,anno
     namelist  /odbc/database,user,password
@@ -67,12 +82,11 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
-    CALL idba_preparati(idbhandle,handle, &
-     "write","write","write")
+    ier=idba_preparati(idbhandle,handle,"write","write","write")
 
 ! INIZIO CICLO SUI MESI
 
@@ -107,9 +121,9 @@
                 latoss(istan)=wlat
                 lonoss(istan)=wlon
                 if(ialt == imd)then
-                  alte(istan)=dba_mvi
+                  alte(istan)=dba_mvr
                 else
-                  alte(istan)=ialt
+                  alte(istan)=real(ialt)
                 endif
             enddo               !anag
 
@@ -128,6 +142,7 @@
             743 read(1,'(a7,1x,i4,i2,i2,1x,2i2,5(1x,i4))',end=223) &
             scode,idata(3),idata(2),idata(1),iora,imin, &
             ipreci,itemp,idirv,ivelv,iumrel
+
             do nstana=1,numestaz
                 if (scode == code(nstana))then
                     nsts=nstana !mst più che il nome è utile il codice della stazione (cioè scode) perchè contiene sempre l'identificativo della regione
@@ -163,129 +178,108 @@
             if(iumrel /= imd)then
                 umrel=real(iumrel)
             else
-                velv=rmdo
+                umrel=rmdo
             endif
         ! calcolo td da t e umrel
-            if(itemp /= imd .AND. iumrel /= imd)then
-                td=trug(umrel,temp)
-            else
-                td=rmdo
-            endif
+            IF(itemp /= imd .AND. iumrel /= imd .AND. iumrel /= 0)THEN
+              td=trug(umrel,temp)
+            ELSE
+              td=rmdo
+            ENDIF
 
         ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
 
-            call idba_unsetall (handle)
+            ier=idba_unsetall (handle)
 
 ! anagrafica
-            CALL idba_setcontextana (handle)
+            ier=idba_setcontextana (handle)
 ! obbligatori
 ! setto la rete dei dati con questa anagrafica
-            call idba_set (handle,"rep_cod",50) !rete=regioni
+            ier=idba_set (handle,"rep_memo",'regioni') !rete=regioni
 
-            CALL idba_set (handle,"lat",latoss(nsts))
-            CALL idba_set (handle,"lon",lonoss(nsts))
-            CALL idba_set (handle,"mobile",0)
+            print*,nsts,latoss(nsts)
 
-            CALL idba_set (handle,"name",nomest(nsts))
-            CALL idba_set (handle,"block",69)
-            CALL idba_set (handle,"height",alte(nsts))
-        
-            CALL idba_prendilo (handle)
-            CALL idba_enq(handle,"ana_id",id_ana)
+            ier=idba_set (handle,"lat",latoss(nsts))
+            ier=idba_set (handle,"lon",lonoss(nsts))
+            ier=idba_set (handle,"mobile",0)
+
+            ier=idba_set (handle,"name",nomest(nsts))
+            ier=idba_set (handle,"block",69)
+            ier=idba_set (handle,"height",alte(nsts))
+
+            ier=idba_prendilo (handle)
+
+            ier=idba_enq(handle,"*ana_id",id_ana)
 ! dati
-            call idba_unsetall (handle)
+            ier=idba_unsetall (handle)
 
             ! obbligatori
-!            CALL idba_setr (handle,"lat",latoss(nsts))
-!            CALL idba_setr (handle,"lon",lonoss(nsts))
-!            CALL idba_seti (handle,"mobile",0)
+!            ier=idba_set (handle,"lat",latoss(nsts))
+!            ier=idba_set (handle,"lon",lonoss(nsts))
+!            ier=idba_set (handle,"mobile",0)
 
-            CALL idba_set(handle,"ana_id",id_ana)
+            ier=idba_set(handle,"ana_id",id_ana)
 
         ! print*,'datatime ',idata(3),idata(2),idata(1),iora,imin,00
-            call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
+            ier=idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
 
         ! codice per gli osservati delle regioni
-            call idba_set (handle,"rep_cod",50) !rete=regioni
+            ier=idba_set (handle,"rep_memo",'regioni') !rete=regioni
 
         ! inserimento dati
             if (preci /= rmdo) then
-                call idba_set (handle,"leveltype",1)
-                call idba_set (handle,"l1",0)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",4)
-                call idba_set (handle,"p1",-10800)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B13011",preci)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B13011")
+               ier=idba_setlevel(handle,1,0,0,0)
+               ier=idba_settimerange(handle,1,0,10800)
+               ier=idba_set(handle,"B13011",preci)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B13011")
             ! aggiungo altre info
             ! if (hmo.ne.imd) then
-            ! call idba_setc(handle,"*var", "B22021")
-            ! call idba_seti(handle,"*B22071",3)
-            ! call idba_critica(handle)
+            ! ier=idba_setc(handle,"*var", "B22021")
+            ! ier=idba_seti(handle,"*B22071",3)
+            ! ier=idba_critica(handle)
             ! end if
 
             endif
 
             if (temp /= rmdo) then
-                call idba_set (handle,"leveltype",105)
-                call idba_set (handle,"l1",2)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",0)
-                call idba_set (handle,"p1",0)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B12001",temp)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B12001")
+               ier=idba_setlevel(handle,103,2000,0,0)
+               ier=idba_settimerange(handle,254,0,0)
+               ier=idba_set(handle,"B12101",temp)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B12101")
             endif
 
             if (dirv /= rmdo) then
-                call idba_set (handle,"leveltype",105)
-                call idba_set (handle,"l1",10)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",0)
-                call idba_set (handle,"p1",0)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B11001",dirv)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B11001")
+               ier=idba_setlevel(handle,103,10000,0,0)
+               ier=idba_settimerange(handle,254,0,0)
+               ier=idba_set(handle,"B11001",dirv)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B11001")
             endif
 
             if (velv /= rmdo) then
-                call idba_set (handle,"leveltype",105)
-                call idba_set (handle,"l1",10)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",0)
-                call idba_set (handle,"p1",0)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B11002",velv)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B11002")
+               ier=idba_setlevel(handle,103,10000,0,0)
+               ier=idba_settimerange(handle,254,0,0)
+               ier=idba_set(handle,"B11002",velv)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B11002")
             endif
 
             if (umrel /= rmdo) then
-                call idba_set (handle,"leveltype",105)
-                call idba_set (handle,"l1",2)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",0)
-                call idba_set (handle,"p1",0)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B13003",umrel)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B13003")
+               ier=idba_setlevel(handle,103,2000,0,0)
+               ier=idba_settimerange(handle,254,0,0)
+               ier=idba_set(handle,"B13003",umrel)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B13003")
             endif
 
             if (td /= rmdo) then
-                call idba_set (handle,"leveltype",105)
-                call idba_set (handle,"l1",2)
-                call idba_set (handle,"l2",0)
-                call idba_set (handle,"pindicator",0)
-                call idba_set (handle,"p1",0)
-                call idba_set (handle,"p2",0)
-                call idba_set(handle,"B12003",td)
-                call idba_prendilo (handle)
-                call idba_unset (handle,"B12003")
+               ier=idba_setlevel(handle,103,2000,0,0)
+               ier=idba_settimerange(handle,254,0,0)
+               ier=idba_set(handle,"B12103",td)
+               ier=idba_prendilo (handle)
+               ier=idba_unset (handle,"B12103")
             endif
 
             goto 743
@@ -295,8 +289,8 @@
         enddo                  !regione
     enddo                     !mese
 
-    call idba_fatto(handle)
-    call idba_arrivederci(idbhandle)
+    ier=idba_fatto(handle)
+    ier=idba_arrivederci(idbhandle)
 
     stop
     996 print*,'errore apertura file anag ',ns,nm

@@ -1,23 +1,11 @@
- $lista
-   cvar='B13011',
-   iquota=-1,
-   hlimite=500.,
-   nsoglie=5,
-   soglie=1.,10.,20.,50.,100.,
+ $listaens
    lwght=.F.,
    nowght=11,11,10,10,10,10,10,10,10,10,
    nelsupens=102,
    lselect=.F.,
+   lsprerr=.F.,
  $end
 
-### cvar = codice variable secondo la Btable
-### iquota = per verificare solo punti sopra o sotto ad una certa quota
-###          -1 se le voglio tutte
-###          0 solo pianura (sotto hlimite)
-###          1 solo montagna (sopra hlimite)
-### nsoglie = numero delle soglie per cui calcolare gli score
-### soglie = elenco delle soglie per cui calcolare gli score
-###          l'unita' di misura e' quella che la variabile ha secondo la Btable
 ### lwght = .T. se si vogliono calcolare gli score dell'ensemble pesando i vari
 ###         elementi secondo quanto specificato in pesi.nml
 ### nowght = letta se lwght = .F.; lista pesi da attribuire (costante per i 
@@ -30,4 +18,4 @@
 ### lselect = .T. se si vuole effettuare la verifica su un sottoisieme
 ###               delle stazioni presenti in db, le cui coordinate devono
 ###               essere specificate nel file locale selstaz.dat (rlon rlat)
-### scrivere una namelist per ciascuna variabile!!!
+### lsprerr = .T. calcola la relazione spread/errore (non attivo)

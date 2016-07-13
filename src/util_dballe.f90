@@ -27,7 +27,8 @@
 
   MODULE util_dballe
 
-    INCLUDE "dballe/dballef.h"
+    USE missing_values
+    INCLUDE "dballe/dballeff.h"
     
     CONTAINS
 
@@ -43,8 +44,11 @@
 ! c =90 (valore fittizio) per punti di griglia su cui e' definita l'analisi (prima era itipostaz=2)
 ! c autore: Chiara Marsigli
 
-    integer :: handle,nstaz,iana,h
+    integer :: handle,nstaz,iana
+    real :: h
     character(20) :: namest
+
+    integer :: ier
 
     real :: x(nstaz),y(nstaz),alt(nstaz)
 
@@ -56,16 +60,16 @@
     print*,'stazioni ',nstaz
     do ist=1,nstaz
        
-       call idba_elencamele(handle)
+       ier=idba_elencamele(handle)
        
-       call idba_enq (handle,"ana_id",icodice)
-       call idba_enq (handle,"lat",rlat)
-       call idba_enq (handle,"lon",rlon)
-       call idba_enq (handle,"height",h)
-       call idba_enq (handle,"name",namest)
+       ier=idba_enq (handle,"ana_id",icodice)
+       ier=idba_enq (handle,"lat",rlat)
+       ier=idba_enq (handle,"lon",rlon)
+       ier=idba_enq (handle,"height",h)
+       ier=idba_enq (handle,"name",namest)
        
        if(.not.c_e_c(namest))namest=''
-       if(.not.c_e_i(h))h=9999
+       if(.not. c_e(h))h=9999.
        
        IF (nstaz.LT.icodice) THEN
           PRINT*,"ATTENTION !!!!"
@@ -81,7 +85,7 @@
              print*,ist,icodice,rlat,rlon,h,namest
              x(icodice)=rlon
              y(icodice)=rlat
-             if(h == 9999)then
+             if(h == 9999.)then
                 alt(icodice)=rmdo
              else
                 alt(icodice)=h
@@ -93,7 +97,7 @@
              write(33,*)ist,icodice,rlat,rlon,h,namest
              x(icodice)=rlon
              y(icodice)=rlat
-             if(h == 9999)then
+             if(h == 9999.)then
                 alt(icodice)=rmdo
              else
                 alt(icodice)=h
@@ -123,7 +127,11 @@
     integer :: anaid(nstaz)
     LOGICAL :: lselect
 
+    integer :: ier
+
     REAL :: x(nstaz),y(nstaz),alt(nstaz),toll
+    REAL :: rlat,rlon
+    DOUBLE PRECISION :: dlat,dlon
 
     DATA toll/0.0001/
 
@@ -149,23 +157,23 @@
     i=0
     DO ist=1,nstaz
        
-       CALL idba_elencamele(handle)
+       ier=idba_elencamele(handle)
        
-       CALL idba_enq (handle,"ana_id",icodice)
-       CALL idba_enq (handle,"block",itipostaz)
-       CALL idba_enq (handle,"lat",rlat)
-       CALL idba_enq (handle,"lon",rlon)
+       ier=idba_enq (handle,"ana_id",icodice)
+       ier=idba_enq (handle,"block",itipostaz)
+       ier=idba_enq (handle,"lat",dlat)
+       ier=idba_enq (handle,"lon",dlon)
        
        IF(.NOT.c_e_i(itipostaz))itipostaz=0
        
        IF(lselect)THEN
           
           DO jst=1,nread
-             IF(ABS(rlon-x(jst))<toll .AND. ABS(rlat-y(jst))<toll)THEN
+             IF(ABS(dlon-x(jst))<toll .AND. ABS(dlat-y(jst))<toll)THEN
                 i=i+1
-                PRINT*,ist,icodice,rlon,rlat
+                PRINT*,ist,icodice,dlon,dlat
                 anaid(i)=icodice
-             ENDIF
+             endif
           ENDDO
           
        ELSE
@@ -220,6 +228,8 @@
     integer :: handle,nstaz
     integer :: anaid(nstaz)
 
+    integer :: ier
+
     OPEN(1,file='selstaz.dat',status='old')
 
     i=0
@@ -227,12 +237,12 @@
 
       READ(1,*,end=100)rlon,rlat
       
-      CALL idba_set (handle,"lat",rlat)
-      CALL idba_set (handle,"lon",rlon)
+      ier=idba_set (handle,"lat",rlat)
+      ier=idba_set (handle,"lon",rlon)
 
 ! esiste una API che permette di ottenere ana_id da lon e lat??????
 
-      CALL idba_enq (handle,"ana_id",icodice)
+      ier=idba_enq (handle,"ana_id",icodice)
 
       i=i+1
       anaid(i)=icodice
@@ -259,6 +269,8 @@
     integer :: handle,nstaz
     integer :: anaid(nstaz)
 
+    integer :: ier
+
     character(20) :: namest
 
 ! inizializzazione matrici
@@ -267,12 +279,12 @@
     print*,'stazioni ',nstaz
     DO ist=1,nstaz
 
-        call idba_elencamele(handle)
+        ier=idba_elencamele(handle)
 
-        call idba_enq (handle,"ana_id",icodice)
-        call idba_enq (handle,"lat",rlat)
-        call idba_enq (handle,"lon",rlon)
-        call idba_enq (handle,"name",namest)
+        ier=idba_enq (handle,"ana_id",icodice)
+        ier=idba_enq (handle,"lat",rlat)
+        ier=idba_enq (handle,"lon",rlon)
+        ier=idba_enq (handle,"name",namest)
 
         PRINT*,ist,icodice,rlat,rlon,namest
         anaid(ist)=icodice
@@ -298,14 +310,19 @@
     integer :: dataval(nd),oraval(no),scad(nd)
     integer :: handle,handleana
     character(len=6) :: cvar
-
-    integer :: level(3),scaddb(4)
-    integer :: icodice,repcod,p1,p2,wpind
+    integer :: leveltype1,l1,leveltype2,l2
+    integer :: pind,fctime,period
+    integer :: scaddb(4)
+    integer :: icodice
+!    integer :: repcod
     real :: rlat,rlon
     integer :: h
     character descr*20,btable*10
+    character(20) :: namest
 ! Equatore della rotazione
     real :: rxeq,ryeq
+
+    integer :: ier
 
     print*,'util.f - leggioss_db'
 
@@ -326,41 +343,63 @@
 
 ! Lettura osservazioni da database
 
-    call idba_unsetall(handle)
+    ier=idba_unsetall(handle)
 
-    call idba_set (handle,"priomin",0)
-    call idba_unset (handle,"priomax")
-    CALL idba_set (handle,"query","best")
+    ier=idba_set (handle,"priomin",0)
+    ier=idba_unset (handle,"priomax")
+    ier=idba_set (handle,"query","best")
 
-    call idba_set (handle,"year",dataval(3))
-    call idba_set (handle,"month",dataval(2))
-    call idba_set (handle,"day",dataval(1))
-    call idba_set (handle,"hour",oraval(1))
-    call idba_set (handle,"min",oraval(2))
-    call idba_set (handle,"sec",0)
+    ier=idba_set (handle,"year",dataval(3))
+    ier=idba_set (handle,"month",dataval(2))
+    ier=idba_set (handle,"day",dataval(1))
+    ier=idba_set (handle,"hour",oraval(1))
+    ier=idba_set (handle,"min",oraval(2))
+    ier=idba_set (handle,"sec",0)
 
 ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
     call converti_scadenze(4,scad,scaddb)
-    if(scaddb(4) > 0)then
-        p1=0-(scaddb(3)-scaddb(2))
-        p2=0
-    else
-        p1=0
-        p2=0
-    endif
 
-! in time range indicator speciale per le preci analizzate e' 13, ma in database
-! deve essere comunque 4 
-    wpind=scaddb(4)
-    IF(scaddb(4) == 13)wpind=4
+    scadenzeo: select case(scaddb(4))
+    case(4) ! cumulata
+       pind=1
+       fctime=0
+       period=scaddb(3)-scaddb(2)
+    case(0) ! istantanea
+       pind=254
+       if(scaddb(3)/=0)then 
+          print*,'case 0 - p1= ',scaddb(2),' p2= ',scaddb(3)
+          call exit(1)
+       endif
+       fctime=0
+       period=0
+    case(1) ! analisi inizializzata
+       pind=254
+       if(scaddb(2)/=0)then
+          print*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+          call exit(1)
+       endif
+       fctime=0
+       period=0
+    case(2) ! prodotto valido in un periodo
+       pind=205
+       fctime=0
+       period=scaddb(3)-scaddb(2)
+    case(13) ! analisi di precipitazione
+       pind=1
+       print*,'controllo - verrebbe fctime= ', &
+            scaddb(2),' period= ',scaddb(3)
+       fctime=0
+       period=scaddb(3)-scaddb(2)
+    case default
+       print*,'indicatore scadenza non gestito'
+       call exit(1)
+    end select scadenzeo
+    
+    ier=idba_settimerange(handle,pind,fctime,period)
 
-    call idba_set (handle,"p1",p1)
-    call idba_set (handle,"p2",p2)
-    call idba_set (handle,"pindicator",wpind)
+    ier=idba_set (handle,"var",cvar)
 
-    call idba_set (handle,"var",cvar)
-
-    call idba_voglioquesto (handle,N)
+    ier=idba_voglioquesto (handle,N)
     if(N == 0)then
         print*,'non ci sono dati'
         goto 66
@@ -371,22 +410,20 @@
     nv=0
     do idati=1,N
 
-        call idba_dammelo (handle,btable)
+        ier=idba_dammelo (handle,btable)
     ! sara' da impostare mentre per ora e' solo richiesto
-        call idba_enq (handle,"leveltype", &
-        level(1))
-        call idba_enq (handle,"l1",level(2))
-        call idba_enq (handle,"l2",level(3))
+        ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
 
-        call idba_enq (handle,"rep_cod",repcod)
-        call idba_enq (handle,"ana_id",icodice)
+        ier=idba_enq (handle,"ana_id",icodice)
 
-        if(repcod >= 100)goto30
+        ier=idba_enq (handle,"name",namest)
+
+        if(namest(1:4)=='_box')goto30
 
 ! per chiedere i dati dell'anagrafica
      
-        call idba_set (handleana,"ana_id",icodice)
-        CALL idba_quantesono (handleana,N)
+        ier=idba_set (handleana,"ana_id",icodice)
+        ier=idba_quantesono (handleana,N)
         IF (N.NE.1) THEN
           PRINT*,"ERRORE !!!"
           PRINT*,"ERRORE !!!"
@@ -394,13 +431,13 @@
           call exit (1)
         END IF
 
-        call idba_elencamele (handleana)
-        call idba_enq (handleana,"lat",rlat)
-        call idba_enq (handleana,"lon",rlon)
-        CALL idba_enq (handleana,"height",h)
+        ier=idba_elencamele (handleana)
+        ier=idba_enq (handleana,"lat",rlat)
+        ier=idba_enq (handleana,"lon",rlon)
+        ier=idba_enq (handleana,"height",h)
 
         nv=nv+1
-        call idba_enq (handle,btable,dato)
+        ier=idba_enq (handle,btable,dato)
         obs(icodice)=dato
     ! print*,'ecco ',ipos,iv,dato
         if(ruota)then
@@ -509,10 +546,10 @@
 
 !**************************************************************************
 
-    SUBROUTINE modello(model,ivlsm,ivor,ls,diffh)
+    SUBROUTINE modello(model,ivlsm,ivor,ls,diffh,corrq)
 
     INTEGER :: ivlsm,ivor,ls
-    LOGICAL :: diffh
+    LOGICAL :: diffh,corrq
     CHARACTER(len=10) :: model
 
     character :: cdum*10,civor*3,civlsm*3,profile*20
@@ -522,7 +559,7 @@
 ! c autore: Chiara Marsigli
 
     profile='profile_'//model(1:nlenvera(model))
-    IF(diffh)THEN
+    IF(diffh .OR.corrq)THEN
       OPEN(44,file=profile,status='old')
       DO WHILE (.TRUE.)
         READ(44,'(a10)',END=222)cdum
@@ -723,7 +760,7 @@
 
     integer :: fact(0:12)
     data fact/60,3600,86400,2592000,31536000, &
-    315360000,946080000,3153600000, &
+    315360000,946080000,0, &
     0,0,10800,21600,43200/
 
 ! se scad(1)=0 il valore e' in minuti, quindi
@@ -757,18 +794,20 @@
     ruota,area,slon1,slon2,slat1,slat2)
 
 ! c VERIFICA - util.f
-! c legge le ccordinate delle pseudostazioni da file grib (punti di griglia)
+! c legge le coordinate delle pseudostazioni da file grib (punti di griglia)
 ! c autore: Chiara Marsigli
 
     real :: xb(MNBOX),yb(MNBOX)
-    character(len=60) :: vfile
+    character(len=80) :: vfile
     logical :: ruota,area
+    integer :: nbox
+    REAL :: alorot,alarot,slon1,slon2,slat1,slat2
 
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
 ! grib fields
     integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)
-    REAL :: psec2(10),psec3(2),dummy(1)
+    REAL :: psec2(10),psec3(2)
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     real :: alat(4),alon(4)
 
@@ -788,6 +827,8 @@
     if(ier /= 0)goto 9300
     call pbclose(iug,ier)
     if(ier < 0)goto9500
+
+!    PRINT*,ija,alarot,alorot
 
     if(area)then
         call rot_grib_LAMBO(alorot,alarot,rxeq,ryeq)
@@ -863,6 +904,93 @@
 
 !********************************************************************************
 
+SUBROUTINE selarea_grib(gribfile,shapefile,maschera)
+USE volgrid6d_class
+USE gridinfo_class
+USE grid_transform_class
+USE grid_id_class
+USE georef_coord_class
+USE err_handling
+IMPLICIT NONE
+CHARACTER(len=512) :: shapefile
+CHARACTER(len=80) :: gribfile
+INTEGER :: maschera(:)
+
+TYPE(gridinfo_def) :: gridinfo
+TYPE(arrayof_gridinfo) :: gridinfov
+TYPE(volgrid6d),POINTER :: vol(:), volmask(:)
+TYPE(transform_def) :: trans
+TYPE(grid_file_id) :: ifile
+TYPE(grid_id) :: gaid
+TYPE(arrayof_georef_coord_array) :: macroa
+INTEGER :: i, j, k
+
+NULLIFY(vol, volmask)
+
+ifile = grid_file_id_new(gribfile,'r')
+! take first message in file
+gaid = grid_id_new(ifile)
+IF (.NOT.c_e(gaid)) THEN
+  PRINT*,'Errore in lettura di '//TRIM(gribfile)
+  CALL raise_fatal_error()
+ENDIF
+! and import it
+CALL init(gridinfo, gaid=gaid)
+!gridinfov = arrayof_gridinfo_new()
+CALL import(gridinfo)
+CALL insert(gridinfov, gridinfo)
+! close the file
+CALL delete(ifile)
+! import into volume
+CALL import(vol, gridinfov)
+IF (.NOT.ASSOCIATED(vol)) THEN
+  PRINT*,'Errore in importazione di '//TRIM(gribfile)
+  CALL raise_fatal_error()
+ENDIF
+! read shapefile
+CALL import(macroa, shapefile)
+IF (macroa%arraysize <= 0) THEN
+  PRINT*,'Errore in importazione di '//TRIM(shapefile)
+  CALL raise_fatal_error()
+ENDIF
+! define maskgen transformation
+CALL init(trans, trans_type='maskgen', sub_type='', poly=macroa)
+! make transformation
+CALL transform(trans,volgrid6d_in=vol, volgrid6d_out=volmask)
+IF (.NOT.ASSOCIATED(volmask)) THEN
+  PRINT*,'Errore nel calcolo delle macroaree '
+  CALL raise_fatal_error()
+ENDIF
+! mask is in volmask(1)%voldati(:,:,1,1,1,1)
+IF (SIZE(maschera) < SIZE(volmask(1)%voldati(:,:,1,1,1,1))) THEN
+  PRINT*,'Errore, maschera troppo piccola ', &
+   SIZE(maschera),SIZE(volmask(1)%voldati(:,:,1,1,1,1))
+  CALL raise_fatal_error()
+ENDIF
+! flatten the mask (check whether this is desired!!!)
+k = 1
+DO j = 1, SIZE(volmask(1)%voldati(:,:,1,1,1,1),2)
+  DO i = 1, SIZE(volmask(1)%voldati(:,:,1,1,1,1),1)
+    IF (c_e(volmask(1)%voldati(i,j,1,1,1,1))) THEN
+      maschera(k) = 1
+    ELSE
+      maschera(k) = 0
+    ENDIF
+    k = k + 1
+  ENDDO
+ENDDO
+! cleanup
+CALL delete(vol)
+CALL delete(volmask)
+CALL delete(gridinfov)
+CALL delete(trans)
+CALL delete(macroa)
+
+
+END SUBROUTINE selarea_grib
+
+!********************************************************************************
+
     subroutine medbox(MIDIMV,MNRM,MNSTAZ,MNBOX, &
          xb,yb,nbox,dxb,dyb,x,y,alt,obsst,rmgrid, &
          npmod,xpmod,ypmod, &
@@ -885,7 +1013,7 @@
     real :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
     real :: thr,perc
     logical :: media,massimo,prob,distr
-
+    integer :: nbox
     real :: vecto(mnpo),vectp(mnpo),medo,medp
 
     print*,'util.f - medbox ',nminobs
@@ -951,6 +1079,7 @@
                 npp=0
                 pred(ib,irm)=0.
                 do ip=1,npmod
+!                  PRINT*,xpmod(ip),ypmod(ip),eblon1,eblon2,eblat1,eblat2
                    if(xpmod(ip) >= eblon1 &
                         .AND. xpmod(ip) < eblon2 &
                         .AND. ypmod(ip) >= eblat1 &
@@ -1160,6 +1289,257 @@
     return
     end subroutine medbox
   
+!********************************************************************************
+
+    SUBROUTINE medaree(MIDIMV,MNRM,MNSTAZ,MNBOX, &
+     id_area_box,nbox,alt,id_area_st,obsst,rmgrid, &
+     npmod,id_area_mod, &
+     nminobs,rmddb,rmd,rmdo,nrm,media,massimo,prob, &
+     distr,perc, &
+     lsm,ls,obm,thr,obs,pred,nb,altbox)
+
+! c VERIFICA - util.f
+! c calcola i valori medi, i valori massimi o le frequenze/probabilita'
+! c di previsti e osservati all'interno di aree predefinite (bacini)
+! c autore: Chiara Marsigli
+
+    PARAMETER (mnpo=1000)
+    REAL :: obsst(MNSTAZ),rmgrid(MIDIMV,MNRM)
+    REAL :: lsm(MIDIMV),obm(MIDIMV)
+    INTEGER :: id_area_box(MNBOX),id_area_st(MNSTAZ),id_area_mod(npmod)
+    REAL :: alt(MNSTAZ)
+    REAL :: altbox(MNSTAZ)
+    REAL :: obs(MNSTAZ),pred(MNSTAZ,MNRM)
+    REAL :: thr,perc
+    LOGICAL :: media,massimo,prob,distr
+    integer :: nbox
+
+    REAL :: vecto(mnpo),vectp(mnpo),medo,medp
+    
+    PRINT*,'util.f - medaree ',nminobs
+
+    OPEN(77,file='stato_aree.dat',status='unknown')
+    
+    ! Computation of average value in a box
+    ib=0
+    DO ibox=1,nbox
+      idarea=id_area_box(ibox) ! identificativo dell'area
+      npo=0
+      ! il ciclo va sempre fatto su tutte le stazioni,
+      ! perche' sono riempite lasciando i buchi
+      DO ist=1,MNSTAZ
+        IF(id_area_st(ist) == idarea .AND. obsst(ist) /= rmddb)THEN
+          npo=npo+1
+        ENDIF
+      ENDDO
+      ! procedo solo se ci sono sufficienti osservazioni per area
+      IF(npo >= nminobs)THEN
+        ib=ib+1
+        IF(ib > MNSTAZ)THEN
+          PRINT*,'ERRORE! ib MAGGIORE DI MNSTAZ!'
+          CALL EXIT (1)
+        ENDIF
+
+        IF(media)THEN       ! MEDIA
+          
+          obs(ib)=0.
+          altbox(ib)=0.
+          npoalt=0
+          DO ist=1,MNSTAZ
+            IF(id_area_st(ist) == idarea .AND. obsst(ist) /= rmddb)THEN
+              obs(ib)=obs(ib)+obsst(ist)
+              IF((alt(ist)-rmdo)>0.1)THEN
+                altbox(ib)=altbox(ib)+alt(ist)
+                npoalt=npoalt+1
+              ENDIF
+            ENDIF
+          ENDDO
+          IF(npo /= 0)THEN
+            obs(ib)=obs(ib)/REAL(npo)
+          ELSE
+            obs(ib)=rmddb
+          ENDIF
+          IF(npoalt /= 0) THEN
+            altbox(ib)=altbox(ib)/REAL(npoalt)
+          ELSE
+            altbox(ib)=rmdo
+          ENDIF
+          DO irm=1,nrm
+            npp=0
+            pred(ib,irm)=0.
+            DO ip=1,npmod
+              IF(id_area_mod(ip) == idarea .AND. rmgrid(ip,irm) /= rmd)THEN
+                IF(NINT(obm(ip)) == 1)THEN
+                  IF(ls >= 0)THEN
+                    IF(NINT(lsm(ip)) == ls)THEN
+                      npp=npp+1
+                      pred(ib,irm)=pred(ib,irm)+ &
+                       rmgrid(ip,irm)
+                    ENDIF
+                  ELSE
+                    npp=npp+1
+                    pred(ib,irm)=pred(ib,irm)+rmgrid(ip,irm)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDDO
+            IF(npp /= 0)THEN
+              pred(ib,irm)=pred(ib,irm)/REAL(npp)
+            ELSE
+              pred(ib,irm)=rmddb
+            ENDIF
+            WRITE(77,'(a,i4,2(1x,a,1x,i4))') &
+             'box:',ibox,'npo',npo,'npp',npp
+          ENDDO            ! nrm
+          
+        ELSEIF(massimo)THEN ! MASSIMO
+          
+          obs(ib)=-999.9
+          altbox(ib)=0.
+          npoalt=0
+          DO ist=1,MNSTAZ
+            IF(id_area_st(ist) == idarea .AND. obsst(ist) /= rmddb)THEN
+              obs(ib)=MAX(obs(ib),obsst(ist))
+              IF((alt(ist)-rmdo)>0.1)THEN
+                altbox(ib)=altbox(ib)+alt(ist)
+                npoalt=npoalt+1
+              ENDIF
+            ENDIF
+          ENDDO
+          IF(npo == 0)obs(ib)=rmddb
+          IF(npoalt /= 0)THEN
+            altbox(ib)=altbox(ib)/REAL(npoalt)
+          ELSE
+            altbox(ib)=rmdo
+          ENDIF
+          DO irm=1,nrm
+            pred(ib,irm)=-999.9
+            ncont=0
+            DO ip=1,npmod
+              IF(id_area_mod(ip) == idarea .AND. rmgrid(ip,irm) /= rmd)THEN
+                IF(NINT(obm(ip)) == 1)THEN
+                  IF(ls >= 0)THEN
+                    IF(NINT(lsm(ip)) == ls)THEN
+                      ncont=ncont+1
+                      pred(ib,irm)= &
+                       MAX(pred(ib,irm),rmgrid(ip,irm))
+                    ENDIF
+                  ELSE
+                    ncont=ncont+1
+                    pred(ib,irm)= &
+                     MAX(pred(ib,irm),rmgrid(ip,irm))
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDDO
+            WRITE(77,'(a,i4,2(1x,a,1x,i4))') &
+             'box:',ibox,'npo',npo,'npp',ncont
+            IF(ncont == 0)pred(ib,irm)=rmddb
+          ENDDO            ! nrm
+          
+        ELSEIF(prob)THEN    ! PROB
+          
+          obs(ib)=0.
+          altbox(ib)=0.
+          npoalt=0
+          DO ist=1,MNSTAZ
+            IF(id_area_st(ist) == idarea .AND. obsst(ist) /= rmddb &
+             .AND. obsst(ist) >= thr)THEN
+              obs(ib)=obs(ib)+1.
+              IF((alt(ist)-rmdo)>0.1)THEN
+                altbox(ib)=altbox(ib)+alt(ist)
+                npoalt=npoalt+1
+              ENDIF
+            ENDIF
+          ENDDO
+          IF(npo /= 0)THEN
+            obs(ib)=(obs(ib)/REAL(npo))*10.
+          ELSE
+            obs(ib)=rmddb
+          ENDIF
+          IF(npoalt /= 0)THEN
+            altbox(ib)=altbox(ib)/REAL(npoalt)
+          ELSE
+            altbox(ib)=rmdo
+          ENDIF
+          DO irm=1,nrm
+            npp=0
+            pred(ib,irm)=0.
+            DO ip=1,npmod
+              IF(id_area_mod(ip) == idarea .AND. rmgrid(ip,irm) /= rmd)THEN
+                IF(NINT(obm(ip)) == 1)THEN
+                  IF(ls >= 0)THEN
+                    IF(NINT(lsm(ip)) == ls)THEN
+                      npp=npp+1
+                      IF(rmgrid(ip,irm) >= thr)THEN
+                        pred(ib,irm)=pred(ib,irm)+1.
+                      ENDIF
+                    ENDIF
+                  ELSE
+                    npp=npp+1
+                    IF(rmgrid(ip,irm) >= thr)THEN
+                      pred(ib,irm)=pred(ib,irm)+1.
+                    ENDIF
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDDO
+            IF(npp /= 0)THEN
+              pred(ib,irm)=(pred(ib,irm)/REAL(npp))*10.
+            ELSE
+              pred(ib,irm)=rmddb
+            ENDIF
+            WRITE(77,'(a,i4,2(1x,a,1x,i4))') &
+             'box:',ibox,'npo',npo,'npp',npp
+          ENDDO            ! nrm
+             
+        ELSEIF(distr)THEN   ! DISTR
+          
+          nvo=0
+          DO ist=1,MNSTAZ
+            IF(id_area_st(ist) == idarea .AND. obsst(ist) /= rmddb)THEN
+              nvo=nvo+1
+              vecto(nvo)=obsst(ist)
+            ENDIF
+          ENDDO
+          DO irm=1,nrm
+            nvp=0
+            DO ip=1,npmod
+              IF(id_area_mod(ip) == idarea .AND. rmgrid(ip,irm) /= rmd)THEN
+                IF(NINT(obm(ip)) == 1)THEN
+                  IF(ls >= 0)THEN
+                    IF(NINT(lsm(ip)) == ls)THEN
+                      nvp=nvp+1
+                      vectp(nvp)=rmgrid(ip,irm)
+                    ENDIF
+                  ELSE
+                    nvp=nvp+1
+                    vectp(nvp)=rmgrid(ip,irm)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDDO
+            IF(nvp >= 3)THEN
+              CALL percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
+            ELSE
+              obs(ib)=rmddb
+              pred(ib,irm)=rmddb
+            ENDIF
+          ENDDO            ! nrm
+          
+        ENDIF               !media o massimo o probabilita'
+        
+      ENDIF                  !nminobs
+    ENDDO                     !nbox
+    nb=ib
+    PRINT*,'numero aree buone ',nb
+    WRITE(23,*)'numero aree buone ',nb
+
+    CLOSE(77)
+    
+    RETURN
+    END SUBROUTINE medaree
+
 !*****************************************************************************
 
     subroutine percentile(nvo,nvp,vecto,vectp,medo,medp,perc)
@@ -1167,10 +1547,10 @@
     real :: vecto(nvo),vectp(nvp)
     real :: medo,medp,perc
 
-    k=(perc/100.)*nvo        ! percentile relativo al campione
+    k=int((perc/100.)*nvo)        ! percentile relativo al campione
 ! print*,'k obs ',k,' perc ',selip(k,nvo,vecto)
     medo=selip(k,nvo,vecto)
-    k=(perc/100.)*nvp        ! percentile relativo al campione
+    k=int((perc/100.)*nvp)        ! percentile relativo al campione
 ! print*,'k pre ',k,' perc ',selip(k,nvp,vectp)
     medp=selip(k,nvp,vectp)
 

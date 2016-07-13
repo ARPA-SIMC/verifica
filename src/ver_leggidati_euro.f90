@@ -31,7 +31,7 @@
     parameter (nstaz=20000,nmesi=100)
 
     REAL :: lonoss(nstaz),latoss(nstaz)
-    INTEGER :: alte(nstaz)
+    REAL :: alte(nstaz)
     REAL :: preci(nstaz,31)
     INTEGER :: DATA(3),ora(2)
     INTEGER :: giomax,ialt
@@ -41,11 +41,13 @@
     CHARACTER(len=2) :: reg='',mese(nmesi)=''
     CHARACTER(len=4) :: anno(nmesi)=''
     INTEGER :: nme=0
-    CHARACTER(19) :: database='',user='',password=''
+    CHARACTER(512) :: database='',user='',password=''
     
     integer :: handle
     integer :: debug=1
     integer :: handle_err
+
+    integer :: ier
 
     NAMELIST /euro/path,reg,nme,mese,anno
     namelist /odbc/database,user,password
@@ -65,11 +67,11 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
-    CALL idba_preparati(idbhandle,handle,"write","write","write")
+    ier=idba_preparati(idbhandle,handle,"write","write","write")
 
 ! INIZIO CICLO SUI MESI
 
@@ -97,9 +99,9 @@
           numestaz=numestaz+1
           
           IF(ialt == imd)THEN
-            alte(istaz)=dba_mvi
+            alte(istaz)=dba_mvr
           ELSE
-            alte(istaz)=ialt
+            alte(istaz)=real(ialt)
           ENDIF
 
         ENDDO
@@ -122,56 +124,55 @@
 
           DO istaz=1,numestaz
             
-            CALL idba_unsetall (handle)
+            ier=idba_unsetall (handle)
           
 ! anagrafica
-            CALL idba_setcontextana (handle)
-            ! obbligatori
-            CALL idba_set (handle,"lat",latoss(istaz))
-            CALL idba_set (handle,"lon",lonoss(istaz))
-            CALL idba_set (handle,"mobile",0)
+            ier=idba_setcontextana (handle)
+! obbligatori
+! setto la rete dei dati con questa anagrafica
+            ier=idba_set (handle,"rep_memo",'regioni') !rete=regioni
 
-            CALL idba_set (handle,"height",alte(istaz))
-            CALL idba_set (handle,"block",69)
+            ier=idba_set (handle,"lat",latoss(istaz))
+            ier=idba_set (handle,"lon",lonoss(istaz))
+            ier=idba_set (handle,"mobile",0)
+
+            ier=idba_set (handle,"height",alte(istaz))
+            ier=idba_set (handle,"block",69)
         
-            CALL idba_prendilo (handle)
+            ier=idba_prendilo (handle)
 
-            CALL idba_enq(handle,"ana_id",id_ana)
+            ier=idba_enq(handle,"*ana_id",id_ana)
 
 ! dati
-            call idba_unsetall (handle)
+            ier=idba_unsetall (handle)
 
-            CALL idba_set(handle,"ana_id",id_ana)
+            ier=idba_set(handle,"ana_id",id_ana)
             
             ! print*,'datatime ',data(3),data(2),data(1),ora(1),ora(2),00
-            CALL idba_set (handle,"year",data(3))
-            CALL idba_set (handle,"month",data(2))
-            CALL idba_set (handle,"day",data(1))
-            CALL idba_set (handle,"hour",ora(1))
-            CALL idba_set (handle,"min",ora(2))
-            CALL idba_set (handle,"sec",00)
+            ier=idba_set (handle,"year",data(3))
+            ier=idba_set (handle,"month",data(2))
+            ier=idba_set (handle,"day",data(1))
+            ier=idba_set (handle,"hour",ora(1))
+            ier=idba_set (handle,"min",ora(2))
+            ier=idba_set (handle,"sec",00)
             
-            CALL idba_set (handle,"leveltype",1)
-            CALL idba_set (handle,"l1",0)
-            CALL idba_set (handle,"l2",0)
-            CALL idba_set (handle,"pindicator",4)
-            CALL idba_set (handle,"p1",-86400)
-            CALL idba_set (handle,"p2",0)
-            
+            ier=idba_setlevel(handle,1,0,0,0)
+            ier=idba_settimerange(handle,1,0,86400)
+
             ! codice per gli osservati delle regioni
-            CALL idba_set (handle,"rep_cod",50)
+            ier=idba_set (handle,"rep_memo",'regioni')
             
           ! inserimento dati
             IF(preci(istaz,igio) >= 0.)THEN
-              CALL idba_set(handle,"B13011",preci(istaz,igio))
-              CALL idba_prendilo (handle)
-              CALL idba_unset (handle,"B13011")
+              ier=idba_set(handle,"B13011",preci(istaz,igio))
+              ier=idba_prendilo (handle)
+              ier=idba_unset (handle,"B13011")
             ENDIF
             ! aggiungo altre info
             ! if (hmo.ne.imd) then
-            ! call idba_setc(handle,"*var", "B22021")
-            ! call idba_seti(handle,"*B22071",3)
-            ! call idba_critica(handle)
+            ! ier=idba_setc(handle,"*var", "B22021")
+            ! ier=idba_seti(handle,"*B22071",3)
+            ! ier=idba_critica(handle)
             ! end if
             
           ENDDO !stazioni
@@ -189,10 +190,8 @@
 
       ENDDO !mese
       
-      CALL idba_fatto(handle)
-      CALL idba_arrivederci(idbhandle)
+      ier=idba_fatto(handle)
+      ier=idba_arrivederci(idbhandle)
       
-      STOP
-997   PRINT*,'errore apertura file dati ',nm
       STOP
       END PROGRAM ver_leggidati_euro

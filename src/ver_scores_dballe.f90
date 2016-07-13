@@ -94,51 +94,34 @@
 ! Internet: http://www.arpa.emr.it/sim/
 
     USE util_dballe
+    USE common_namelists
 
-    PARAMETER (MNSTAZ=5000,MNSCAD=72,MNGIO=366,MNORE=1)
-    PARAMETER (MNSOG=10,MNV=MNSTAZ*MNGIO*MNORE)
+    PARAMETER (MNSTAZ=5000,MNGIO=366,MNORE=1)
+    PARAMETER (MNV=MNSTAZ*MNGIO*MNORE)
 ! attenzione!!! Non sono usate, servono solo per dare
 ! un riferimento a chi dimensiona i vettori dinamicamente
-    INTEGER :: ora(2),var(3),scad(4),level(3)
-    INTEGER :: dataval(3),oraval(2),scaddb(4),p1,p2
-    INTEGER :: icodice,itipost,ntot,h
+    INTEGER :: ora(2),scad(4)
+    INTEGER :: dataval(3),oraval(2),scaddb(4)
+    INTEGER :: icodice,itipost,h
     REAL :: dato
+    integer :: leveltype1,l1,leveltype2,l2
+    integer :: pind,fctime,period
     CHARACTER :: descr*20,descrfisso*20,cel*3
+    INTEGER :: npo
     REAL :: maerr,mserr,rmserr,bi
     REAL :: cog
-! namelist variables
-    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
-    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
-    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1
-    character(len=10) :: model=''
-    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
-    logical :: ruota=.false.,diffh=.false.
-    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
-    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
-    CHARACTER(len=6) :: cvar=''
-    INTEGER :: iquota=-1,lthr=0
-    INTEGER :: nsoglie=1
-    REAL :: hlimite=100.,soglie(MNSOG)=0.,distmean=1.
-    LOGICAL :: daily=.FALSE.,ldir=.FALSE.,lselect=.FALSE.
-    CHARACTER(LEN=19) :: database='',user='',password=''
 
-    REAL, ALLOCATABLE :: oss(:),prev(:,:),previ(:),lon(:),lat(:)
+    REAL, ALLOCATABLE :: oss(:),prev(:,:),lon(:),lat(:)
     INTEGER, ALLOCATABLE :: anaid(:)
-    
+    REAL, ALLOCATABLE :: previ(:)
+
     CHARACTER(LEN=10) :: btable
     INTEGER :: handle,handle_err,handleana,USTAZ
     INTEGER :: debug=1
 
+    integer :: ier
+
     DATA      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
-    NAMELIST  /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-     nvar,nrm,nore,ore
-    NAMELIST  /stat/model,itipo,iana,imet,imod,ls,ruota, &
-     nminobs,media,massimo,prob,distr,dxb,dyb,diffh,diffmax, &
-     thr,perc
-    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect,distmean
-    NAMELIST  /date/DATA
-    NAMELIST  /scadenza/scadenze
-    NAMELIST  /odbc/database,user,password
     
     print*,'program scores'
 
@@ -170,17 +153,17 @@
     endif
 
 ! gestione degli errori
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
 ! connessione con database
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
 ! apertura database in lettura
-    call idba_preparati(idbhandle,handle,"read","read","read")
-    call idba_preparati(idbhandle,handleana,"read","read","read")
+    ier=idba_preparati(idbhandle,handle,"read","read","read")
+    ier=idba_preparati(idbhandle,handleana,"read","read","read")
 
 ! leggo tutte le stazioni presenti in archivio
-    call idba_quantesono(handle,nstaz)
+    ier=idba_quantesono(handle,nstaz)
     print*,'massimo numero stazioni e pseudo-stazioni ',nstaz
     if(nstaz > MNSTAZ)then
         print*,'SONO TANTE ',nstaz,' STAZIONI!! SEI SICURO/A?'
@@ -297,19 +280,20 @@
         enddo
         print*,'scadenza ',scad
 
-    ! nizializzazione matrici
+    ! inizializzazione matrici
         oss = rmddb
         prev = rmddb
         previ = rmddb
 
         iscaddb=scad1+inc*(iscad-1)
         write(11,'(a,i3)')' scadenza= ',iscaddb
-        write(11,'(4x,a3,6x,a5,6x,a5,5x,a6,7x,a4)') &
+        write(11,'(4x,a3,8x,a5,8x,a5,7x,a6,9x,a4)') &
         'npo','maerr','mserr','rmserr','bias'
+        write(13,'(a,i3)')' scadenza= ',iscaddb
         write(15,'(a,i3)')' scadenza= ',iscaddb
         WRITE(15,'(4x,a3,6x,a3,6x,a8)')'npo','cog','distmean'
         write(66,'(a,i3)')' scadenza= ',iscaddb
-        write(66,'(3(1x,a3),2(6x,a5),5x,a6,7x,a4)') &
+        write(66,'(3(1x,a3),2(8x,a5),7x,a6,9x,a4)') &
         'gio','ora','npo','maerr','mserr','rmserr','bias'
         print*,'scadenza ',iscaddb
 
@@ -345,38 +329,64 @@
             ! lettura previsioni da database
 
             ! ricominciamo 
-                call idba_unsetall(handle)
+                ier=idba_unsetall(handle)
 
-                CALL idba_set (handle,'query','bigana')
-
-                call idba_set (handle,"year",dataval(3))
-                call idba_set (handle,"month",dataval(2))
-                call idba_set (handle,"day",dataval(1))
-                call idba_set (handle,"hour",oraval(1))
-                call idba_set (handle,"min",oraval(2))
-                call idba_set (handle,"sec",0)
+                ier=idba_set (handle,"year",dataval(3))
+                ier=idba_set (handle,"month",dataval(2))
+                ier=idba_set (handle,"day",dataval(1))
+                ier=idba_set (handle,"hour",oraval(1))
+                ier=idba_set (handle,"min",oraval(2))
+                ier=idba_set (handle,"sec",0)
 
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                 call converti_scadenze(4,scad,scaddb)
+
+! questa gestione delle scadenze è fatta rispetto al vettore scad scritto come
+! lo è per i grib in formato GRIB1. Passando a GRIB2 scad sarà posta identica
+! come sono scritte le scadenze in dballe 
+                scadenzep: select case(scaddb(4))
+                case(4) ! cumulata
+                   pind=1
+                   fctime=scaddb(3)
+                   period=scaddb(3)-scaddb(2)
+                case(0) ! istantanea
+                   pind=254
+                   if(scaddb(3)/=0)then
+                      print*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                      call exit(1)
+                   endif
+                   fctime=scaddb(2)
+                   period=0
+                case(1) ! analisi inizializzata
+                   pind=254
+                   if(scaddb(2)/=0)then
+                      print*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                      call exit(1)
+                   endif
+                   fctime=scaddb(2)
+                   period=0
+                case(2) ! prodotto valido in un periodo
+                   pind=205
+                   fctime=scaddb(3)
+                   period=scaddb(3)-scaddb(2)
+                case(13) ! analisi di precipitazione
+                   pind=1
+                   print*,'controllo - verrebbe fctime= ',scaddb(2), &
+                        ' period= ',scaddb(3)
+                   fctime=scaddb(2)
+                   period=scaddb(3)
+                case default
+                   print*,'indicatore scadenza non gestito'
+                   call exit(1)
+                end select scadenzep
+                ier=idba_settimerange(handle,pind,fctime,period)
 
 ! gestione scadenze
 ! scad(4) (ksec1(18)) e' posto pari a 13 per esprimere le scadenze relative 
 ! a piogge analizzate: p1 e p2 vanno considerati all'indietro a partire da
 ! data e ora del GRIB (es: p1=0 e p2=1 significa andare indietro di 1 ora)
-                IF(scaddb(4) == 13)THEN
-                  wp1=0-scaddb(3)
-                  wp2=0
-                  wpind=4
-                  CALL idba_set (handle,"p1",wp1)
-                  CALL idba_set (handle,"p2",wp2)
-                  CALL idba_set (handle,"pindicator",wpind)  
-                ELSE
-                  CALL idba_set (handle,"p1",scaddb(2))
-                  CALL idba_set (handle,"p2",scaddb(3))
-                  CALL idba_set (handle,"pindicator",scaddb(4))
-                ENDIF
 
-                call idba_set (handle,"var",cvar)
+                ier=idba_set (handle,"var",cvar)
 
                 do irm=1,nrm
 
@@ -388,38 +398,35 @@
                        //'el'//cel
                     ENDIF
 
-                    call idba_set (handle,"rep_memo",descr)
+                    ier=idba_set (handle,"rep_memo",descr)
 
-!                    print*,'prev ',descr,dataval,oraval,scaddb,cvar
+                    print*,'prev ',descr,dataval,oraval,scaddb,cvar
 
-                    call idba_voglioquesto (handle,N)
+                    ier=idba_voglioquesto (handle,N)
                 ! print*,'numero di dati trovati',N
                     if(N == 0)then
                         print*,'pre - non ci sono dati'
                         print*,dataval,oraval
                         goto 66
                     else
-!                      PRINT*,'pre - numero di dati trovati ',N
+                      PRINT*,'pre - numero di dati trovati ',N
                     endif
 
                     do idati=1,N
 
-                        call idba_dammelo (handle,btable)
+                        ier=idba_dammelo (handle,btable)
                     ! sara' da impostare mentre per ora e' solo richiesto
-                        call idba_enq (handle,"leveltype", &
-                        level(1))
-                        call idba_enq (handle,"l1",level(2))
-                        call idba_enq (handle,"l2",level(3))
+                        ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
 
-                    ! call idba_enq (handle,"mobile",mobile)
+                    ! ier=idba_enq (handle,"mobile",mobile)
 
-                        call idba_enq (handle,"ana_id",icodice)
+                        ier=idba_enq (handle,"ana_id",icodice)
 
 !mst  interrogo sezione anagrafica per avere l'altezza
-                        CALL idba_set (handleana,"ana_id",icodice)
-                        CALL idba_quantesono(handleana,USTAZ)
-                        CALL idba_elencamele (handleana)
-                        CALL idba_enq (handleana,"height",h)
+                        ier=idba_set (handleana,"ana_id",icodice)
+                        ier=idba_quantesono(handleana,USTAZ)
+                        ier=idba_elencamele (handleana)
+                        ier=idba_enq (handleana,"height",h)
 
                         IF(iquota >= 0)THEN
                           IF(c_e_i(h))THEN
@@ -435,13 +442,15 @@
                           ENDIF
                         ENDIF
 
+                        ipos=0
                         do i=1,nstaz
                             if(icodice == anaid(i))then
                                 ipos=i
                             endif
                         enddo
+                        IF(ipos == 0)goto20
 
-                        call idba_enq (handle,btable,dato)
+                        ier=idba_enq (handle,btable,dato)
 
                         iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
                         prev(iv,irm)=dato
@@ -453,79 +462,97 @@
 
             ! lettura osservazioni da database
 
-                call idba_unsetall(handle)
+                ier=idba_unsetall(handle)
 
                 if(itipost == 0)then
-                    call idba_set (handle,"priomin",0)
-                    call idba_unset (handle,"priomax")
-                    call idba_set (handle,"query","best")
+                    ier=idba_set (handle,"priomin",0)
+!                    ier=idba_set (handle,"priomax",99)
+                    ier=idba_set (handle,"query","best")
                     descr="oss"
                 elseif(itipost == 80)then
-                    call idba_unset (handle,"query")
+                    ier=idba_unset (handle,"query")
                     nlm=nlenvera(model)
                     descr='oss'//descrfisso((nlm+1):(nlm+5))
-                    call idba_set (handle,"rep_memo",descr)
+                    ier=idba_set (handle,"rep_memo",descr)
                 elseif(itipost == 90)then
-                    call idba_unset (handle,"query")
-                    descr="ana"
-                    call idba_set (handle,"rep_memo",descr)
+                    ier=idba_unset (handle,"query")
+                    descr="analisi"
+                    ier=idba_set (handle,"rep_memo",descr)
                 endif
 
-                CALL idba_set (handle,'query','bigana')
+                ier=idba_set (handle,"year",dataval(3))
+                ier=idba_set (handle,"month",dataval(2))
+                ier=idba_set (handle,"day",dataval(1))
+                ier=idba_set (handle,"hour",oraval(1))
+                ier=idba_set (handle,"min",oraval(2))
+                ier=idba_set (handle,"sec",0)
 
-                call idba_set (handle,"year",dataval(3))
-                call idba_set (handle,"month",dataval(2))
-                call idba_set (handle,"day",dataval(1))
-                call idba_set (handle,"hour",oraval(1))
-                call idba_set (handle,"min",oraval(2))
-                call idba_set (handle,"sec",0)
-
-                if(scaddb(4) > 0)then
-                    p1=0-(scaddb(3)-scaddb(2))
-                    p2=0
-                else
-                    p1=0
-                    p2=0
-                endif
+                scadenzeo: select case(scaddb(4))
+                case(4) ! cumulata
+                   pind=1
+                   fctime=0
+                   period=scaddb(3)-scaddb(2)
+                case(0) ! istantanea
+                   pind=254
+                   if(scaddb(3)/=0)then 
+                      print*,'case 0 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                      call exit(1)
+                   endif
+                   fctime=0
+                   period=0
+                case(1) ! analisi inizializzata
+                   pind=254
+                   if(scaddb(2)/=0)then
+                      print*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                      call exit(1)
+                   endif
+                   fctime=0
+                   period=0
+                case(2) ! prodotto valido in un periodo
+                   pind=205
+                   fctime=0
+                   period=scaddb(3)-scaddb(2)
+                case(13) ! analisi di precipitazione
+                   pind=1
+                   print*,'controllo - verrebbe fctime= ', &
+                        scaddb(2),' period= ',scaddb(3)
+                   fctime=0
+                   period=scaddb(3)-scaddb(2)
+                case default
+                   print*,'indicatore scadenza non gestito'
+                   call exit(1)
+                end select scadenzeo
+                ier=idba_settimerange(handle,pind,fctime,period)
 
 ! in time range indicator speciale per le preci analizzate e' 13, ma in database
 ! deve essere comunque 4 
-                wpind=scaddb(4)
-                IF(scaddb(4) == 13)wpind=4
 
-                CALL idba_set (handle,"p1",p1)
-                call idba_set (handle,"p2",p2)
-                call idba_set (handle,"pindicator",wpind)
+                ier=idba_set (handle,"var",cvar)
 
-                call idba_set (handle,"var",cvar)
+                PRINT*,'oss ',descr,dataval,oraval,cvar,pind,fctime,period
 
-!                PRINT*,'oss ',descr,dataval,oraval,cvar
-
-                call idba_voglioquesto (handle,N)
+                ier=idba_voglioquesto (handle,N)
                 if(N == 0)then
                     print*,'oss - non ci sono dati'
                     print*,dataval,oraval
                     goto 66
                 else
-!                  PRINT*,'oss - numero di dati trovati ',N
+                  PRINT*,'oss - numero di dati trovati ',N
                 endif
 
                 do idati=1,N
 
-                    call idba_dammelo (handle,btable)
+                    ier=idba_dammelo (handle,btable)
                 ! sara' da impostare mentre per ora e' solo richiesto
-                    call idba_enq (handle,"leveltype", &
-                    level(1))
-                    call idba_enq (handle,"l1",level(2))
-                    call idba_enq (handle,"l2",level(3))
+                    ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
 
-                    call idba_enq (handle,"ana_id",icodice)
+                    ier=idba_enq (handle,"ana_id",icodice)
 
 !mst  interrogo sezione anagrafica per avere l'altezza
-                    CALL idba_set (handleana,"ana_id",icodice)
-                    CALL idba_quantesono(handleana,USTAZ)
-                    CALL idba_elencamele (handleana)
-                    CALL idba_enq (handleana,"height",h)
+                    ier=idba_set (handleana,"ana_id",icodice)
+                    ier=idba_quantesono(handleana,USTAZ)
+                    ier=idba_elencamele (handleana)
+                    ier=idba_enq (handleana,"height",h)
                     
                     IF(iquota >= 0)THEN
                       IF(c_e_i(h))THEN
@@ -541,15 +568,17 @@
                       ENDIF
                     ENDIF
 
+                    ipos=0
                     do i=1,nstaz
                         if(icodice == anaid(i))then
                             ipos=i
                         endif
                     enddo
+                    IF(ipos == 0)goto30
 
-                    CALL idba_enq (handleana,"lon",rlon)
-                    CALL idba_enq (handleana,"lat",rlat)
-                    call idba_enq (handle,btable,dato)
+                    ier=idba_enq (handleana,"lon",rlon)
+                    ier=idba_enq (handleana,"lat",rlat)
+                    ier=idba_enq (handle,btable,dato)
 
                     iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
                     if(iv > nv)then
@@ -568,6 +597,7 @@
                 if(daily)then
                 ! calcolo degli scores giorno per giorno e per ora E per elemento!
                     lag=nstaz*(igio-1)+nstaz*ngio*(iore-1)
+                    write(13,'(a,1x,i3)')'giorno',igio
                     do irm=1,nrm
                         do i=1,nstaz
                             previ(i)=prev(i+lag,irm)
@@ -587,7 +617,7 @@
                           CALL bias_dd(nstaz,oss(1+lag),previ,nstaz, &
                            rmddb,rmdo,npo,bi)
                         ENDIF
-                        WRITE(66,'(1x,i3,1x,i2,1x,i6,4(1x,f10.3))') &
+                        WRITE(66,'(1x,i3,1x,i2,1x,i6,4(1x,f12.3))') &
                         igio,iore,npo,maerr,mserr,rmserr,bi
                         write(20,'(a8,i3)')' giorno= ',igio
                         if(lthr /= 0)then
@@ -613,7 +643,7 @@
         print*,'nv ',nv
 
         write(55,*)'scad ',iscaddb
-
+ 
     ! ottengo gli scores deterministici per ogni elemento
         do irm=1,nrm
             do i=1,nv
@@ -623,23 +653,23 @@
             IF(.NOT.ldir)THEN
               CALL mae(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
               CALL mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
-              CALL bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
               CALL cgravity(nv,oss,previ,lon,lat,nv,rmddb,rmdo,npo,distmean,cog)
-            ELSE
+              CALL bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
+             ELSE
               CALL mae_dd(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
               CALL mse_dd(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
               CALL bias_dd(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
             ENDIF
-            write(11,'(1x,i6,4(1x,f10.3))') &
+            write(11,'(1x,i6,4(1x,f12.3))') &
             npo,maerr,mserr,rmserr,bi
             WRITE(15,'(1x,i6,2(1x,f10.3))')npo,cog,distmean
             write(20,'(a11,i3)')' scadenza= ',iscaddb
             if(lthr /= 0)then
-                call score_con_table(nv,oss,previ,nv, &
+                CALL score_con_table(nv,oss,previ,nv, &
                 nsoglie,soglie,iscaddb,rmddb,rmdo,lthr)
             endif
 
-            call splot(nv,oss,previ,nv,rmddb,rmdo,npo)
+            CALL splot(nv,oss,previ,nv,rmddb,rmdo,npo)
         enddo
 
     enddo                     !nscad
@@ -654,9 +684,9 @@
     close(66)
 
 ! chiusura database
-    call idba_fatto(handle)
-    call idba_fatto(handleana)
-    call idba_arrivederci(idbhandle)
+    ier=idba_fatto(handle)
+    ier=idba_fatto(handleana)
+    ier=idba_arrivederci(idbhandle)
 
     stop
     9001 print*,'errore nella lettura della namelist parameters'

@@ -26,7 +26,6 @@ share/boe.nml.template \
 share/caldescr.template \
 share/corrispondenze_parametri.txt \
 share/cumula.nml.template \
-share/dballe.txt \
 share/expansion_ver.template \
 share/euro.nml.template \
 share/ffdd_nml.template \
@@ -71,5 +70,4 @@ share/spiega_GRIBARCH.txt \
 share/spiegapar.txt \
 share/tpsott_ged.template \
 share/umrel_ged.template \
-share/valoriB \
 share/verana.nml.template

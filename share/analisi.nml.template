@@ -1,4 +1,5 @@
  $analisi
+    lorog=.false.,
     fileorog='orografia.grib',
     vfile='analisi.grib',
     ruota=.T.,

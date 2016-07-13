@@ -1,12 +1,14 @@
     program ver_pulisci
 
-    INCLUDE "dballe/dballef.h"
+    INCLUDE "dballe/dballeff.h"
 
 ! namelist variables
-    character(LEN=19) :: database='',user='',password=''
+    character(LEN=512) :: database='',user='',password=''
 
     INTEGER :: handle,handle_err
     integer :: debug=1
+
+    integer :: ier
 
     namelist  /odbc/database,user,password
 
@@ -19,17 +21,17 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"cancello database=",database
 
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
 ! richiesta completa cancellazione iniziale
-    call idba_preparati(idbhandle,handle, &
+    ier=idba_preparati(idbhandle,handle, &
     "write","write","write")
-    call idba_scopa(handle,"repinfo.csv")
-    call idba_fatto(handle)
+    ier=idba_scopa(handle,"repinfo.csv")
+    ier=idba_fatto(handle)
 
-    call idba_arrivederci(idbhandle)
+    ier=idba_arrivederci(idbhandle)
 
 
     stop

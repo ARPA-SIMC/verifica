@@ -57,16 +57,17 @@ program leggidati_mare
   INTEGER :: versione(nstaz)=0,nboe=0
   REAL :: BLOCK(nstaz)=0.,station(nstaz)=0.
   REAL :: rlat(nstaz)=0.,rlon(nstaz)=0.,hstaz(nstaz)=0.
-  CHARACTER(19) :: database='',user='',password=''
+  CHARACTER(512) :: database='',user='',password=''
 
   namelist  /boe/path,nomefile,versione,nboe,nome,block,station,rlat,rlon,hstaz, &
        rwdata
 
   data rmd/-999./
+
+  integer :: ier
   
-  INTEGER :: handle,handle_ana,rewrite
+  INTEGER :: handle,handle_ana
   logical :: init,rwdata
-  character(1000) :: messaggio
   integer :: debug=1
   integer :: handle_err
   data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
@@ -91,30 +92,30 @@ program leggidati_mare
 
   ! PREPARAZIONE DELL' ARCHIVIO
   
-  call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+  ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
   
-  call idba_presentati(idbhandle,database,user,password)
+  ier=idba_presentati(idbhandle,database)
   
   if (init)then
      ! solo se richiesta completa cancellazione iniziale
      ! o è la prima volta che si inseriscono i dati
 
-     call idba_preparati(idbhandle,handle, &
+     ier=idba_preparati(idbhandle,handle, &
           "write","write","write")
-     call idba_scopa(handle,"repinfo.csv")
-     call idba_fatto(handle)
+     ier=idba_scopa(handle,"repinfo.csv")
+     ier=idba_fatto(handle)
      rwdata = .false.
   end if
 
   if (rwdata) then
-     call idba_preparati(idbhandle,handle, &
+     ier=idba_preparati(idbhandle,handle, &
           "write","write","write")
   else
-     call idba_preparati(idbhandle,handle, &
+     ier=idba_preparati(idbhandle,handle, &
           "write","add","add")
   endif
 
-     call idba_preparati(idbhandle,handle_ana, &
+     ier=idba_preparati(idbhandle,handle_ana, &
           "write","write","write")
 
   ! INIZIO CICLO SUL NUMERO DI BOE
@@ -128,34 +129,34 @@ program leggidati_mare
      
      !anagrafica
      
-     call idba_unsetall (handle)
-     call idba_unsetall (handle_ana)
+     ier=idba_unsetall (handle)
+     ier=idba_unsetall (handle_ana)
      
-     call idba_setcontextana (handle_ana)
+     ier=idba_setcontextana (handle_ana)
 
-     call idba_set (handle_ana,"lat",rlat(ns))
-     call idba_set (handle_ana,"lon",rlon(ns))
-     call idba_set (handle_ana,"mobile",0)
+     ier=idba_set (handle_ana,"lat",rlat(ns))
+     ier=idba_set (handle_ana,"lon",rlon(ns))
+     ier=idba_set (handle_ana,"mobile",0)
 
 
-     call idba_set (handle_ana,"name",nome(ns))
-     call idba_set (handle_ana,"block",block(ns))
-     call idba_set (handle_ana,"station",station(ns))
-     call idba_set (handle_ana,"height",hstaz(ns))
+     ier=idba_set (handle_ana,"name",nome(ns))
+     ier=idba_set (handle_ana,"block",block(ns))
+     ier=idba_set (handle_ana,"station",station(ns))
+     ier=idba_set (handle_ana,"height",hstaz(ns))
      
-     call idba_prendilo (handle_ana)
-     call idba_enq (handle_ana,"ana_id",ana_id)
+     ier=idba_prendilo (handle_ana)
+     ier=idba_enq (handle_ana,"ana_id",ana_id)
      
 
      ! dati (la temperatira non c'è)
 
-     call idba_unsetall (handle)
+     ier=idba_unsetall (handle)
      
-     call idba_set (handle,"ana_id",ana_id)
+     ier=idba_set (handle,"ana_id",ana_id)
      
-     call idba_set (handle,"rep_memo","boe")
-     call idba_setlevel (handle,1,0,0)
-     call idba_settimerange (handle,0,0,0)
+     ier=idba_set (handle,"rep_memo","boe")
+     ier=idba_setlevel (handle,1,0,0,0)
+     ier=idba_settimerange (handle,254,0,0)
           
      print *,"apro file", path(1:istr_lunghezza(path))//"/" &
           //nomefile(ns)(1:istr_lunghezza(nomefile(ns)))
@@ -207,22 +208,22 @@ program leggidati_mare
      
      ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
      
-     call idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,isec)
+     ier=idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,isec)
      
      do i=1,5
         
         ! inserimento dati con cancellazione dati segnati mancanti
         if (field(i) == rmd .and. rwdata )then
            !                    print *,"cancello i dati",var(i),idata,iora
-           call idba_set(handle,"var",var(i))
-           call idba_dimenticami(handle)
+           ier=idba_set(handle,"var",var(i))
+           ier=idba_dimenticami(handle)
         else if (field(i) /= rmd ) then
-           call idba_set(handle,var(i),field(i))
-           call idba_prendilo (handle)
-           call idba_set(handle,"*B33007",iconf)
-           call idba_critica(handle)
-           call idba_unset (handle,"*B33007")
-           call idba_unset (handle,var(i))
+           ier=idba_set(handle,var(i),field(i))
+           ier=idba_prendilo (handle)
+           ier=idba_set(handle,"*B33007",iconf)
+           ier=idba_critica(handle)
+           ier=idba_unset (handle,"*B33007")
+           ier=idba_unset (handle,var(i))
            
         end if
         
@@ -235,9 +236,9 @@ program leggidati_mare
      
   enddo                     !boa
   
-  call idba_fatto(handle)
-  call idba_fatto(handle_ana)
-  call idba_arrivederci(idbhandle)
+  ier=idba_fatto(handle)
+  ier=idba_fatto(handle_ana)
+  ier=idba_arrivederci(idbhandle)
   
   stop
   

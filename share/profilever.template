@@ -16,8 +16,12 @@ dyb=0.5
 nminobs=1
 diffh='F'
 diffmax=500.
+corrq='F'
 thr=50.
 perc=50.
+lobm=1
+laree='F'
+shapefile=''
 deterministico='T'
 probabilistico='F'
 #
@@ -52,14 +56,23 @@ probabilistico='F'
 # distr = se si vuole il valore del percentile scritto in 'perc' in una box (T o F)
 # dxb = dimensione long. della box in gradi
 # dyb = dimensione lat. della box in gradi
-# diffh = se si vuole tenere conto della differenza tra la quota 
-#         del punto stazione e la quota del punto di griglia del modello
-#         (vale solo con interpola='T')
+# diffh = se si vuole eliminare l'interpolazione su una stazione la cui quota 
+#         ha una differenza rispetto a quella del punto di griglia del modello 
+#         maggiore di diffmax (vale solo con interpola='T')
 # diffmax = differenza massima ammessa tra le quote  
+# corrq = se si vuole correggere il dato per la differenza di quota tra il punto
+#         stazione ed il punto di griglia del modello (lapse=0.7)
 # thr = soglia per il calcolo di frequenze/probabilita', 
 #       non viene considerata se prob='F'
 # perc = percentile della distribuzione degli osservati e dei previsti su cui si 
 #       calcolano gli scores - non viene considerata se distr='F'
+# lobm = 0 se non si vuole usare la observational mask nel calcolo dei valori su box
+#        1 altrimenti
+# laree = F per il normale calcolo dei valori su box
+#         T se si vuole calcolare la media su un'area diversa dalla box, 
+#           i cui confini sono specificati nel file shapefile
+# shapefile = nome del file (con tutto il path) dove sono specificati 
+#             i confini dell'area voluta
 # deterministico = verifica usuale del run deterministico
 #                  o, nell'ensmeble, se si vogliono gli scores usuali per elemento
 # probabilistico = verifica dell'ensemble con scores probabilistici

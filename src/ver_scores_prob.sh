@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/bash
 
 ### VERIFICA - ver_scores_prob.sh
 ### script per l'esecuzione del calcolo degli scores probabilistici
@@ -42,6 +42,11 @@ if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
 fi
 [ $BATCH -eq 0 ] && $EDITOR odbc.nml
+
+if [ ! -f ./lista.nml ] ; then
+  cp $VERSHARE/lista.nml.template ./lista.nml
+fi
+[ $BATCH -eq 0 ] && $EDITOR lista.nml
 
 if [ ! -f ./lista_ens.nml ] ; then
   cp $VERSHARE/lista_ens.nml.template ./lista_ens.nml

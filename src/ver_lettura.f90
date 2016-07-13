@@ -1,27 +1,35 @@
-    PROGRAM lettura
+    PROGRAM ver_lettura
 
     USE util_dballe
 
-    character(LEN=10) :: btable,starbtable(12)
-    character(LEN=10) :: dati(12)
+    character(LEN=10) :: btable="",starbtable(12)
+    CHARACTER(LEN=10) :: dati(12),d1,d2,d3
     real :: dato
-    logical :: found,starfound
 ! namelist variables
-    character(19) :: database='',user='',password=''
+    character(512) :: database='',user='',password=''
 
     INTEGER :: handle,handleana,handle_err
-    character(1000) :: messaggio
     integer :: debug=1
 
-    namelist  /odbc/database,user,password
+    NAMELIST  /odbc/database,user,password
+    NAMELIST /lettura/selperiod,yearmin,monthmin,daymin,yearmax,monthmax,daymax,&
+     seldate,idata,iora,imin,selrep,rep_memo,selscad,pind,fctime,period,selvar,btable
 
-    character(20) :: name
+    CHARACTER(20) :: name,rep_memo=""
     real :: lat,lon
-    INTEGER :: height,rep_cod,mobile,BLOCK,ana_id
-    integer :: leveltype,l1,l2,pindicator,p1,p2
+    INTEGER :: height,mobile,BLOCK,ana_id
+    integer :: leveltype1,leveltype2,l1,l2
     integer :: year,month,day,hour,min,sec
 
+    LOGICAL :: selperiod=.FALSE.,seldate=.FALSE.,selrep=.FALSE.
+    LOGICAL :: selscad=.FALSE.,selvar=.FALSE.
+    INTEGER :: yearmin=2009,monthmin=01,daymin=01,yearmax=2009,monthmax=03,daymax=31
+    INTEGER :: idata(3),iora=00,imin=00
+    integer :: pind=1,fctime=0,period=0
+
     integer :: imd
+
+    integer :: ier
 
     DATA imd/9999/
 
@@ -31,127 +39,100 @@
     read(1,nml=odbc,err=9001)
     close(1)
 
+    open(1,file='lettura.nml',status='old')
+    read(1,nml=lettura,err=9001)
+    close(1)
+
+    PRINT*,selperiod,yearmin,monthmin,daymin,yearmax,monthmax,daymax,&
+     seldate,idata,iora,imin,selrep,rep_memo,selscad,pind,fctime,period,selvar,btable
+
     open(11,file='lettura.out',status='unknown')
+    open(21,file='lettura_metview.out',status='unknown')
 
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
-    call idba_presentati(idbhandle,database,user,password)
-    call idba_preparati(idbhandle,handle,"read","read","read")
-    call idba_preparati(idbhandle,handleana,"read","read","read")
+    ier=idba_presentati(idbhandle,database)
+    ier=idba_preparati(idbhandle,handle,"read","read","read")
+    ier=idba_preparati(idbhandle,handleana,"read","read","read")
 
-! Only return values with best priority
-! call idba_set (handle,"query","best")
+    IF(seldate)ier=idba_setdate (handle,idata(3),idata(2),idata(1),iora,imin,00)
+    IF(selscad)ier=idba_settimerange(handle,pind,fctime,period)
+    IF(selrep)ier=idba_set (handle,"rep_memo",rep_memo)
+    IF(selvar)ier=idba_set(handle,"var",btable)
 
-! call idba_set (handle,"var",'B12001')
-! call idba_set (handle,"rep_cod",50)
-! call idba_set (handle,"station",1)
-! call idba_set (handle,"year",2006)
-! call idba_set (handle,"month",3)
-! call idba_set (handle,"day",2)
-! call idba_set (handle,"hour",12)
-! call idba_set (handle,"min",0)
-! call idba_set (handle,"sec",0)
-! CALL idba_set (handle,"p1",0)
-! CALL idba_set (handle,"p2",0)
-! CALL idba_set (handle,"pindicator",0)
+    d1='1000'
+    d2='20090423'
+    d3='06'
 
-! Definiamo il box 7D
+    WRITE(21,*)'#GEO'
+    WRITE(21,*)'PARAMETER = 013023'
+    WRITE(21,*)'#lat   long   level   date   time    value'
+    WRITE(21,*)'#DATA'
 
-! call idba_set (handle,"priomax",15)
-! call idba_set (handle,"priomin",10)
-
-! call idba_set (handle,"latmax",45.4)
-! call idba_set (handle,"lonmax",15.0)
-
-! call idba_set (handle,"latmin",35.2)
-! call idba_set (handle,"lonmin",10.3)
-
-! call idba_set (handle,"yearmax",2004)
-! call idba_set (handle,"monthmax",9)
-! call idba_set (handle,"daymax",10)
-! call idba_set (handle,"hourmax",12)
-! call idba_set (handle,"minumax",0)
-! call idba_set (handle,"secmax",0)
-
-! call idba_set (handle,"yearmin",2004)
-! call idba_set (handle,"monthmin",9)
-! call idba_set (handle,"daymin",10)
-! call idba_set (handle,"hourmin",12)
-! call idba_set (handle,"minumin",0)
-! call idba_set (handle,"secmin",0)
-
-    call idba_voglioquesto (handle,N)
+    ier=idba_voglioquesto (handle,N)
     print*,"numero dei dati da recuperare ",N
 
     do i=1,N
 
-        call idba_dammelo (handle,btable)
+        ier=idba_dammelo (handle,btable)
 
-        call idba_enq (handle,"lat",lat)
-        call idba_enq (handle,"lon",lon)
+        ier=idba_enq (handle,"lat",lat)
+        ier=idba_enq (handle,"lon",lon)
 
-        call idba_enq (handle,"leveltype",leveltype)
-        call idba_enq (handle,"l1",l1)
-        call idba_enq (handle,"l2",l2)
+        ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
 
-        call idba_enq (handle,"pindicator",pindicator)
-        call idba_enq (handle,"p1",p1)
-        call idba_enq (handle,"p2",p2)
+        ier=idba_enqtimerange(handle,pind,fctime,period)
 
-        call idba_enq (handle,"mobile",mobile)
+        ier=idba_enq (handle,"mobile",mobile)
 
-        call idba_enq (handle,"year",year)
-        call idba_enq (handle,"month",month)
-        call idba_enq (handle,"day",day)
-        call idba_enq (handle,"hour",hour)
-        call idba_enq (handle,"min",min)
-        call idba_enq (handle,"sec",sec)
+        ier=idba_enq (handle,"year",year)
+        ier=idba_enq (handle,"month",month)
+        ier=idba_enq (handle,"day",day)
+        ier=idba_enq (handle,"hour",hour)
+        ier=idba_enq (handle,"min",min)
+        ier=idba_enq (handle,"sec",sec)
 
-        call idba_enq (handle,"rep_cod",rep_cod)
-        call idba_enq (handle,btable,dato)
+        ier=idba_enq (handle,"rep_memo",rep_memo)
+        ier=idba_enq (handle,btable,dato)
 
-        CALL idba_enq (handle,"ana_id",ana_id)
+        ier=idba_enq (handle,"ana_id",ana_id)
        
 ! chiedo l'anagrafica 
-        CALL idba_set (handleana,"ana_id",ana_id)
-        CALL idba_quantesono (handleana,NN)
-        CALL idba_elencamele (handleana)
-        CALL idba_enq (handleana,"name",name)
+        ier=idba_set (handleana,"ana_id",ana_id)
+        ier=idba_quantesono (handleana,NN)
+        ier=idba_elencamele (handleana)
+        ier=idba_enq (handleana,"name",name)
         IF (.not. c_e_c(name)) name=''
-        CALL idba_enq (handleana,"height",height)
-        PRINT*,name,height
+        ier=idba_enq (handleana,"height",height)
+!!$        PRINT*,name,height
         IF (.not. c_e_i(height)) height=imd
-        CALL idba_enq (handleana,"block",BLOCK)
+        ier=idba_enq (handleana,"block",BLOCK)
         IF (.not. c_e_i(block)) block=imd
 
-        call idba_voglioancora (handle,NN)
+        ier=idba_voglioancora (handle,NN)
 
         do ii=1,NN
-           call idba_ancora (handle,starbtable(ii))
-           call idba_enq(handle,starbtable(ii),dati(ii))
+           ier=idba_ancora (handle,starbtable(ii))
+           ier=idba_enq(handle,starbtable(ii),dati(ii))
         end do
         
-        print*,'----------------------------------------'
-        PRINT *,name,lat,lon,height,rep_cod,block
-        print *,leveltype,l1,l2
-        print *,pindicator,p1,p2
-        print *,year,month,day,hour,min,sec
-        print *,btable,dato,(starbtable(j),dati(j),j=1,nn)
-        
-        write(11,12) &
-             name,lat,lon,height,rep_cod,year,month,day,hour, &
-             min,sec,pindicator,p1,p2,leveltype,l1,l2,btable,dato
+        WRITE(11,12) &
+         name,lat,lon,height,rep_memo,year,month,day,hour,min,sec, &
+         pind,fctime,period,leveltype1,l1,leveltype2,l2,btable,dato
+
+        WRITE(21,*)lat,lon,d1,d2,d3,dato
 
      enddo
-     call idba_fatto(handle)
-     call idba_arrivederci(idbhandle)
-     close(11)
-
+     ier=idba_fatto(handle)
+     ier=idba_arrivederci(idbhandle)
+     CLOSE(11)
+     CLOSE(21)
+     
      stop
      
 12   FORMAT(a,2(1x,f9.2),1x,i4,1x,i3,1x,i4,5(1x,i2), &
-          1x,i3,2(1x,i10),3(1x,i3),1x,a,1x,f7.1)
+          1x,i3,2(1x,i10),2(1x,i3,1x,i6),1x,a,1x,f7.1)
      
 9001 print *,"Errore durante la lettura della namelist odbc"
      call exit (1)
-     END PROGRAM lettura
+     END PROGRAM ver_lettura

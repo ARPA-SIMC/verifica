@@ -28,16 +28,25 @@
 
     USE util_dballe
 
-    parameter (MNBOX=80000)
-    parameter (MIDIMG=1200000)
+    IMPLICIT NONE
+
+    integer, parameter :: MNBOX=250000
+    integer, parameter :: MIDIMG=500000
 
     real :: xb(MNBOX),yb(MNBOX),alte(MNBOX),h
     integer :: pos(MNBOX)
-    integer :: scaddb(4),p1,p2
+    integer :: scaddb(4)
     integer :: block,station
-    character :: name*20,cb*5
+    character :: name*20,cb*5,rep_memo*20
     logical :: forever
     character :: cvar*6
+    real :: dato
+    real :: a,b,alarot,alorot,rot,blat,blon,cryeq,sryeq,dx,dy,factz,rmd
+    real :: rlon,rlat,rxeq,ryeq
+    integer :: idrt,igrid,ija,imd,ier,ibm
+    integer :: ib,nbox,id_ana,idbhandle,iug,ix,iy,nx,ny,nb2
+    integer :: midimv,idimg,idimv
+    integer :: idayv,imonthv,iyearv,ihourv,iminv,iminuti
 
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
@@ -45,12 +54,13 @@
     REAL :: psec2(384),psec3(2),dummy(1)
     integer :: level(3),var(3),est(3),scad(4),data(3),ora(2)
     real :: alat(4),alon(4)
-
+    integer :: leveltype1,l1,leveltype2,l2
+    integer :: pind,fctime,period
 ! namelist variables
     character(len=80) :: fileorog='',vfile=''
-    logical :: ruota=.false.,area=.false.
+    logical :: lorog=.false.,ruota=.false.,area=.false.
     real :: slon1=10.,slon2=10.,slat1=45.,slat2=45.
-    character(19) :: database='',user='',password=''
+    character(512) :: database='',user='',password=''
 
     data ksec0/2*0/
     data ksec1/104*0/
@@ -66,11 +76,13 @@
     data forever/.true./
 
 ! database
-    integer :: handler,handle
+    integer :: handle
     integer :: debug=1
     integer :: handle_err
 
-    namelist  /analisi/fileorog,vfile,ruota
+!    integer :: ier
+
+    namelist  /analisi/lorog,fileorog,vfile,ruota
     namelist  /areaoss/area,slon1,slon2,slat1,slat2
     namelist  /odbc/database,user,password
 
@@ -196,11 +208,11 @@
 ! PREPARAZIONE DELL' ARCHIVIO
     print*,"database=",database
 
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
-    CALL idba_preparati(idbhandle,handle,"write","write","write")
+    ier=idba_preparati(idbhandle,handle,"write","write","write")
 
     iug=0
     idimg=MIDIMG
@@ -225,25 +237,56 @@
         CALL variabile(3,var,cvar,a,b,.TRUE.)
             
         CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2),iminuti)
-        IF (scad(4) > 0) THEN
-          CALL converti_scadenze(4,scad,scaddb) ! converte in secondi
-          iminuti=iminuti+scaddb(3)/60
-          p1=0-(scaddb(3)-scaddb(2))
-          p2=0
-        ELSE
-          iminuti=iminuti+scaddb(2)/60
-          p1=0
-          p2=0
-        ENDIF
+
+        CALL converti_scadenze(4,scad,scaddb) ! converte in secondi
+
+        scadenze: select case(scaddb(4))
+!        case(4) ! cumulata
+!           pind=1
+!           fctime=0
+!           period=scaddb(3)-scaddb(2)
+!           iminuti=iminuti+scaddb(3)/60 ! porto la validità alla fine del periodo
+        case(0) ! istantanea
+           pind=254
+           if(scaddb(3)/=0)then 
+              print*,'case 0 - p1= ',scaddb(2),' p2= ',scaddb(3)
+              call exit(1)
+           endif
+           fctime=0
+           period=0
+        case(1) ! analisi inizializzata
+           pind=254
+           if(scaddb(2)/=0)then
+              print*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+              call exit(1)
+           endif
+           fctime=0
+           period=0
+        case(2) ! prodotto valido in un periodo
+           pind=205
+           fctime=0
+           period=scaddb(3)-scaddb(2)
+        case(4) ! analisi di precipitazione !!! era 13!!!
+           pind=1
+           print*,'controllo - verrebbe fctime= ',scaddb(2),' period= ',scaddb(3)
+           fctime=0
+           period=scaddb(3)
+! la validità dovrebbe già essere alla fine del periodo, non sposto iminuti
+        case default
+           print*,'scadenza non gestito'
+           call exit(1)
+        end select scadenze
+! non sposto iminuti per gli altri casi dato che dovrebbero essere analisi!
+
         CALL JELADATA6(idayv,imonthv,iyearv,ihourv,iminv,iminuti)
         
     ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
-        call idba_unsetall (handle)
+        ier=idba_unsetall (handle)
 
         do ib=1,nbox
 
 ! anagrafica
-            CALL idba_setcontextana (handle)
+            ier=idba_setcontextana (handle)
 
             rlon=xb(ib)
             rlat=yb(ib)
@@ -252,46 +295,66 @@
             name='_gp'//cb
             station=ib
 
-            call idba_set (handle,"lon",rlon)
-            call idba_set (handle,"lat",rlat)
-            call idba_set (handle,"mobile",0)
+            if(xgrid(pos(ib)) /= rmd)then
 
-            call idba_set (handle,"name",name)
-            call idba_set (handle,"block",block)
-            call idba_set (handle,"station",station)
-            call idba_set (handle,"height",h)
+               ier=idba_set (handle,"lon",rlon)
+               ier=idba_set (handle,"lat",rlat)
+               ier=idba_set (handle,"mobile",0)
 
-            CALL idba_prendilo (handle)
-            CALL idba_enq(handle,"ana_id",id_ana)
+               ier=idba_set (handle,"name",name)
+               ier=idba_set (handle,"block",block)
+!            ier=idba_set (handle,"station",station)
+               if(lorog)then
+                  ier=idba_set (handle,"height",h)
+               endif
+
+               ier=idba_set (handle,"rep_memo",'analisi')
+               
+               ier=idba_prendilo (handle)
+               ier=idba_enq(handle,"*ana_id",id_ana)
 ! dati
 
-            call idba_unsetall (handle)
+               ier=idba_unsetall (handle)
 
-            CALL idba_set(handle,"ana_id",id_ana)
+               ier=idba_set(handle,"ana_id",id_ana)
 
             ! codice per le analisi
-            CALL idba_set (handle,"rep_cod",105)
+               ier=idba_set (handle,"rep_memo",'analisi')
             
-            CALL idba_set (handle,"leveltype",level(1))
-            CALL idba_set (handle,"l1",level(2))
-            CALL idba_set (handle,"l2",level(3))
-            
-            CALL idba_set (handle,"year",iyearv)
-            CALL idba_set (handle,"month",imonthv)
-            CALL idba_set (handle,"day",idayv)
-            CALL idba_set (handle,"hour",ihourv)
-            CALL idba_set (handle,"min",iminv)
-            CALL idba_set (handle,"sec",00)
-          
-            CALL idba_set (handle,"pindicator",scad(4))
-            CALL idba_set (handle,"p1",p1)
-            CALL idba_set (handle,"p2",p2)
-            
+! non ho previsto nessuno strato
+               leveltype2=0
+               l2=0
+               livelli: select case(level(1))
+               case(1) ! livello del suolo, per la pioggia
+                  leveltype1=1
+                  l1=0
+               case(105) ! altezza specifica sopra al suolo (t e td 2m,v 10m)
+                  leveltype1=103
+                  l1=level(2)*1000 ! l'altezza deve essere in mm
+               case(100) ! livello isobarico
+                  leveltype1=100
+                  l1=level(2)*100 ! la pressione deve essere in Pa
+               case default
+                  print*,'tipo livello non gestito'
+                  call exit(1)
+               end select livelli
+               ier=idba_setlevel(handle,leveltype1,l1,leveltype2,l2)
+               
+               ier=idba_set (handle,"year",iyearv)
+               ier=idba_set (handle,"month",imonthv)
+               ier=idba_set (handle,"day",idayv)
+               ier=idba_set (handle,"hour",ihourv)
+               ier=idba_set (handle,"min",iminv)
+               ier=idba_set (handle,"sec",00)
+               
+               ier=idba_settimerange(handle,pind,fctime,period)
+               
             ! if(xgrid(pos(ib)).le.0.)xgrid(pos(ib))=0.
-            dato=xgrid(pos(ib))
-            
-            CALL idba_set(handle,cvar,dato)
-            CALL idba_prendilo (handle)
+               dato=xgrid(pos(ib))
+               ier=idba_set(handle,cvar,dato)
+               ier=idba_prendilo (handle)
+
+            endif
 
         enddo                  !nbox
 
@@ -299,11 +362,13 @@
 
     111 continue                  !fine grib
 
-    call idba_fatto(handle)
-    call idba_arrivederci(idbhandle)
+    ier=idba_fatto(handle)
+    ier=idba_arrivederci(idbhandle)
 
     call pbclose(iug,ier)
     if(ier < 0)goto9500
+
+    DEALLOCATE(xgrid)
 
     stop
     9001 print *,"Errore durante la lettura della namelist analisi"

@@ -29,7 +29,7 @@
 
     USE util_dballe
 
-    parameter (MNBOX=150000)
+    parameter (MNBOX=250000)
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
@@ -41,7 +41,8 @@
     real :: dist=0
     integer :: iana=0
     logical :: ruota=.false.
-    character(19) :: database='',user='',password=''
+! odbc.nml
+    character(512) :: database='',user='',password=''
 
     logical :: area=.false.
     real, ALLOCATABLE :: x(:),y(:),alt(:)
@@ -53,8 +54,10 @@
     integer :: debug=1
     INTEGER :: handle,handle_err
 
+    integer :: ier
+
     namelist /obsmask/rfile,iana,ruota,dist
-    namelist /odbc/database,user,password
+    NAMELIST /odbc/database,user,password
 
     data ksec0/2*0/
     data ksec1/104*0/
@@ -78,13 +81,13 @@
     close(1)
 
 ! gestione degli errori
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
 ! connessione con database
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
 ! apertura database in lettura
-    call idba_preparati(idbhandle,handle,"read","read","read")
+    ier=idba_preparati(idbhandle,handle,"read","read","read")
 
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
     iug=0
@@ -144,7 +147,7 @@
         enddo
     endif
 
-    call idba_quantesono(handle,nstaz)
+    ier=idba_quantesono(handle,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
 
 ! allocazione matrici

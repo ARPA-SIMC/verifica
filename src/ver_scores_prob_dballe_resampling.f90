@@ -42,11 +42,17 @@
     integer :: pind,fctime,period
     character(len=20) :: descr,descrfisso
     character(len=3) :: cel
-    REAL :: bs,bss,roca,clarea,outr,rps,rpss,bssd,rpssd,succrate(3)
+    REAL :: bs,bss,roca,clarea,outr,rps,rpss,bssd,rpssd
     integer :: pesi(MNRM)
     LOGICAL :: loutput
 
-    REAL, ALLOCATABLE :: oss(:,:),prev(:,:,:),prevr(:,:,:)
+    logical :: lhyptest=.TRUE.
+    character(len=20) :: descr2,descrfisso2='clepsmed05'
+    integer :: icic,ncic=100,irand
+    real :: harvest
+
+    REAL, ALLOCATABLE :: oss(:,:),prev(:,:,:)
+    REAL, ALLOCATABLE :: prev2(:,:,:),prevrnd(:,:,:)
     INTEGER, ALLOCATABLE :: anaid(:)
     INTEGER, ALLOCATABLE :: wght(:,:),temp_wght(:),distrib(:)
 
@@ -58,9 +64,9 @@
 
     DATA rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
     DATA loutput/.TRUE./
-
+ 
     NAMELIST /pesirm/pesi
-
+ 
     OPEN(55,file='ctrl_output.dat',status='unknown')
 
     PRINT*,'program scores_prob'
@@ -73,7 +79,7 @@
     read(1,nml=parameters,err=9001)
     close(1)
 ! ora di inizio dei runs
-    ora(1)=nora/100.
+    ora(1)=nora/100
     ora(2)=mod(nora,100)
     open(1,file='stat.nml',status='old')
     read(1,nml=stat,err=9002)
@@ -144,13 +150,14 @@
 ! allocazione matrici dati
     ALLOCATE(oss(1:nstaz, 1:ngio))
     ALLOCATE(prev(1:nstaz, 1:ngio, 1:nrm))
+    if(lhyptest)then
+       ALLOCATE(prev2(1:nstaz, 1:ngio, 1:nrm))
+    endif
 
 ! allocazione matrice pesi
     ALLOCATE(wght(1:ngio, 1:nrm))
     ALLOCATE(temp_wght(1:nrm))
     ALLOCATE(distrib(1:nrm))
-
-    wght=1
 
     open(11,file='scores_prob.dat',status='unknown')
 
@@ -261,7 +268,7 @@
           
           ier=idba_set (handle,"rep_memo",descr)
           
-!          PRINT*,'prev ',descr,dataval,oraval,'iscaddb',iscaddb
+          ! PRINT*,'prev ',descr,dataval,oraval,iscaddb
           
           ier=idba_voglioquesto (handle,N)
           ! PRINT*,'numero dati trovati= ',N
@@ -283,26 +290,25 @@
             
             ier=idba_enq (handle,"ana_id",icodice)
             
-! commento temporaneo per gestire pb allocazione memoria da elencamele
             !mst  interrogo sezione anagrafica per avere l'altezza
-!!$            ier=idba_set (handleana,"ana_id",icodice)
-!!$            ier=idba_quantesono(handleana,USTAZ)
-!!$            ier=idba_elencamele (handleana)
-!!$            ier=idba_enq (handleana,"height",h)
+            ier=idba_set (handleana,"ana_id",icodice)
+            ier=idba_quantesono(handleana,USTAZ)
+            ier=idba_elencamele (handleana)
+            ier=idba_enq (handleana,"height",h)
             
-!!$            IF(iquota >= 0)THEN
-!!$              IF(c_e_i(h))THEN
-!!$                IF(iquota == 0)THEN !pianura
-!!$                  IF(h >= hlimite)goto20
-!!$                ELSEIF(iquota == 1)THEN !montagna
-!!$                  IF(h < hlimite)goto20
-!!$                ELSEIF(iquota > 1)THEN
-!!$                  PRINT*,'iquota non gestito ',iquota
-!!$                ENDIF
-!!$              ELSE
-!!$                goto20
-!!$              ENDIF
-!!$            ENDIF
+            IF(iquota >= 0)THEN
+              IF(c_e_i(h))THEN
+                IF(iquota == 0)THEN !pianura
+                  IF(h >= hlimite)goto20
+                ELSEIF(iquota == 1)THEN !montagna
+                  IF(h < hlimite)goto20
+                ELSEIF(iquota > 1)THEN
+                  PRINT*,'iquota non gestito ',iquota
+                ENDIF
+              ELSE
+                goto20
+              ENDIF
+            ENDIF
             
             ipos=0
             DO i=1,nstaz
@@ -316,12 +322,41 @@
             ier=idba_enq (handle,btable,dato)
             
             prev(ipos,igio,irm)=dato
-
-!            print*,'letto da db',igio,irm,prev(ipos,igio,irm)
             
 20          CONTINUE
             
           ENDDO            ! idati
+
+          if(lhyptest)then
+
+             descr2=descrfisso2(1:nlenvera(descrfisso2))//'el'//cel
+             ier=idba_set (handle,"rep_memo",descr2)
+             ier=idba_voglioquesto (handle,N)
+             ! PRINT*,'numero dati trovati= ',N
+             IF(N == 0)THEN
+                PRINT*,'pre - non ci sono dati'
+                PRINT*,dataval,oraval
+                GOTO 66
+             ELSE
+                ! PRINT*,"pre - numero di dati trovati ",N
+             ENDIF
+             DO idati=1,N
+                ier=idba_dammelo (handle,btable)
+                ier=idba_enq (handle,"ana_id",icodice)
+                ipos=0
+                DO i=1,nstaz
+                   IF(icodice == anaid(i))THEN
+                      ipos=i
+                   ENDIF
+                ENDDO
+                IF(ipos == 0)goto40
+                ier=idba_enq (handle,btable,dato)
+                prev2(ipos,igio,irm)=dato                
+40              CONTINUE
+             ENDDO            ! idati
+
+          endif
+
         ENDDO               ! nrm
 
         ! lettura osservazioni da database
@@ -410,26 +445,25 @@
           
           ier=idba_enq (handle,"ana_id",icodice)
           
-! commento temporaneo per gestire pb allocazione memoria da elencamele
           !mst  interrogo sezione anagrafica per avere l'altezza
-!!$          ier=idba_set (handleana,"ana_id",icodice)
-!!$          ier=idba_quantesono(handleana,USTAZ)
-!!$          ier=idba_elencamele (handleana)
-!!$          ier=idba_enq (handleana,"height",h)
+          ier=idba_set (handleana,"ana_id",icodice)
+          ier=idba_quantesono(handleana,USTAZ)
+          ier=idba_elencamele (handleana)
+          ier=idba_enq (handleana,"height",h)
             
-!!$          IF(iquota >= 0)THEN
-!!$            IF(c_e_i(h))THEN
-!!$              IF(iquota == 0)THEN !pianura
-!!$                IF(h >= hlimite .OR. h < -900.)goto30
-!!$              ELSEIF(iquota == 1)THEN !montagna
-!!$                IF(h < hlimite .OR. h == REAL(imd))goto30
-!!$              ELSEIF(iquota > 1)THEN
-!!$                PRINT*,'iquota non gestito ',iquota
-!!$              ENDIF
-!!$            ELSE
-!!$              goto30
-!!$            ENDIF
-!!$          ENDIF
+          IF(iquota >= 0)THEN
+            IF(c_e_i(h))THEN
+              IF(iquota == 0)THEN !pianura
+                IF(h >= hlimite .OR. h < -900.)goto30
+              ELSEIF(iquota == 1)THEN !montagna
+                IF(h < hlimite .OR. h == REAL(imd))goto30
+              ELSEIF(iquota > 1)THEN
+                PRINT*,'iquota non gestito ',iquota
+              ENDIF
+            ELSE
+              goto30
+            ENDIF
+          ENDIF
           
           ipos=0
           DO i=1,nstaz
@@ -443,10 +477,6 @@
           ier=idba_enq (handle,btable,dato)
           
           oss(ipos,igio)=dato
-
-!          if(igio == 1)then
-!             print*,ipos,oss(ipos,igio)
-!          endif
           
 30        CONTINUE
           
@@ -470,13 +500,12 @@
             DO irm=1,nrm
               wght(igio,irm)=nowght(irm)
             ENDDO
-
           ENDIF
         ENDIF
         DO irm=1,nrm
           temp_wght(irm)=wght(igio,irm)
         ENDDO
-
+        
         ! calcolo l'errore assoluto per giorno e per elemento
         WRITE(22,'(a,i3)')' giorno= ',igio
         npu=0
@@ -489,12 +518,12 @@
         ENDDO
         IF(npu > 0)ossmed=ossmed/REAL(npu)
         WRITE(22,'(a,f8.3)')' ossmed= ',ossmed
-!!$        IF(ossmed > 0.2)THEN
-!!$          CALL terr(nstaz,nrm,oss(:,1),prev(:,1,:),nstaz,nrm, &
-!!$           nelsupens,rmddb,rmdo,temp_wght,loutput,iposiz)
-!!$          distrib(iposiz)=distrib(iposiz)+1
-!!$          ng=ng+1
-!!$        ENDIF
+        IF(ossmed > 0.2)THEN
+          CALL terr(nstaz,nrm,oss(:,1),prev(:,1,:),nstaz,nrm, &
+           nelsupens,rmddb,rmdo,temp_wght,loutput,iposiz)
+          distrib(iposiz)=distrib(iposiz)+1
+          ng=ng+1
+        ENDIF
         
 66      CONTINUE
         
@@ -515,68 +544,87 @@
       
       ! output degli scores
 
-      lsprerr=.FALSE.
-    
-      print*,'lsprerr',lsprerr
+      print*,'lhyptest= ',lhyptest
 
       IF(lsprerr)THEN
         CALL sprerr(oss,prev,rmddb)
       ELSE
       
-        IF(prob)THEN
-          CALL brier_prob(nstaz,ngio,nrm,oss,prev, &
-           ngio,nstaz,nrm, &
-           nelsupens,rmddb,rmds,soglie(1),wght,loutput, &
-           ntot,rnocc,bs,bss)
-        ELSE
+      IF(lhyptest)THEN
 
-           nel=count(wght(1,:)>0)
-           print*,'nel= ',nel
-           if(nel /= nrm)then
-              ALLOCATE(prevr(1:nstaz,1:ngio,1:nel))
-              do ig=1,ngio
-                 iel=1
-                 do irm=1,nrm
-                    if(wght(ig,irm)>0)then
-                       prevr(:,ig,iel)=prev(:,ig,irm)
-                       iel=iel+1
-                    endif
-                 enddo
-              enddo
-              CALL outrange(nstaz,ngio,nrm,oss,prevr,ngio,nstaz,nel, &
-                   rmddb,rmds,wght,loutput,outr)
-              DEALLOCATE(prevr)
-           else
-              CALL outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-                   rmddb,rmds,wght,loutput,outr)
-           endif
+         ALLOCATE(prevrnd(1:nstaz, 1:ngio, 1:nrm))
 
-          CALL ranked(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm,nelsupens, &
-           nsoglie,rmddb,rmds,soglie(1:nsoglie),wght,loutput,rps,rpss,rpssd)
-          CALL mode_population(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-           rmddb,rmds,wght,loutput,succrate)
+         CALL RANDOM_SEED()
+         CICLI: DO icic=1,ncic
+! scambio random tra i due vettori di previsti
+            DO igio=1,ngio
+               CALL RANDOM_NUMBER(harvest)
+               irand=NINT(harvest)
+               IF(irand == 0)THEN
+                  DO irm=1,nrm
+                     DO istaz=1,nstaz
+                        prevrnd(istaz,igio,irm)=prev(istaz,igio,irm)
+                     ENDDO
+                  ENDDO
+               ELSEIF(irand == 1)then
+                  DO irm=1,nrm
+                     DO istaz=1,nstaz
+                        prevrnd(istaz,igio,irm)=prev2(istaz,igio,irm)
+                     ENDDO
+                  ENDDO
+               ENDIF
+            ENDDO
+! output degli scores
+            CALL outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                 rmddb,rmds,wght,loutput,outr)
+            PRINT*,'ciclo= ',icic
+            PRINT*,'OUT= ',outr
+!!$            DO iso=1,nsoglie
+!!$               CALL brier(nstaz,ngio,nrm,oss,prevrnd,ngio,nstaz,nrm, &
+!!$                    nelsupens,rmddb,rmds,soglie(iso),wght,loutput, &
+!!$                    ntot,nocc,bs,rel,res,bss,bssd)
+!!$               CALL roc(nstaz,ngio,nrm,oss,prevrnd,ngio,nstaz,nrm, &
+!!$                    nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,roca)
+!!$               PRINT*,'ciclo= ',icic
+!!$               PRINT*,soglie(iso),ntot,nocc,bs,rel,res,bss,roca
+!!$               WRITE(11,'(1x,f5.1,2(2x,i6),11(2x,f6.3))') &
+!!$                    soglie(iso),ntot,nocc,bs,rel,res,bss,roca              
+!!$            ENDDO               !nsoglie
 
-          print*,'succrate',succrate
+         ENDDO CICLI
+         
+         DEALLOCATE(prevrnd)
 
-          DO iso=1,nsoglie
+      ELSE
 
-             print*,'calcolo il brier'
-            CALL brier(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-             nelsupens,rmddb,rmds,soglie(iso),wght,loutput, &
-             ntot,nocc,bs,rel,res,bss,bssd)
-!            PRINT*,'dopo brier',soglie(iso),ntot,nocc
-            CALL roc(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-             nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,roca)
-            CALL costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
-             nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,clarea)
-            PRINT*,soglie(iso),ntot,nocc,bs,rel,res,bss,roca,clarea,outr
-            WRITE(11,'(1x,f5.1,2(2x,i6),11(2x,f6.3))') &
-             soglie(iso),ntot,nocc,bs,rel,res,bss,roca,clarea,outr,rps,rpss,bssd,rpssd
+         IF(prob)THEN
+            CALL brier_prob(nstaz,ngio,nrm,oss,prev, &
+                 ngio,nstaz,nrm, &
+                 nelsupens,rmddb,rmds,soglie(1),wght,loutput, &
+                 ntot,rnocc,bs,bss)
+         ELSE
+            CALL outrange(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                 rmddb,rmds,wght,loutput,outr)
+            CALL ranked(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm,nelsupens,nsoglie, &
+                 rmddb,rmds,soglie(1:nsoglie),wght,loutput,rps,rpss,rpssd)
             
-         ENDDO               !nsoglie
- 
+            DO iso=1,nsoglie
+               
+               CALL brier(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                    nelsupens,rmddb,rmds,soglie(iso),wght,loutput, &
+                    ntot,nocc,bs,rel,res,bss,bssd)
+               CALL roc(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                    nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,roca)
+               CALL costloss(nstaz,ngio,nrm,oss,prev,ngio,nstaz,nrm, &
+                    nelsupens,rmddb,rmds,soglie(iso),wght,loutput,ntot,nocc,clarea)
+               PRINT*,soglie(iso),ntot,nocc,bs,rel,res,bss,roca,clarea,outr
+               WRITE(11,'(1x,f5.1,2(2x,i6),11(2x,f6.3))') &
+                    soglie(iso),ntot,nocc,bs,rel,res,bss,roca,clarea,outr,rps,rpss,bssd,rpssd
+            
+            ENDDO               !nsoglie
+         ENDIF
       ENDIF
-     ENDIF
+      ENDIF
    ENDDO                     !nscad
     
    CLOSE(11)

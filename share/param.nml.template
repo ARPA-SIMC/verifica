@@ -1,5 +1,5 @@
  $param
-   par='B12001',
+   par='B12101',
  $end
 
 Namelist per fissare il parametro da verificare. Si deve inserire un valore 

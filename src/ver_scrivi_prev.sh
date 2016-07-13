@@ -97,8 +97,12 @@ if [ $interpola = 'T' ] ; then
   echo '   dyb='$dyb',' >> stat.nml
   echo '   diffh='$diffh',' >> stat.nml
   echo '   diffmax='$diffmax',' >> stat.nml
+  echo '   corrq='$corrq',' >> stat.nml
   echo '   thr='$thr',' >> stat.nml
   echo '   perc='$perc',' >> stat.nml
+  echo '   lobm='$lobm',' >> stat.nml
+  echo '   laree='$laree',' >> stat.nml
+  echo '   shapefile='$shapefile',' >> stat.nml
   echo ' $end' >> stat.nml
 
   ver_interpola_dballe
@@ -130,8 +134,12 @@ elif [ $boxfix = 'T' ] ; then
   echo '   dyb='$dyb',' >> stat.nml
   echo '   diffh='$diffh',' >> stat.nml
   echo '   diffmax='$diffmax',' >> stat.nml
+  echo '   corrq='$corrq',' >> stat.nml
   echo '   thr='$thr',' >> stat.nml
   echo '   perc='$perc',' >> stat.nml
+  echo '   lobm='$lobm',' >> stat.nml
+  echo '   laree='$laree',' >> stat.nml
+  echo '   shapefile='$shapefile',' >> stat.nml
   echo ' $end' >> stat.nml
 
   ver_boxfix_dballe

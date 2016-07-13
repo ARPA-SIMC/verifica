@@ -32,24 +32,28 @@
     parameter (MNSTAZ=10000)
 
     real :: rlon,rlat,h
+    integer :: fctime,period
 ! namelist variables
     INTEGER :: giornoi=01,mesei=01,annoi=2000,orai=00,mini=00
     integer :: giornof=01,mesef=01,annof=2000,oraf=00,minf=00
     INTEGER :: incr=60,ncum=60,interval=60
     real :: perc=1.
-    character(19) :: database='',user='',password=''
+    character(512) :: database='',user='',password=''
 
     integer :: nstep,nsog,nstaz
-    integer :: data(3),ora(2),p1,p2,repcod
+    INTEGER :: DATA(3),ora(2),repcod,icodice
     integer :: dataval(3),oraval(2)
     character(len=6) :: cvar
     character(len=10) :: btable
+    character(len=20) :: repmemo
 
     integer, ALLOCATABLE :: anaid(:)
 
-    INTEGER :: handle,handler,rewrite
+    INTEGER :: handle,handler
     integer :: debug=1
     integer :: handle_err
+
+    integer :: ier
 
     namelist /odbc/database,user,password
     NAMELIST /cumula/giornoi,mesei,annoi,orai,mini, &
@@ -72,6 +76,8 @@
     open(1,file='cumula.nml',status='old')
     read(1,nml=cumula)
     close(1)
+
+    OPEN(2,file='log_cumulate.txt',status='unknown')
 
 ! numero di step di precipitazione che occorrono per cumulare su ncum
     nstep=ncum/incr
@@ -96,18 +102,18 @@
 ! PREPARAZIONE DELL' ARCHIVIO
 
 ! gestione degli errori
-    call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
 ! connessione con database
     print*,"database=",database
-    call idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
 
 ! apertura database in lettura
-    call idba_preparati(idbhandle,handler,"read","read","read")
+    ier=idba_preparati(idbhandle,handler,"read","read","read")
 ! apertura database in scrittura
-    call idba_preparati(idbhandle,handle,"write","write","write")
+    ier=idba_preparati(idbhandle,handle,"write","write","write")
 
-    call idba_quantesono(handler,nstaz)
+    ier=idba_quantesono(handler,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
 ! allocazione matrici
     ALLOCATE(anaid(1:nstaz))
@@ -115,9 +121,9 @@
 
     STATIONS: DO ist=1,nstaz
 
-      CALL idba_unsetall (handler)
+      ier=idba_unsetall (handler)
 
-      CALL idba_set (handler,"ana_id",anaid(ist))
+      ier=idba_set (handler,"ana_id",anaid(ist))
 
       dataval(3)=annoi
       dataval(2)=mesei
@@ -129,12 +135,12 @@
       ! INIZIO CICLO SUI GIORNI
       MINUTES: DO WHILE (iminuti.LE.iminmax)
 
-        CALL idba_set (handler,"year",dataval(3))
-        CALL idba_set (handler,"month",dataval(2))
-        CALL idba_set (handler,"day",dataval(1))
-        CALL idba_set (handler,"hour",oraval(1))
-        CALL idba_set (handler,"min",oraval(2))
-        CALL idba_set (handler,"sec",00)
+        ier=idba_set (handler,"year",dataval(3))
+        ier=idba_set (handler,"month",dataval(2))
+        ier=idba_set (handler,"day",dataval(1))
+        ier=idba_set (handler,"hour",oraval(1))
+        ier=idba_set (handler,"min",oraval(2))
+        ier=idba_set (handler,"sec",00)
 
         iminutiw=iminuti
         ndati=0
@@ -142,40 +148,38 @@
         STEPS: DO i=1,nstep
           CALL JELADATA6(idayw,imonthw,iyearw,ihourw,iminw, &
            iminutiw)
-          CALL idba_set (handler,"year",iyearw)
-          CALL idba_set (handler,"month",imonthw)
-          CALL idba_set (handler,"day",idayw)
-          CALL idba_set (handler,"hour",ihourw)
-          CALL idba_set (handler,"min",iminw)
-          CALL idba_set (handler,"sec",00)
+          ier=idba_set (handler,"year",iyearw)
+          ier=idba_set (handler,"month",imonthw)
+          ier=idba_set (handler,"day",idayw)
+          ier=idba_set (handler,"hour",ihourw)
+          ier=idba_set (handler,"min",iminw)
+          ier=idba_set (handler,"sec",00)
           
-          p1=-(incr*60) !lo trasformo in secondi
-          p2=0
-          CALL idba_set (handler,"pindicator",4)
-          CALL idba_set (handler,"p1",p1)
-          CALL idba_set (handler,"p2",p2)
+          period=incr*60 !lo trasformo in secondi
+          fctime=0
+          ier=idba_settimerange(handler,1,fctime,period)
 
-          CALL idba_set (handler,"leveltype",1)
-          CALL idba_set (handler,"l1",0)
-          CALL idba_set (handler,"l2",0)
-          CALL idba_set (handler,"var",cvar)
+! non funziona con il livello impostato così!!!
+!          ier=idba_setlevel(handler,1,0,0,0)
 
-!          PRINT*,'estraggo ',idayw,imonthw,iyearw,ihourw,iminw,p1,p2,cvar,icodice
+          ier=idba_set (handler,"var",cvar)
 
-          CALL idba_voglioquesto (handler,N)
+          PRINT*,'estraggo ',idayw,imonthw,iyearw,ihourw,iminw,fctime,period,cvar
+
+          ier=idba_voglioquesto (handler,N)
           
           IF(N == 0)THEN
-!            PRINT*,'oss - non ci sono dati'
+            PRINT*,'oss - non ci sono dati'
           ELSEIF (N == 1) THEN
-            CALL idba_dammelo (handler,btable)
+            ier=idba_dammelo (handler,btable)
 
-            CALL idba_enq (handler,"lat",rlat)
-            CALL idba_enq (handler,"lon",rlon)
-            CALL idba_enq (handler,"height",h)
-            CALL idba_enq (handler,"ana_id",icodice)
-            CALL idba_enq (handler,"rep_cod",repcod)
+            ier=idba_enq (handler,"lat",rlat)
+            ier=idba_enq (handler,"lon",rlon)
+            ier=idba_enq (handler,"height",h)
+            ier=idba_enq (handler,"ana_id",icodice)
+            ier=idba_enq (handler,"rep_memo",repmemo)
             
-            CALL idba_enq (handler,btable,dato)
+            ier=idba_enq (handler,btable,dato)
             
             ndati=ndati+1
             prec=prec+dato
@@ -189,48 +193,43 @@
         ENDDO STEPS
 
         IF (ndati < nsog) THEN
-          PRINT*,'butto la cumulata perche'' ci sono solo ',ndati,' dati'
-          PRINT*,icodice,rlon,rlat,idayw,imonthw,iyearw,ihourw,iminw,p1
+          WRITE(2,*)'butto la cumulata perche'' ci sono solo ',ndati,' dati'
+          WRITE(2,*)icodice,rlon,rlat,idayw,imonthw,iyearw,ihourw,iminw
           GOTO 55
         ELSE
-          PRINT*,'tengo la cumulata! Percentuale dati usati ',ndati,' su ',nstep
+          WRITE(2,*)'tengo la cumulata! Percentuale dati usati ',ndati,' su ',nstep
         ENDIF
         
         ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
 
-        CALL idba_unsetall (handle)
+        ier=idba_unsetall (handle)
         
-        CALL idba_set (handle,"year",dataval(3))
-        CALL idba_set (handle,"month",dataval(2))
-        CALL idba_set (handle,"day",dataval(1))
-        CALL idba_set (handle,"hour",oraval(1))
-        CALL idba_set (handle,"min",oraval(2))
-        CALL idba_set (handle,"sec",00)
+        ier=idba_set (handle,"year",dataval(3))
+        ier=idba_set (handle,"month",dataval(2))
+        ier=idba_set (handle,"day",dataval(1))
+        ier=idba_set (handle,"hour",oraval(1))
+        ier=idba_set (handle,"min",oraval(2))
+        ier=idba_set (handle,"sec",00)
         
-        p1=-(ncum*60) !lo trasformo in secondi
-        p2=0
+        period=ncum*60 !lo trasformo in secondi
+        fctime=0
+        ier=idba_settimerange(handle,1,fctime,period)
         
-        CALL idba_set (handle,"pindicator",4)
-        CALL idba_set (handle,"p1",p1)
-        CALL idba_set (handle,"p2",p2)
+        ier=idba_set (handle,"rep_memo",repmemo)
         
-        CALL idba_set (handle,"rep_cod",repcod)
+        ier=idba_set (handle,"ana_id",icodice)
         
-        CALL idba_set (handle,"ana_id",icodice)
+        ier=idba_set (handle,"mobile",0)
         
-        CALL idba_set (handle,"mobile",0)
-        
-        CALL idba_set (handle,"leveltype",1)
-        CALL idba_set (handle,"l1",0)
-        CALL idba_set (handle,"l2",0)
-        
-        PRINT*,'scrivo ',dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),p1,p2,prec,icodice,repcod
-        
-        CALL idba_unset (handle,"B13011") !TOTAL PRECIPITATION [KG/M2]
-        
-        IF (prec /= rmdo) CALL idba_set(handle,"B13011",prec)
+        ier=idba_setlevel(handle,1,0,0,0)
 
-        CALL idba_prendilo (handle)
+        WRITE(2,*)'scrivo ',dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),prec,icodice,repcod
+        
+        ier=idba_unset (handle,"B13011") !TOTAL PRECIPITATION [KG/M2]
+        
+        IF (prec /= rmdo) ier=idba_set(handle,"B13011",prec)
+
+        ier=idba_prendilo (handle)
         
 55      CONTINUE
         
@@ -246,9 +245,11 @@
       
     ENDDO STATIONS
 
-    call idba_fatto(handler)
-    call idba_fatto(handle)
-    call idba_arrivederci(idbhandle)
+    CLOSE(2)
+
+    ier=idba_fatto(handler)
+    ier=idba_fatto(handle)
+    ier=idba_arrivederci(idbhandle)
 
     stop
     end program

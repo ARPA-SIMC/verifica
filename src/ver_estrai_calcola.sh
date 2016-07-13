@@ -114,8 +114,10 @@ for par in $param ;  do
             -e "s%@@scadenza%"$scad1"%g" \
             -e "w ricopia.ged"    $VERSHARE/ricopia_ged.template
         ged ricopia.ged
+	newscad1=`echo $scad1 |awk '{a=substr($0,0,3); printf "%03d", a;}'`
+	cong tmp_sott.grib tmp_sott_corr.grib -s000 -t"$scad1"
+	cat tmp_sott_corr.grib >> tmp_pezzi.grib
       fi
-      cat tmp_sott.grib >> tmp_pezzi.grib
       is1=$scad1
       while [ $is1 -lt $scad2 ] ; do
         is2=` expr $is1 + $inc `
@@ -221,7 +223,7 @@ for par in $dpar ; do
             -e "s%@@intensita%$ivff%g" \
             -e "s%@@direzione%$ivdd%g" \
             -e "w ffdd.nml"    $VERSHARE/ffdd_nml.template
-         ffdd
+         ver_ffdd
          cat tmp_int.grib >> tmp_pezzi_int.grib
          cat tmp_dir.grib >> tmp_pezzi_dir.grib
          is=` expr $is + $inc `

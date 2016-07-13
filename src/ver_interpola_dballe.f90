@@ -35,10 +35,11 @@
 ! Internet: http://www.arpa.emr.it/sim/
 
     USE util_dballe
+    USE common_namelists
 
     parameter (MIDIMG=1200000)
-    parameter (MNSCAD=72,MNGIO=150,MNRM=102)
-    parameter (MNBOX=150000)
+    parameter (MNGIO=150)
+    parameter (MNBOX=250000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:),lsm(:),oro(:)
     REAL, ALLOCATABLE :: xgridu(:),xgridv(:)
@@ -46,25 +47,19 @@
     integer :: dataval(3),oraval(2),scaddb(4)
     integer :: varv(3)
     real :: a,b,dato
-    integer :: iscaddb
+    INTEGER :: iscaddb,npmod
+    integer :: leveltype1,l1,leveltype2,l2
+    integer :: pind,fctime,period
     real :: alat(4),alon(4)
-    character :: vfile*60,cvar*6,cvarv*6,cel*3,descrfisso*20
+    character :: vfile*80,cvarv*6,cel*3,descrfisso*20
     character(len=20) :: descr
     real :: xpmod(MNBOX),ypmod(MNBOX)
     real :: hdiff,rdum
     logical :: wind
-    INTEGER :: lsvar,ivor,dum(2)
-! namelist variables
-    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
-    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
-    integer :: data(3)=(/-1,-1,-1/),scadenze(4,MNSCAD)=-1,kvar(3,2)=-1
-    character(len=10) :: model=''
-    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
-    logical :: ruota=.false.,diffh=.false.
-    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
-    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
-    character(19) :: database='',user='',password=''
-
+    INTEGER :: lsvar,ivlsm=9999,ivor=9999,dum(2)
+    REAL :: alorot,alarot,tlm0d,tph0d
+    REAL :: lapse=0.007
+! namelist variables are in a module
     REAL, ALLOCATABLE :: x(:),y(:),alt(:)
     REAL, ALLOCATABLE :: xstaz(:,:),xstazv(:,:)
 
@@ -87,18 +82,10 @@
     INTEGER :: debug=1
     INTEGER :: handle_err
 
+    integer :: ier
+
     COMMON /point/ij1,ij2,ij3,ij4
     
-    NAMELIST /parameters/nora,ngio,nscad,scad1,scad2,inc, &
-     nvar,nrm,nore,ore
-    NAMELIST /date/DATA
-    NAMELIST /scadenza/scadenze
-    NAMELIST /parametro/kvar
-    NAMELIST /stat/model,itipo,iana,imet,imod,ls, &
-     ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
-     diffh,diffmax,thr,perc
-    NAMELIST /odbc/database,user,password
-
     DATA level/-1,-1,-1/, var/-1,-1,-1/, est/-1,-1,-1/, &
      scad/-1,-1,-1,-1/, ora/-1,-1/, varv/-1,-1,-1/
     DATA rmdo/-999.9/
@@ -113,15 +100,15 @@
     CLOSE(1)
 
 ! gestione degli errori
-    CALL idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+    ier=idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
     
 ! connessione con database
-    CALL idba_presentati(idbhandle,database,user,password)
+    ier=idba_presentati(idbhandle,database)
     
 ! apertura database in lettura
-    CALL idba_preparati(idbhandle,handler,"read","read","read")
+    ier=idba_preparati(idbhandle,handler,"read","read","read")
     
-    CALL idba_quantesono(handler,nstaz)
+    ier=idba_quantesono(handler,nstaz)
     PRINT*,'massimo numero pseudo-stazioni ',nstaz
 
 ! allocazione matrici
@@ -132,8 +119,9 @@
 ! leggo tutte le stazioni disponibili
     call leggiana_db(iana,x,y,alt,rmdo,nstaz,handler)
 
-    IF(diffh .OR. (ls >= 0))THEN
-      CALL modello(model,ivlsm,ivor,ls,diffh)
+    IF(diffh .OR. corrq .OR. (ls >= 0))THEN
+      CALL modello(model,ivlsm,ivor,ls,diffh,corrq)
+      PRINT*,'diffh ',diffh,' corrq ',corrq,' ls ',ls
       PRINT*,' ivlsm ',ivlsm,' ivor ',ivor
     ENDIF
 
@@ -144,7 +132,7 @@
     descrfisso=descr
 
 ! apertura database in scrittura
-    call idba_preparati(idbhandle,handle,"write","write","write")
+    ier=idba_preparati(idbhandle,handle,"write","write","write")
 
     vfile='estratti.grib'
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
@@ -197,7 +185,7 @@
         if(ibm /= 0 .OR. ier /= 0)goto 9400
     endif
 ! leggo l'orografia
-    if(diffh)then
+    IF(diffh .OR. corrq)THEN
         var(3)=ivor
         call findgrib(iug,kgrib,idimg,data,ora, &
         scad,level,var,ier)
@@ -239,8 +227,10 @@
     call variabile(3,var,cvar,a,b,.true.)
 
     lsvar=ls
-    write(*,*)'variabile ',var,' cvar ',cvar, &
+    write(*,*)'variable ',var,' cvar ',cvar, &
     ' lsvar ',lsvar,' a ',a,' b ',b
+
+    write(*,*)'warning! for the scalar variables the value is forced be to >= 0'
 
     IF(imet == 0 .OR. imet == 1)THEN         ! scalare
       
@@ -354,6 +344,9 @@
               IF(ruota)THEN
                 CALL rot_grib_LAMBO(alorot,alarot, &
                  tlm0d,tph0d)
+              ELSE
+                tlm0d=0.
+                tph0d=0.
               ENDIF
               DO ist=1,nstaz
                 IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
@@ -364,18 +357,24 @@
                    idimv,nx,ny,alon(1),alat(1),dx,dy, &
                    igrid,ija,tlm0d,tph0d,wind,imod, &
                    lsvar,xint,dummy,ier)
-                  
+
                   IF(ier == 2 .OR. ier == 4)THEN
            ! cerca di interpolare su un punto che non e' nel dominio dei dati!
                     xstaz(ist,irm)=rmdo
                   ELSEIF(ier == 0)THEN                  
-                    IF (diffh) THEN
+
+                    IF (diffh .OR. corrq) THEN
                       ind=ij1
-                      hdiff=ABS(oro(ind)/9.81-alt(ist))
-                      IF (hdiff <= diffmax) THEN
-                        xstaz(ist,irm)=xint
+!                      print*,'ind',ind,'oro',oro(ind),'alt',alt(ist)
+                      hdiff=oro(ind)/9.81-alt(ist)
+                      IF (corrq) THEN
+                        xstaz(ist,irm)=xint+(lapse*hdiff)
                       ELSE
-                        xstaz(ist,irm)=rmdo
+                        IF (hdiff <= diffmax) THEN
+                          xstaz(ist,irm)=xint
+                        ELSE
+                          xstaz(ist,irm)=rmdo
+                        ENDIF
                       ENDIF
                     ELSE
                       xstaz(ist,irm)=xint
@@ -389,21 +388,57 @@
             
            ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
             CALL converti_scadenze(4,scad,scaddb)
+
+            scadenze1: SELECT CASE(scaddb(4))
+            CASE(4) ! cumulata
+              pind=1
+              fctime=scaddb(3)
+              period=scaddb(3)-scaddb(2)
+            CASE(0) ! istantanea
+              pind=254
+              IF(scaddb(3)/=0)THEN 
+                PRINT*,'case 0 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                CALL EXIT(1)
+              ENDIF
+              fctime=scaddb(2)
+              period=0
+            CASE(1) ! analisi inizializzata
+              pind=254
+              IF(scaddb(2)/=0)THEN
+                PRINT*,'case 1 - p1= ',scaddb(2),' p2= ',scaddb(3)
+                CALL EXIT(1)
+              ENDIF
+              fctime=scaddb(2)
+              period=0
+            CASE(2) ! prodotto valido in un periodo
+              pind=205
+              fctime=scaddb(3)
+              period=scaddb(3)-scaddb(2)
+            CASE(13) ! analisi di precipitazione
+              pind=1
+              PRINT*,'controllo - verrebbe fctime= ',scaddb(2),' period= ',scaddb(3)
+              fctime=scaddb(2)
+              period=scaddb(3)
+            CASE default
+              PRINT*,'scadenza non gestito'
+              CALL EXIT(1)
+            END SELECT scadenze1
+            ier=idba_settimerange(handle,pind,fctime,period)
             
-            IF(scaddb(4) == 13) THEN
-              wp1=0-scaddb(3)
-              wp2=0
-              wpind=4
-              CALL idba_set (handle,"p1",wp1)
-              CALL idba_set (handle,"p2",wp2)
-              CALL idba_set (handle,"pindicator",wpind)
-            ELSE
-              CALL idba_set (handle,"p1",scaddb(2))
-              CALL idba_set (handle,"p2",scaddb(3))
-              CALL idba_set (handle,"pindicator",scaddb(4))
-            ENDIF
+!            IF(scaddb(4) == 13) THEN
+!              wp1=0-scaddb(3)
+!              wp2=0
+!              wpind=4
+!              ier=idba_set (handle,"p1",wp1)
+!              ier=idba_set (handle,"p2",wp2)
+!              ier=idba_set (handle,"pindicator",wpind)
+!            ELSE
+!              ier=idba_set (handle,"p1",scaddb(2))
+!              ier=idba_set (handle,"p2",scaddb(3))
+!              ier=idba_set (handle,"pindicator",scaddb(4))
+!            ENDIF
             
-            CALL idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
+            ier=idba_setdate(handle,dataval(3),dataval(2),dataval(1),oraval(1),oraval(2),0)
             
             ! scrittura su database
             DO irm=1,nrm
@@ -414,31 +449,53 @@
               ENDIF
               PRINT*,'scrivo: descr ',descr
               
-              CALL idba_set (handle,"rep_memo",descr)
-              
+              ier=idba_set (handle,"rep_memo",descr)
+
               DO ist=1,nstaz
                 IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
                  ABS(y(ist)-rmdo) > 0.1 .AND. &
                  xstaz(ist,irm) /= rmdo)THEN
+
                   rlat=y(ist)
                   rlon=x(ist)
                   h=alt(ist)
-                  
+
                   ! imposto tutta l'anagrafica
                   
-                  CALL idba_set (handle,"lat",rlat)
-                  CALL idba_set (handle,"lon",rlon)
-                  CALL idba_set (handle,"mobile",0)
+                  ier=idba_set (handle,"lat",rlat)
+                  ier=idba_set (handle,"lon",rlon)
+                  ier=idba_set (handle,"mobile",0)
                   
-                  CALL idba_set (handle,"leveltype", &
-                   level(1))
-                  CALL idba_set (handle,"l1",level(2))
-                  CALL idba_set (handle,"l2",level(3))
-                  
+                  leveltype2=dba_mvi
+                  l2=dba_mvi
+                  livelli1: select case(level(1))
+                  case(1) ! livello del suolo, per la pioggia
+                     leveltype1=1
+                     l1=0
+                  case(102) ! mean sea level (mslp)
+                     leveltype1=101
+                     l1=0
+                  case(105) ! altezza specifica sopra al suolo (t e td 2m,v 10m)
+                     leveltype1=103
+                     l1=level(2)*1000 ! l'altezza deve essere in mm
+                  case(100) ! livello isobarico
+                     leveltype1=100
+                     l1=level(2)*100 ! la pressione deve essere in Pa
+                  case default
+                     print*,'livello non gestito'
+                     call exit(1)
+                  end select livelli1
+                  ier=idba_setlevel(handle,leveltype1,l1,leveltype2,l2)
+
                   IF(imet == 0)THEN ! scalare
                     
                     ! attenzione!!!!!! ho bisogno che il minimo sia 0????
                     dato=a+xstaz(ist,irm)*b
+
+! provvisiorio per caricare le preci da radar
+                    if(dato <0)then
+                       dato=0.
+                    endif
                     
                   ELSEIF(imet == 1)THEN !scalare direzione
                     
@@ -450,9 +507,9 @@
                     ENDIF
                     
                   ENDIF
-                  
-                  CALL idba_set (handle,cvar,dato)
-                  CALL idba_prendilo (handle)
+
+                  ier=idba_set (handle,cvar,dato)
+                  ier=idba_prendilo (handle)
                   
                 ENDIF
               ENDDO      !nstaz
@@ -612,6 +669,9 @@
             IF(ruota)THEN
               CALL rot_grib_LAMBO(alorot,alarot, &
                tlm0d,tph0d)
+            ELSE
+              tlm0d=0.
+              tph0d=0.
             ENDIF
             DO irm=1,nrm
               DO ist=1,nstaz
@@ -656,24 +716,40 @@
                   
                   ! imposto tutta l'anagrafica
                   
-                  CALL idba_set (handle,"lat",rlat)
-                  CALL idba_set (handle,"lon",rlon)
-                  CALL idba_set (handle,"mobile",0)
+                  ier=idba_set (handle,"lat",rlat)
+                  ier=idba_set (handle,"lon",rlon)
+                  ier=idba_set (handle,"mobile",0)
                   
-                  CALL idba_set (handle,"rep_memo",descr)
+                  ier=idba_set (handle,"rep_memo",descr)
                   
-                  CALL idba_set (handle,"leveltype", &
-                   level(1))
-                  CALL idba_set (handle,"l1",level(2))
-                  CALL idba_set (handle,"l2",level(3))
-                  
+                  leveltype2=dba_mvi
+                  l2=dba_mvi
+                  livelli2: select case(level(1))
+                  case(1) ! livello del suolo, per la pioggia
+                     leveltype1=1
+                     l1=0
+                  case(102) ! mean sea level (mslp)
+                     leveltype1=101
+                     l1=0
+                  case(105) ! altezza specifica sopra al suolo (t e td 2m,v 10m)
+                     leveltype1=103
+                     l1=level(2)*1000 ! l'altezza deve essere in mm
+                  case(100)
+                     leveltype1=100
+                     l1=level(2)*100 ! la pressione deve essere in Pa
+                  case default
+                     print*,'livello non gestito'
+                     call exit(1)
+                  end select livelli2
+                  ier=idba_setlevel(handle,leveltype1,l1,leveltype2,l2)
+
                   dato=a+xstaz(ist,irm)*b
-                  CALL idba_set (handle,cvar,dato)
+                  ier=idba_set (handle,cvar,dato)
                   ! Scrivo anche v
                   dato=a+xstazv(ist,irm)*b
-                  CALL idba_set (handle,cvarv,dato)
+                  ier=idba_set (handle,cvarv,dato)
                   
-                  CALL idba_prendilo (handle)
+                  ier=idba_prendilo (handle)
                   
                 ENDIF
               ENDDO      !nstaz
@@ -697,9 +773,9 @@
     if(ier < 0)goto9500
 
 ! chiusura database
-    call idba_fatto(handler)
-    call idba_fatto(handle)
-    call idba_arrivederci(idbhandle)
+    ier=idba_fatto(handler)
+    ier=idba_fatto(handle)
+    ier=idba_arrivederci(idbhandle)
 
     stop
     9001 print *,"Errore durante la lettura della namelist parameters "

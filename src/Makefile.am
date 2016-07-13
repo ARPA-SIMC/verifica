@@ -1,37 +1,45 @@
-bin_PROGRAMS =  ver_calcola_descrittore  ver_interpola_dballe  ver_lettura \
-                ver_crea_obsmask         ver_leggidati_ana     ver_scores_dballe \
-                ver_cumula_preci         ver_leggidati_mare    ver_scores_prob_dballe \
-                ver_boxfix_dballe        ver_ffdd              ver_leggidati_regio \
-                ver_pulisci              ver_leggidati_euro
+lib_LTLIBRARIES = libverifica.la
+libverifica_la_SOURCES = common_namelists.f90 scores_prob_util_dballe.f90  scores_util_dballe.f90 util_dballe.f90
 
+bin_PROGRAMS = ver_boxfix_dballe    ver_calcola_descrittore ver_calcola_td \
+               ver_crea_obsmask     ver_cumula_preci        ver_ffdd \
+               ver_interpola_dballe ver_leggidati_ana       ver_leggidati_euro \
+               ver_leggidati_mare   ver_leggidati_regio     ver_lettura \
+               ver_pulisci          ver_scores_dballe       ver_scores_prob_dballe \
+               ver_scores_prob_dballe_resampling
 
-ver_calcola_descrittore_SOURCES = ver_calcola_descrittore.f90 util_dballe.f90
-ver_calcola_descrittore.o: util_dballe.o
-ver_interpola_dballe_SOURCES = ver_interpola_dballe.f90 util_dballe.f90
-ver_interpola_dballe.o: util_dballe.o
-ver_lettura_SOURCES = ver_lettura.f90 util_dballe.f90
-ver_lettura.o: util_dballe.o
-ver_crea_obsmask_SOURCES = ver_crea_obsmask.f90 util_dballe.f90
-ver_crea_obsmask.o: util_dballe.o
-ver_leggidati_ana_SOURCES = ver_leggidati_ana.f90 util_dballe.f90
-ver_leggidati_ana.o: util_dballe.o
-ver_scores_dballe_SOURCES = ver_scores_dballe.f90 util_dballe.f90 scores_util_dballe.f90
-ver_scores_dballe.o: util_dballe.o
-ver_cumula_preci_SOURCES = ver_cumula_preci.f90 util_dballe.f90
-ver_cumula_preci.o: util_dballe.o
-ver_leggidati_mare_SOURCES = ver_leggidati_mare.f90  util_dballe.f90
-ver_leggidati_mare.o: util_dballe.o
-ver_scores_prob_dballe_SOURCES = ver_scores_prob_dballe.f90 util_dballe.f90 scores_prob_util_dballe.f90
-ver_scores_prob_dballe.o: util_dballe.o
-ver_boxfix_dballe_SOURCES = ver_boxfix_dballe.f90 util_dballe.f90
-ver_boxfix_dballe.o: util_dballe.o
+ver_boxfix_dballe_SOURCES = ver_boxfix_dballe.f90
+ver_boxfix_dballe_LDADD = libverifica.la
+ver_calcola_descrittore_SOURCES = ver_calcola_descrittore.f90
+ver_calcola_descrittore_LDADD = libverifica.la
+ver_calcola_td_SOURCES = ver_calcola_td.f90
+ver_calcola_td_LDADD = libverifica.la
+ver_crea_obsmask_SOURCES = ver_crea_obsmask.f90
+ver_crea_obsmask_LDADD = libverifica.la
+ver_cumula_preci_SOURCES = ver_cumula_preci.f90
+ver_cumula_preci_LDADD = libverifica.la
 ver_ffdd_SOURCES = ver_ffdd.f90
-ver_leggidati_regio_SOURCES = ver_leggidati_regio.f90 util_dballe.f90
-ver_leggidati_regio.o: util_dballe.o
-ver_leggidati_euro_SOURCES = ver_leggidati_euro.f90 util_dballe.f90
-ver_leggidati_euro.o: util_dballe.o
-ver_pulisci_SOURCES = ver_pulisci.f90 util_dballe.f90
-
+ver_ffdd_LDADD = libverifica.la
+ver_interpola_dballe_SOURCES = ver_interpola_dballe.f90
+ver_interpola_dballe_LDADD = libverifica.la
+ver_leggidati_ana_SOURCES = ver_leggidati_ana.f90
+ver_leggidati_ana_LDADD = libverifica.la
+ver_leggidati_euro_SOURCES = ver_leggidati_euro.f90
+ver_leggidati_euro_LDADD = libverifica.la
+ver_leggidati_mare_SOURCES = ver_leggidati_mare.f90
+ver_leggidati_mare_LDADD = libverifica.la
+ver_leggidati_regio_SOURCES = ver_leggidati_regio.f90
+ver_leggidati_regio_LDADD = libverifica.la
+ver_lettura_SOURCES = ver_lettura.f90
+ver_lettura_LDADD = libverifica.la
+ver_pulisci_SOURCES = ver_pulisci.f90
+ver_pulisci_LDADD = libverifica.la
+ver_scores_dballe_SOURCES = ver_scores_dballe.f90
+ver_scores_dballe_LDADD = libverifica.la
+ver_scores_prob_dballe_SOURCES = ver_scores_prob_dballe.f90
+ver_scores_prob_dballe_LDADD = libverifica.la
+ver_scores_prob_dballe_resampling_SOURCES = ver_scores_prob_dballe_resampling.f90
+ver_scores_prob_dballe_resampling_LDADD = libverifica.la
 
 dist_bin_SCRIPTS = ver_calcola_descrittore.sh \
  ver_crea_obsmask.sh \
@@ -45,3 +53,5 @@ dist_bin_SCRIPTS = ver_calcola_descrittore.sh \
  ver_scrivi_euro.sh \
  ver_scrivi_prev.sh \
  ver_pulisci.sh
+
+nodist_include_HEADERS = scores_prob_util_dballe.mod util_dballe.mod common_namelists.mod

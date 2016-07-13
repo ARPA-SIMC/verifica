@@ -1,7 +1,7 @@
-temperatura       B12001 3073
+temperatura       B12101 3073
 precipitazione    B13011 3339
 direzione vento   B11001 2817
 intensita' vento  B11002 2818
 umidita' relativa B13003 3331
-td                B12003 3075
+td                B12103 3075
 geopotenziale     B10003 2563

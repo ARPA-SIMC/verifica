@@ -1,6 +1,6 @@
-    program ffdd
+    PROGRAM ffdd
 
-! c VERIFICA - ffdd.f
+! c VERIFICA - ver_ffdd.f90
 ! c programma per il calcolo e la codifica in grib di intensita' e direzione
 ! c del vento a partire dai campi gribbati u e v
 ! c autore: Chiara Marsigli
@@ -73,7 +73,7 @@
     data(3)=giorno(3)
     var(2)=tabella
     scad(2)=scadenza
-    print*,'ffdd.f - scadenza ',scadenza
+    print*,'ver_ffdd - scadenza ',scadenza
 
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
     iug=0
@@ -249,4 +249,4 @@
     stop
     9800 print *,"Errore durante la pbgrib ",ier
     stop
-    end program
+    END PROGRAM ffdd
