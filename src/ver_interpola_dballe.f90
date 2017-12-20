@@ -36,6 +36,7 @@
 
     USE util_dballe
     USE common_namelists
+    USE grib_api
 
     parameter (MIDIMG=1200000)
     parameter (MNGIO=150)
@@ -66,6 +67,12 @@
 ! grib fields
     integer :: ksec0(2),ksec1(104),ksec2(384),ksec3(2),ksec4(60)
     REAL :: psec2(384),psec3(2),dummy(1)
+
+! new grib_api fields
+  integer              :: iret
+  character(len = 256) :: error
+  integer(kind = 4)    :: step
+  integer              :: ifile,igrib
 
     data ksec0/2*0/
     data ksec1/104*0/
@@ -136,18 +143,16 @@
 
     vfile='estratti.grib'
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
-    iug=0
-    call pbopen(iug,vfile,'r',ier)
-    if(ier /= 0)goto9100
-    CALL pbgrib(iug,kgrib,MIDIMG,idimg,ier)
-    if(ier /= 0)goto9800
-    CALL gribex(ksec0,ksec1,ksec2,psec2,ksec3,psec3,ksec4, &
-     dummy,SIZE(dummy), &
-     kgrib,MIDIMG,idimg,'J',ier)
-    if(ier /= 0)goto9700
-    MIDIMV=ksec4(1)
-    call pbclose(iug,ier)
-    if(ier /= 0)goto9500
+    call grib_open_file(ifile,vfile,'r')
+
+    call grib_new_from_file(ifile,igrib, iret)
+!   Loop on all the messages in a file.
+    call grib_get(igrib,'numberOfDataPoints',MIDIMV)
+    write(*,'(i7)') MIDIMV
+    
+    print*,'MIDIMV',MIDIMV
+
+    call grib_close_file(ifile)
 
     ALLOCATE(xgrid(MIDIMV))
     ALLOCATE(lsm(MIDIMV))
@@ -160,6 +165,7 @@
     idimv=MIDIMV
     imd=-32768
     igrid=0                    !sono griglie regolari
+
     call pbopen(iug,vfile,'r',ier)
     if(ier /= 0)goto9100
 

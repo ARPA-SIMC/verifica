@@ -1063,7 +1063,7 @@
           IF(ABS(pred(is,ig,ifc)-rmddb) < 1.0E-6)nmd=1 
 !          IF(ABS(pred(is,ig,ifc)-0.) < 1.0E-6)nmd=1 
           ! controllo coppie        
-          print*,'obs ',obs(is,ig),'member ',ifc,'pred ',pred(is,ig,ifc)
+!          print*,'obs ',obs(is,ig),'member ',ifc,'pred ',pred(is,ig,ifc)
           ifc=ifc+1
         ENDDO
         ! IF missing DATA (nmd=1) no action is taken 

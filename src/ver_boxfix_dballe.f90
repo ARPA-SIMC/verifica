@@ -33,8 +33,8 @@
     USE common_namelists
 
     parameter (MIDIMG=1200000)
-    parameter (MNSTAZ=50000,MNGIO=150)
-    parameter (MNBOX=250000)
+    parameter (MNSTAZ=55000,MNGIO=150)
+    parameter (MNBOX=450000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:),lsm(:),obm(:),oro(:)
     REAL, ALLOCATABLE :: rmgrid(:,:)
@@ -146,6 +146,19 @@
     vfile='estratti.grib'
 
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+! new version
+!    call grib_open_file(ifile,vfile,'r')
+!
+!    call grib_new_from_file(ifile,igrib, iret)
+!   Loop on all the messages in a file.
+!    call grib_get(igrib,'numberOfDataPoints',MIDIMV)
+!    write(*,'(i7)') MIDIMV
+!    
+!    print*,'MIDIMV',MIDIMV
+!
+!    call grib_close_file(ifile)
+
+! old version
     iug=0
     call pbopen(iug,vfile,'r',ier)
     if(ier /= 0)goto9100

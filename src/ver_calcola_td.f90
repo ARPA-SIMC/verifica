@@ -45,7 +45,7 @@ CHARACTER btable*10, rep_memo*20
 REAL :: t,rh,td
 REAL :: rmdo
 
-INTEGER, ALLOCATABLE :: anaid(:)
+type(anaid_type), ALLOCATABLE :: anaid(:)
 
 CHARACTER(19) :: database,user,password
 INTEGER :: handle,handler
@@ -110,7 +110,10 @@ STAZIONI: DO ist=1,nstaz
   
   ier=idba_unsetall (handler)
   
-  ier=idba_set (handler,"ana_id",anaid(ist))
+!  ier=idba_set (handler,"ana_id",anaid(ist))
+
+  ier=idba_set (handler,"lat",anaid(ist)%lat)
+  ier=idba_set (handler,"lon",anaid(ist)%lon)
   
   dataval(3)=annoi
   dataval(2)=mesei

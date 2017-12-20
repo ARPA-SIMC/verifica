@@ -30,8 +30,8 @@
 
     IMPLICIT NONE
 
-    integer, parameter :: MNBOX=250000
-    integer, parameter :: MIDIMG=500000
+    integer, parameter :: MNBOX=750000
+    integer, parameter :: MIDIMG=2500000
 
     real :: xb(MNBOX),yb(MNBOX),alte(MNBOX),h
     integer :: pos(MNBOX)
@@ -102,6 +102,7 @@
     read(1,nml=areaoss,err=9002)
     close(1)
 
+! old
 ! lettura grib allo scopo di avere MIDIMV (ksec4(1))
     iug=0
     call pbopen(iug,fileorog,'r',ier)
@@ -115,6 +116,19 @@
     MIDIMV=ksec4(1)
     call pbclose(iug,ier)
     if(ier /= 0)goto9500
+
+! new
+! lettura grib allo scopo di avere MIDIMV (ksec4(1))
+!    call grib_open_file(ifile,vfile,'r')
+
+!    call grib_new_from_file(ifile,igrib, iret)
+!   Loop on all the messages in a file.
+!    call grib_get(igrib,'numberOfDataPoints',MIDIMV)
+!    write(*,'(i7)') MIDIMV
+    
+!    print*,'MIDIMV',MIDIMV
+
+!    call grib_close_file(ifile)
 
     ALLOCATE(xgrid(MIDIMV))
 

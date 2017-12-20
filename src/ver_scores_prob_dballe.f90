@@ -36,7 +36,8 @@
 ! un riferimento a chi dimensiona i vettori dinamicamente
     integer :: ora(2),scad(4)
     integer :: dataval(3),oraval(2),scaddb(4)
-    INTEGER :: icodice,itipost,ntot,h,sum_nowght
+    INTEGER :: itipost,ntot,h,sum_nowght
+    type(anaid_type) :: icodice
     real :: dato
     integer :: leveltype1,l1,leveltype2,l2
     integer :: pind,fctime,period
@@ -47,7 +48,7 @@
     LOGICAL :: loutput
 
     REAL, ALLOCATABLE :: oss(:,:),prev(:,:,:),prevr(:,:,:)
-    INTEGER, ALLOCATABLE :: anaid(:)
+    type(anaid_type), ALLOCATABLE :: anaid(:)
     INTEGER, ALLOCATABLE :: wght(:,:),temp_wght(:),distrib(:)
 
     CHARACTER(len=10) :: btable
@@ -127,6 +128,8 @@
     ier=idba_preparati(idbhandle,handle,"read","read","read")
     ier=idba_preparati(idbhandle,handleana,"read","read","read")
 
+    ier=idba_set(handle,"rep_memo",reteref)
+    
 ! leggo tutte le stazioni presenti in archivio
     ier=idba_quantesono(handle,nstaz)
     print*,'massimo numero pseudo-stazioni ',nstaz
@@ -261,16 +264,16 @@
           
           ier=idba_set (handle,"rep_memo",descr)
           
-!          PRINT*,'prev ',descr,dataval,oraval,'iscaddb',iscaddb
+          PRINT*,'prev ',descr,dataval,oraval,'iscaddb',iscaddb
           
           ier=idba_voglioquesto (handle,N)
-          ! PRINT*,'numero dati trovati= ',N
+
           IF(N == 0)THEN
             PRINT*,'pre - non ci sono dati'
             PRINT*,dataval,oraval
             GOTO 66
           ELSE
-            ! PRINT*,"pre - numero di dati trovati ",N
+!             PRINT*,"pre - numero di dati trovati ",N
           ENDIF
             
           DO idati=1,N
@@ -281,8 +284,10 @@
             
             ! ier=idba_enqi (handle,"mobile",mobile)
             
-            ier=idba_enq (handle,"ana_id",icodice)
-            
+!            ier=idba_enq (handle,"ana_id",icodice)
+            ier=idba_enq (handle,"lat",icodice%lat)
+            ier=idba_enq (handle,"lon",icodice%lon)
+           
 ! commento temporaneo per gestire pb allocazione memoria da elencamele
             !mst  interrogo sezione anagrafica per avere l'altezza
 !!$            ier=idba_set (handleana,"ana_id",icodice)
@@ -306,7 +311,9 @@
             
             ipos=0
             DO i=1,nstaz
-              IF(icodice == anaid(i))THEN
+!              IF(icodice == anaid(i))THEN
+               if(icodice%lat == anaid(i)%lat .and. &
+                    icodice%lon == anaid(i)%lon)then !!!
                 ipos=i
               ENDIF
             ENDDO
@@ -408,7 +415,9 @@
           ! sara' da impostare mentre per ora e' solo richiesto
           ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
           
-          ier=idba_enq (handle,"ana_id",icodice)
+!          ier=idba_enq (handle,"ana_id",icodice)
+          ier=idba_enq (handle,"lat",icodice%lat)
+          ier=idba_enq (handle,"lon",icodice%lon)
           
 ! commento temporaneo per gestire pb allocazione memoria da elencamele
           !mst  interrogo sezione anagrafica per avere l'altezza
@@ -433,7 +442,9 @@
           
           ipos=0
           DO i=1,nstaz
-            IF(icodice == anaid(i))THEN
+!            IF(icodice == anaid(i))THEN
+             if(icodice%lat == anaid(i)%lat .and. &
+                  icodice%lon == anaid(i)%lon)then !!!
               ipos=i
             ENDIF
           ENDDO

@@ -36,7 +36,8 @@
 ! un riferimento a chi dimensiona i vettori dinamicamente
     integer :: ora(2),scad(4)
     integer :: dataval(3),oraval(2),scaddb(4)
-    INTEGER :: icodice,itipost,ntot,h,sum_nowght
+    INTEGER :: itipost,ntot,h,sum_nowght
+    type(anaid_type) :: icodice
     real :: dato
     integer :: leveltype1,l1,leveltype2,l2
     integer :: pind,fctime,period
@@ -53,7 +54,7 @@
 
     REAL, ALLOCATABLE :: oss(:,:),prev(:,:,:)
     REAL, ALLOCATABLE :: prev2(:,:,:),prevrnd(:,:,:)
-    INTEGER, ALLOCATABLE :: anaid(:)
+    type(anaid_type), ALLOCATABLE :: anaid(:)
     INTEGER, ALLOCATABLE :: wght(:,:),temp_wght(:),distrib(:)
 
     CHARACTER(len=10) :: btable
@@ -288,10 +289,14 @@
             
             ! ier=idba_enqi (handle,"mobile",mobile)
             
-            ier=idba_enq (handle,"ana_id",icodice)
+!            ier=idba_enq (handle,"ana_id",icodice)
+            ier=idba_enq (handle,"lat",icodice%lat)
+            ier=idba_enq (handle,"lon",icodice%lon)
             
             !mst  interrogo sezione anagrafica per avere l'altezza
-            ier=idba_set (handleana,"ana_id",icodice)
+!            ier=idba_set (handleana,"ana_id",icodice)
+            ier=idba_set (handleana,"lat",icodice%lat)
+            ier=idba_set (handleana,"lon",icodice%lon)
             ier=idba_quantesono(handleana,USTAZ)
             ier=idba_elencamele (handleana)
             ier=idba_enq (handleana,"height",h)
@@ -312,7 +317,9 @@
             
             ipos=0
             DO i=1,nstaz
-              IF(icodice == anaid(i))THEN
+!              IF(icodice == anaid(i))THEN
+               if(icodice%lat == anaid(i)%lat .and. &
+                    icodice%lon == anaid(i)%lon)then !!!
                 ipos=i
               ENDIF
             ENDDO
@@ -342,10 +349,14 @@
              ENDIF
              DO idati=1,N
                 ier=idba_dammelo (handle,btable)
-                ier=idba_enq (handle,"ana_id",icodice)
+!                ier=idba_enq (handle,"ana_id",icodice)
+                ier=idba_enq (handle,"lat",icodice%lat)
+                ier=idba_enq (handle,"lon",icodice%lon)
                 ipos=0
                 DO i=1,nstaz
-                   IF(icodice == anaid(i))THEN
+                   !                   IF(icodice == anaid(i))THEN
+                   if(icodice%lat == anaid(i)%lat .and. &
+                        icodice%lon == anaid(i)%lon)then !!!
                       ipos=i
                    ENDIF
                 ENDDO
@@ -443,10 +454,14 @@
           ! sara' da impostare mentre per ora e' solo richiesto
           ier=idba_enqlevel(handle,leveltype1,l1,leveltype2,l2)
           
-          ier=idba_enq (handle,"ana_id",icodice)
+!          ier=idba_enq (handle,"ana_id",icodice)
+          ier=idba_enq (handle,"lat",icodice%lat)
+          ier=idba_enq (handle,"lon",icodice%lon)
           
           !mst  interrogo sezione anagrafica per avere l'altezza
-          ier=idba_set (handleana,"ana_id",icodice)
+!          ier=idba_set (handleana,"ana_id",icodice)
+          ier=idba_set (handleana,"lat",icodice%lat)
+          ier=idba_set (handleana,"lon",icodice%lon)
           ier=idba_quantesono(handleana,USTAZ)
           ier=idba_elencamele (handleana)
           ier=idba_enq (handleana,"height",h)
@@ -467,7 +482,9 @@
           
           ipos=0
           DO i=1,nstaz
-            IF(icodice == anaid(i))THEN
+!            IF(icodice == anaid(i))THEN
+             if(icodice%lat == anaid(i)%lat .and. &
+                  icodice%lon == anaid(i)%lon)then !!!
               ipos=i
             ENDIF
           ENDDO

@@ -29,6 +29,11 @@
 
     USE missing_values
     INCLUDE "dballe/dballeff.h"
+
+    type anaid_type
+       integer :: lat
+       integer :: lon
+    endtype anaid_type
     
     CONTAINS
 
@@ -94,7 +99,7 @@
        elseif(iana == 1)then
           ! voglio solo le analisi (nome inizia per '_ana')
           if(namest(1:3) == '_gp')then
-             write(33,*)ist,icodice,rlat,rlon,h,namest
+!             write(33,*)ist,icodice,rlat,rlon,h,namest
              x(icodice)=rlon
              y(icodice)=rlat
              if(h == 9999.)then
@@ -124,15 +129,22 @@
 ! c autore: Chiara Marsigli
 
     integer :: handle,iana,nstaz
-    integer :: anaid(nstaz)
+
+    type(anaid_type) :: anaid(nstaz)
+
     LOGICAL :: lselect
 
     integer :: ier
 
+    integer :: ilat,ilon
+    
     REAL :: x(nstaz),y(nstaz),alt(nstaz),toll
     REAL :: rlat,rlon
     DOUBLE PRECISION :: dlat,dlon
 
+    character(9) :: ident
+    character(50) :: repmemo
+    
     DATA toll/0.0001/
 
 ! inizializzazione matrici
@@ -159,10 +171,14 @@
        
        ier=idba_elencamele(handle)
        
-       ier=idba_enq (handle,"ana_id",icodice)
+ !      ier=idba_enq (handle,"ana_id",icodice)
        ier=idba_enq (handle,"block",itipostaz)
        ier=idba_enq (handle,"lat",dlat)
        ier=idba_enq (handle,"lon",dlon)
+       ier=idba_enq (handle,"lat",ilat)
+       ier=idba_enq (handle,"lon",ilon)
+       ier=idba_enq (handle,"ident",ident)
+       ier=idba_enq (handle,"rep_memo",repmemo)
        
        IF(.NOT.c_e_i(itipostaz))itipostaz=0
        
@@ -171,8 +187,9 @@
           DO jst=1,nread
              IF(ABS(dlon-x(jst))<toll .AND. ABS(dlat-y(jst))<toll)THEN
                 i=i+1
-                PRINT*,ist,icodice,dlon,dlat
-                anaid(i)=icodice
+                PRINT*,ist,dlon,dlat,repmemo,itipostaz
+                anaid(i)%lat = ilat
+                anaid(i)%lon = ilon
              endif
           ENDDO
           
@@ -184,22 +201,25 @@
                 IF(itipostaz < 70)THEN
                    i=i+1
                    !              PRINT*,ist,icodice,itipostaz
-                   anaid(i)=icodice
+                   anaid(i)%lat = ilat
+                   anaid(i)%lon = ilon
                 ENDIF
              ELSEIF(itipost == 80)THEN
                 ! voglio solo le box (itipost=80)
                 IF(itipostaz == 80)THEN
                    i=i+1
-                   PRINT*,ist,icodice,itipostaz
-                   anaid(i)=icodice
+                   PRINT*,ist,itipostaz
+                   anaid(i)%lat = ilat
+                   anaid(i)%lon = ilon
                 ENDIF
              ENDIF
           ELSEIF(iana == 1)THEN
              ! voglio solo le analisi (itipostaz=200)
              IF(itipostaz == 90)THEN
                 i=i+1
-                WRITE(33,*)ist,icodice,itipostaz
-                anaid(i)=icodice
+!                WRITE(33,*)ist,icodice,itipostaz
+                anaid(i)%lat = ilat
+                anaid(i)%lon = ilon
              ENDIF
           ELSE
              PRINT*,"ERRORE"
@@ -226,26 +246,31 @@
 ! autore: Chiara Marsigli
 
     integer :: handle,nstaz
-    integer :: anaid(nstaz)
 
+    type(anaid_type) :: anaid(nstaz)
+
+    integer :: ilon,ilat
+    
     integer :: ier
 
     OPEN(1,file='selstaz.dat',status='old')
 
     i=0
     do ist=1,nstaz
-
-      READ(1,*,end=100)rlon,rlat
+       
+!      READ(1,*,end=100)rlon,rlat
+      READ(1,*,end=100)ilon,ilat
       
-      ier=idba_set (handle,"lat",rlat)
-      ier=idba_set (handle,"lon",rlon)
+!      ier=idba_set (handle,"lat",rlat)
+!      ier=idba_set (handle,"lon",rlon)
 
 ! esiste una API che permette di ottenere ana_id da lon e lat??????
 
-      ier=idba_enq (handle,"ana_id",icodice)
+!      ier=idba_enq (handle,"ana_id",icodice)
 
       i=i+1
-      anaid(i)=icodice
+      anaid(i)%lat = ilat
+      anaid(i)%lon = ilon
 
     enddo
     
@@ -266,32 +291,32 @@
 ! c legge l'anagrafica stazioni dal database
 ! c autore: Chiara Marsigli
 
-    integer :: handle,nstaz
-    integer :: anaid(nstaz)
+      integer :: handle,nstaz
+      integer :: ilat,ilon
 
-    integer :: ier
+      type(anaid_type) :: anaid(nstaz)
+      
+      integer :: ier
+      
+      character(20) :: namest
 
-    character(20) :: namest
+      print*,'stazioni ',nstaz
+      DO ist=1,nstaz
 
-! inizializzazione matrici
-    anaid = 0
+         ier=idba_elencamele(handle)
 
-    print*,'stazioni ',nstaz
-    DO ist=1,nstaz
-
-        ier=idba_elencamele(handle)
-
-        ier=idba_enq (handle,"ana_id",icodice)
-        ier=idba_enq (handle,"lat",rlat)
-        ier=idba_enq (handle,"lon",rlon)
-        ier=idba_enq (handle,"name",namest)
-
-        PRINT*,ist,icodice,rlat,rlon,namest
-        anaid(ist)=icodice
-        
-    enddo
-
-    return
+!        ier=idba_enq (handle,"ana_id",icodice)
+         ier=idba_enq (handle,"lat",ilat)
+         ier=idba_enq (handle,"lon",ilon)
+         ier=idba_enq (handle,"name",namest)
+         
+         PRINT*,ist,ilat,ilon,namest
+         anaid(i)%lat = ilat
+         anaid(i)%lon = ilon
+         
+      enddo
+      
+      return
     end subroutine leggiana_db_all
 
 !*****************************************************************************
@@ -889,7 +914,7 @@
     endif
 
     if(nbox > MNBOX)then
-        print*,'ERRORE - MNBOX INSUFFICIENTE'
+        print*,'nbox=',nbox,'ERRORE - MNBOX INSUFFICIENTE'
         call exit (1)
     endif
 

@@ -47,7 +47,7 @@
     character(len=10) :: btable
     character(len=20) :: repmemo
 
-    integer, ALLOCATABLE :: anaid(:)
+    type(anaid_type), ALLOCATABLE :: anaid(:)
 
     INTEGER :: handle,handler
     integer :: debug=1
@@ -123,7 +123,10 @@
 
       ier=idba_unsetall (handler)
 
-      ier=idba_set (handler,"ana_id",anaid(ist))
+!      ier=idba_set (handler,"ana_id",anaid(ist))
+
+      ier=idba_set (handler,"lat",anaid(ist)%lat)
+      ier=idba_set (handler,"lon",anaid(ist)%lon)
 
       dataval(3)=annoi
       dataval(2)=mesei

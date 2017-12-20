@@ -1,5 +1,6 @@
  $lista
    cvar='B12101',
+   reteref='synop',
    iquota=-1,
    hlimite=500.,
    lthr=1,
@@ -12,6 +13,8 @@
  $end
 
 ### cvar = codice variabile (come in Btable)
+### reteref = nome della rete (= rep_memo) che si usa come riferimento (ad es. per
+###           una verifica contro osservati, la rete 'synop')
 ### iquota = per verificare solo punti sopra o sotto ad una certa quota
 ###          -1 se le voglio tutte
 ###          0 solo pianura (sotto hlimite)

@@ -22,6 +22,7 @@ MODULE common_namelists
     CHARACTER(len=512) :: shapefile=''
 ! lista.nml
     CHARACTER(len=6) :: cvar=''
+    CHARACTER(len=20) :: reteref=''
     INTEGER :: iquota=-1,lthr=0
     INTEGER :: nsoglie=1
     REAL :: hlimite=100.,soglie(MNSOG)=0.,distmean=1.
@@ -42,7 +43,7 @@ MODULE common_namelists
     NAMELIST /stat/model,itipo,iana,imet,imod,ls, &
      ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
      diffh,diffmax,corrq,thr,perc,lobm,laree,shapefile
-    NAMELIST  /lista/cvar,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect, &
+    NAMELIST  /lista/cvar,reteref,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect, &
      distmean
     NAMELIST /listaens/lwght,nowght,nelsupens,lselect,lsprerr
     NAMELIST /odbc/database,user,password
