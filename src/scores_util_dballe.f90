@@ -393,7 +393,7 @@
     do iv=1,nv
         if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
             npo=npo+1
-            write(55,'(2(1x,f4.0))')obs(iv),pred(iv)
+            write(55,'(2(1x,f5.1))')obs(iv),pred(iv)
         endif
     enddo
 
