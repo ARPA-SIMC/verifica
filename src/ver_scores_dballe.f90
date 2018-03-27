@@ -211,7 +211,7 @@
         print*,'il numero delle ore al giorno (nore)'
         print*,'il numero di stazioni in archivio (nstaz)'
         print*,'o il numero di elementi dell''ensemble (nrm)'
-        stop
+!        stop
     endif
 
     print*,'numero di elementi dei vettori ',nv
@@ -454,7 +454,7 @@
                         do i=1,nstaz
 !                            if(icodice == anaid(i))then
                            if(icodice%lat == anaid(i)%lat .and. &
-                                icodice%lat == anaid(i)%lat)then !!!
+                                icodice%lon == anaid(i)%lon)then !!!
                               ipos=i
                            endif
                         enddo
@@ -585,7 +585,7 @@
                     ipos=0
                     do i=1,nstaz
                        if(icodice%lat == anaid(i)%lat .and. &
-                            icodice%lat == anaid(i)%lat)then !!!
+                            icodice%lon == anaid(i)%lon)then !!!
                             ipos=i
                         endif
                     enddo

@@ -280,7 +280,7 @@
            pind=205
            fctime=0
            period=scaddb(3)-scaddb(2)
-        case(4) ! analisi di precipitazione !!! era 13!!!
+        case(13) ! analisi di precipitazione !!! era 13!!!
            pind=1
            print*,'controllo - verrebbe fctime= ',scaddb(2),' period= ',scaddb(3)
            fctime=0
@@ -295,12 +295,9 @@
         CALL JELADATA6(idayv,imonthv,iyearv,ihourv,iminv,iminuti)
         
     ! INSERIMENTO DEI PARAMETRI NELL' ARCHIVIO
-        ier=idba_unsetall (handle)
-
         do ib=1,nbox
 
 ! anagrafica
-            ier=idba_setcontextana (handle)
 
             rlon=xb(ib)
             rlat=yb(ib)
@@ -310,10 +307,14 @@
             station=ib
 
             if(xgrid(pos(ib)) /= rmd)then
-
+              
+               ier=idba_unsetall (handle)
+               ier=idba_setcontextana (handle)
+            ! codice per le analisi
+               ier=idba_set (handle,"rep_memo",'analisi')
                ier=idba_set (handle,"lon",rlon)
                ier=idba_set (handle,"lat",rlat)
-               ier=idba_set (handle,"mobile",0)
+               !ier=idba_set (handle,"mobile",0)
 
                ier=idba_set (handle,"name",name)
                ier=idba_set (handle,"block",block)
@@ -325,13 +326,14 @@
                ier=idba_set (handle,"rep_memo",'analisi')
                
                ier=idba_prendilo (handle)
-               ier=idba_enq(handle,"*ana_id",id_ana)
+               !ier=idba_enq(handle,"*ana_id",id_ana)
 ! dati
 
                ier=idba_unsetall (handle)
 
-               ier=idba_set(handle,"ana_id",id_ana)
-
+               !ier=idba_set(handle,"ana_id",id_ana)
+               ier=idba_set (handle,"lon",rlon)
+               ier=idba_set (handle,"lat",rlat)
             ! codice per le analisi
                ier=idba_set (handle,"rep_memo",'analisi')
             

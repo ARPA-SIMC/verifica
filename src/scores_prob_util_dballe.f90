@@ -885,6 +885,7 @@
        WRITE(15,'(1x,a,1x,f6.3/)')'OUTRANGE FROM RANK HISTOGRAM=',outr_rh
     ENDIF
     IF(ntot == 0)RETURN
+    IF(nvalid == 0)RETURN
     IF(loutput)THEN
       DO i=0,nfc
         WRITE(16,'(1x,i3,1x,f7.5,1x,f7.5)')i,inter(i)/REAL(ntot),rankno0(i)/REAL(nvalid)

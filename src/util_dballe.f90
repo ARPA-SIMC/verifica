@@ -900,6 +900,8 @@
     endif
     nbox=ib
 
+    print*,'nbox',nbox
+    
     if(area)then
         nb=0
         do i=1,nbox

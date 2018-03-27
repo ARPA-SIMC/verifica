@@ -82,7 +82,7 @@
     data psec3/2*0./
 
 ! database
-    INTEGER :: handler,handle,handleana,handleanaw,id_ana
+    INTEGER :: handler,handlew,handleanar,handleanaw,id_ana
     integer :: debug=1
     integer :: handle_err
 
@@ -124,9 +124,9 @@
 ! apertura database in lettura
     ier=idba_preparati(idbhandle,handler,"read","read","read")
 ! apertura database in lettura anagrafica
-    ier=idba_preparati(idbhandle,handleana,"read","read","read")
+    ier=idba_preparati(idbhandle,handleanar,"read","read","read")
 ! apertura database in scrittura
-    ier=idba_preparati(idbhandle,handle,"write","write","write")
+    ier=idba_preparati(idbhandle,handlew,"write","write","write")
 ! apertura database in scrittura anagrafica
     ier=idba_preparati(idbhandle,handleanaw,"write","write","write")
 
@@ -410,7 +410,7 @@
             ENDDO
             
             ! le box sono gia' antiruotate e le stazioni le leggo dal db normali
-            CALL leggioss_db(handler,handleana,3,2, &
+            CALL leggioss_db(handler,handleanar,3,2, &
              dataval,oraval,cvar,scad, &
              rxeq,ryeq,.FALSE.,rmddb, &
              MNSTAZ,x,y,alt,nstdispo,obsst)
@@ -488,14 +488,14 @@
                print*,'scadenza non gestito'
                call exit(1)
             end select scadenzep
-            ier=idba_settimerange(handle,pind,fctime,period)
+            ier=idba_settimerange(handlew,pind,fctime,period)
 
-            ier=idba_set (handle,"year",dataval(3))
-            ier=idba_set (handle,"month",dataval(2))
-            ier=idba_set (handle,"day",dataval(1))
-            ier=idba_set (handle,"hour",oraval(1))
-            ier=idba_set (handle,"min",oraval(2))
-            ier=idba_set (handle,"sec",0)
+            ier=idba_set (handlew,"year",dataval(3))
+            ier=idba_set (handlew,"month",dataval(2))
+            ier=idba_set (handlew,"day",dataval(1))
+            ier=idba_set (handlew,"hour",oraval(1))
+            ier=idba_set (handlew,"min",oraval(2))
+            ier=idba_set (handlew,"sec",0)
             
             ! scrittura su database
             ! scrivo i previsti
@@ -520,6 +520,7 @@
                   
 ! imposto tutta l'anagrafica                  
 
+                  ier=idba_unsetall(handleanaw)
                   ier=idba_setcontextana(handleanaw)
 
                   ier=idba_set (handleanaw,"rep_memo",descr)
@@ -537,12 +538,16 @@
 
                   ier=idba_prendilo (handleanaw)
 
-                  ier=idba_enq (handleanaw,"*ana_id",id_ana)
+!                  ier=idba_enq (handleanaw,"*ana_id",id_ana)
 
 ! ora scrivo i dati previsti
 
-                  ier=idba_set (handle,"rep_memo",descr)
-                  ier=idba_set (handle,"ana_id",id_ana)
+                  ier=idba_unsetall(handlew)
+                  
+                  ier=idba_set (handlew,"lat",rlat)
+                  ier=idba_set (handlew,"lon",rlon)
+                  ier=idba_set (handlew,"rep_memo",descr)
+!                  ier=idba_set (handlew,"ana_id",id_ana)
 
                   leveltype2=dba_mvi
                   l2=dba_mvi
@@ -560,7 +565,7 @@
                      print*,'livello non gestito'
                      call exit(1)
                   end select livelli1
-                  ier=idba_setlevel(handle,leveltype1,l1,leveltype2,l2)
+                  ier=idba_setlevel(handlew,leveltype1,l1,leveltype2,l2)
                   
                   IF(imet == 0)THEN ! scalare
                     
@@ -583,8 +588,8 @@
                     
                   ENDIF
                   
-                  ier=idba_set (handle,cvar,dato)
-                  ier=idba_prendilo (handle)
+                  ier=idba_set (handlew,cvar,dato)
+                  ier=idba_prendilo (handlew)
                   
                 ENDIF      !previsti
               ENDDO         !nb
@@ -644,6 +649,7 @@
 
 ! imposto tutta l'anagrafica
                 
+                ier=idba_unsetall(handleanaw)
                 ier=idba_setcontextana (handleanaw)
 
                 ier=idba_set (handleanaw,"rep_memo",descr)
@@ -660,14 +666,17 @@
 !                endif
 
                 ier=idba_prendilo (handleanaw)
-                ier=idba_enq (handleanaw, "*ana_id", id_ana)
+!                ier=idba_enq (handleanaw, "*ana_id", id_ana)
                 
 ! ora scrivo i dati osservati
 
-                ier=idba_set (handle,"rep_memo",descr)
-                ier=idba_set (handle, "ana_id", id_ana)
+                ier=idba_unsetall(handlew)
+                ier=idba_set (handlew,"lat",rlat)
+                ier=idba_set (handlew,"lon",rlon)
+                ier=idba_set (handlew,"rep_memo",descr)
+ !               ier=idba_set (handlew, "ana_id", id_ana)
 
-                ier=idba_settimerange(handle,pind,fctime,period)
+                ier=idba_settimerange(handlew,pind,fctime,period)
                 
                 leveltype2=dba_mvi
                 l2=dba_mvi
@@ -685,7 +694,7 @@
                    print*,'livello non gestito'
                    call exit(1)
                 end select livelli2
-                ier=idba_setlevel(handle,leveltype1,l1,leveltype2,l2)
+                ier=idba_setlevel(handlew,leveltype1,l1,leveltype2,l2)
                                                 
                 IF(imet == 0)THEN ! scalare
                   
@@ -704,8 +713,8 @@
                   
                 ENDIF
                 
-                ier=idba_set (handle,cvar,dato)
-                ier=idba_prendilo (handle)
+                ier=idba_set (handlew,cvar,dato)
+                ier=idba_prendilo (handlew)
                 
               ENDIF        !osservati
             ENDDO          !nb
@@ -725,7 +734,9 @@
 ! chiusura database
 ! chiusura database
     ier=idba_fatto(handler)
-    ier=idba_fatto(handle)
+    ier=idba_fatto(handlew)
+    ier=idba_fatto(handleanar)
+    ier=idba_fatto(handleanaw)
     ier=idba_arrivederci(idbhandle)
 
     stop

@@ -264,7 +264,7 @@
           
           ier=idba_set (handle,"rep_memo",descr)
           
-          PRINT*,'prev ',descr,dataval,oraval,'iscaddb',iscaddb
+!          PRINT*,'prev ',descr,dataval,oraval,'iscaddb',iscaddb
           
           ier=idba_voglioquesto (handle,N)
 
@@ -334,7 +334,7 @@
         ! lettura osservazioni da database
         
         ier=idba_unsetall(handle)
-        
+
         IF(itipost == 0)THEN
           ier=idba_set (handle,"priomin",0)
           ier=idba_unset (handle,"priomax")
@@ -347,7 +347,8 @@
           ier=idba_set (handle,"rep_memo",descr)
         ELSEIF(itipost == 90)THEN
           ier=idba_unset (handle,"query")
-          descr="ana"
+!          descr="ana"
+          descr="analisi"
           ier=idba_set (handle,"rep_memo",descr)
         ENDIF
         
@@ -398,7 +399,7 @@
         
         ier=idba_set (handle,"var",cvar)
           
-        ! print*,'oss ',descr,dataval,oraval
+        print*,'oss ',descr,dataval,oraval
         
         ier=idba_voglioquesto (handle,N)
         IF(N == 0)THEN

@@ -458,7 +458,7 @@
               ier=idba_set (handle,"rep_memo",descr)
 
               DO ist=1,nstaz
-                IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
+                 IF(ABS(x(ist)-rmdo) > 0.1 .AND. &
                  ABS(y(ist)-rmdo) > 0.1 .AND. &
                  xstaz(ist,irm) /= rmdo)THEN
 
