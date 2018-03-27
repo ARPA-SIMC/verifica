@@ -43,6 +43,7 @@ share/obsmask.nml.template \
 share/odbc.nml.template \
 share/param.nml.template \
 share/profile_cleps \
+share/profile_clepsvis \
 share/profile_eps51 \
 share/profile_epsrm \
 share/profile_epsse \
