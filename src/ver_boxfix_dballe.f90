@@ -121,10 +121,6 @@
     ier=idba_presentati(idbhandle,database)
     PRINT*,'aperto database ',database
 
-! apertura database in lettura
-    ier=idba_preparati(idbhandle,handler,"read","read","read")
-! apertura database in lettura anagrafica
-    ier=idba_preparati(idbhandle,handleanar,"read","read","read")
 ! apertura database in scrittura
     ier=idba_preparati(idbhandle,handlew,"write","write","write")
 ! apertura database in scrittura anagrafica
@@ -409,6 +405,10 @@
               obsst(istaz)=rmddb
             ENDDO
             
+            ! apertura database in lettura
+            ier=idba_preparati(idbhandle,handler,"read","read","read")
+            ! apertura database in lettura anagrafica
+            ier=idba_preparati(idbhandle,handleanar,"read","read","read")
             ! le box sono gia' antiruotate e le stazioni le leggo dal db normali
             CALL leggioss_db(handler,handleanar,3,2, &
              dataval,oraval,cvar,scad, &
@@ -416,6 +416,8 @@
              MNSTAZ,x,y,alt,nstdispo,obsst)
             ! esce il dato su punto eventualmente ruotato nell'unita' di misura
             ! in cui e' rappresentato nel database
+            ier=idba_fatto(handler)
+            ier=idba_fatto(handleanar)
 
             ! c ATTENZIONE!!! ora la thr da usare con prob va nella stessa unita'
             ! c di misura, cioe' in quella del db, cioe' in quella specificata
@@ -537,13 +539,22 @@
 !                  endif
 
                   ier=idba_prendilo (handleanaw)
-
+                  
 !                  ier=idba_enq (handleanaw,"*ana_id",id_ana)
 
 ! ora scrivo i dati previsti
 
                   ier=idba_unsetall(handlew)
                   
+                  ier=idba_settimerange(handlew,pind,fctime,period)
+                  
+                  ier=idba_set (handlew,"year",dataval(3))
+                  ier=idba_set (handlew,"month",dataval(2))
+                  ier=idba_set (handlew,"day",dataval(1))
+                  ier=idba_set (handlew,"hour",oraval(1))
+                  ier=idba_set (handlew,"min",oraval(2))
+                  ier=idba_set (handlew,"sec",0)
+
                   ier=idba_set (handlew,"lat",rlat)
                   ier=idba_set (handlew,"lon",rlon)
                   ier=idba_set (handlew,"rep_memo",descr)
@@ -571,7 +582,7 @@
                     
                     ! attenzione!!!!!! ho bisogno che il minimo sia 0????
                     ! niente conversione!!! Viene fatta in lettura!
-                    dato=pred(ib,irm)
+                     dato=pred(ib,irm)
 ! provvisiorio per caricare le preci leggermente negative
                     if(dato <0)then
                        dato=0.
@@ -678,6 +689,13 @@
 
                 ier=idba_settimerange(handlew,pind,fctime,period)
                 
+                ier=idba_set (handlew,"year",dataval(3))
+                ier=idba_set (handlew,"month",dataval(2))
+                ier=idba_set (handlew,"day",dataval(1))
+                ier=idba_set (handlew,"hour",oraval(1))
+                ier=idba_set (handlew,"min",oraval(2))
+                ier=idba_set (handlew,"sec",0)
+
                 leveltype2=dba_mvi
                 l2=dba_mvi
                 livelli2: select case(level(1))
@@ -733,9 +751,7 @@
 
 ! chiusura database
 ! chiusura database
-    ier=idba_fatto(handler)
     ier=idba_fatto(handlew)
-    ier=idba_fatto(handleanar)
     ier=idba_fatto(handleanaw)
     ier=idba_arrivederci(idbhandle)
 

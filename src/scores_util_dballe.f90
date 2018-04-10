@@ -40,6 +40,7 @@
         if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
             npo=npo+1
             maerr=maerr+abs(pred(iv)-obs(iv))
+            print*,'maerr ',npo,pred(iv),obs(iv),maerr
         endif
     enddo
     if(npo > 0)then

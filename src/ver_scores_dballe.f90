@@ -141,6 +141,7 @@
     close(1)
 
     open(2,file='lista.nml',status='old')
+    read(2,nml=lista,err=9003)
 
     call descrittore(model,itipo,imod,ls,media,massimo,prob, &
     distr,dxb,dyb,descr)
@@ -180,7 +181,6 @@
 ! lettura punti (staz o pseudostaz) su cui fare la verifica da db
 !------------------------------------------- 
 ! leggo tutte le stazioni presenti in db
-    read(2,nml=lista,err=9003)
     PRINT*,'lselect= ',lselect
     CALL leggiana_db_scores(iana,anaid, &
      itipost,rmdo,nstaz,handle,lselect)
@@ -410,7 +410,8 @@
                     if(N == 0)then
                         print*,'pre - non ci sono dati'
                         print*,dataval,oraval
-                        goto 66
+!                        goto 66
+                        goto 99
                     else
                       PRINT*,'pre - numero di dati trovati ',N
                     endif
@@ -464,6 +465,7 @@
 
                         iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
                         prev(iv,irm)=dato
+                        print*,'prev ',iv,prev(iv,irm),icodice%lon,icodice%lat
 
                         20 continue
 
@@ -472,13 +474,17 @@
 
             ! lettura osservazioni da database
 
+99              continue
+                
                 ier=idba_unsetall(handle)
 
                 if(itipost == 0)then
                     ier=idba_set (handle,"priomin",0)
 !                    ier=idba_set (handle,"priomax",99)
                     ier=idba_set (handle,"query","best")
-                    descr="oss"
+!                    descr="oss"
+                    descr=reteref
+                    ier=idba_set (handle,"rep_memo",descr)
                 elseif(itipost == 80)then
                     ier=idba_unset (handle,"query")
                     nlm=nlenvera(model)
@@ -604,6 +610,7 @@
                     oss(iv)=dato
                     lon(iv)=rlon
                     lat(iv)=rlat
+                    print*,'oss ',iv,oss(iv),rlon,rlat
 
                     30 continue
 
