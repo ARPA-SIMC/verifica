@@ -1,14 +1,13 @@
-Summary: Pacchetto per la verifica dei prodotti di ARPA-SIM.
-Name: verifica
-Version: 4.2
-Release: 112%{dist}
-License: GPL
-Group: Applications/Meteo
-URL: https://www.arpae.it/sim
-Vendor:   Chiara Marsigli <cmarsigli@arpae.it>
-Packager: Daniele Branchini <dbranchini@arpae.it>
-Source0: %{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Summary:       Verification software for ARPAE-SIMC products
+Name:          verifica
+Version:       4.3
+Release:       1
+License:       GPL
+Group:         Applications/Meteo
+URL:           https://github.com/arpa-simc/%{name}
+Source0:       https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRequires: libtool, gfortran, libdballef4 >= 6.0
 Requires: libdballef4 >= 6.0
 
 %if 0%{?fedora} < 9
@@ -17,7 +16,7 @@ Requires: libdballef4 >= 6.0
 
 %description
 Tale pacchetto permette di effettuare una verifica oggettiva di vari
-prodotti disponibili ad ARPA-SIM: previsioni effettuate dai modelli, sia
+prodotti disponibili ad ARPAE-SIMC: previsioni effettuate dai modelli, sia
 deterministici sia sistemi di ensemble, campi analizzati dai modelli,
 campi derivati dal radar, prodotti dei modelli di qualita\'
 dell\'aria. I campi da verificare devono essere in formato GRIB. La 
@@ -29,21 +28,23 @@ verificare vengono caricati insieme ai valori contro cui effettuare la
 verifica e dal quale vengono poi estratti per calcolare una serie di
 misure di errore.
 
-
 %prep
 rm -rf %{buildroot}
-%setup -q
-%configure FC=gfortran FCFLAGS="$RPM_OPT_FLAGS -I/usr/include/ -I/usr/lib64/gfortran/modules/ -I%{_fmoddir}"
+%setup -q -n %{name}-%{version}-%{release}
+sh autogen.sh
 
 %build
+
+%configure FC=gfortran FCFLAGS="$RPM_OPT_FLAGS -I/usr/include/ -I/usr/lib64/gfortran/modules/ -I%{_fmoddir}"
+
 make
 
 %install
-rm -rf %{buildroot}
+[ "%{buildroot}" != / ] && rm -rf %{buildroot}
 %makeinstall
 
 %clean
-rm -rf %{buildroot}
+[ "%{buildroot}" != / ] && rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
@@ -59,10 +60,10 @@ rm -rf %{buildroot}
 %{_libdir}/*.la
 %{_libdir}/*.so*
 
-%doc
-
-
 %changelog
+* Tue May 15 2018 Daniele Branchini <dbranchini@arpae.it> - 4.3-1
+- migrated to github, adding travis and copr automation
+
 * Tue Mar 27 2018 Daniele Branchini <dbranchini@arpae.it> - 4.2-112%{dist}
 - aggiornamenti e correzione bug per dballe v7
 
