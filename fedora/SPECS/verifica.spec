@@ -63,6 +63,7 @@ make
 %changelog
 * Tue May 15 2018 Daniele Branchini <dbranchini@arpae.it> - 4.3-1
 - migrated to github, adding travis and copr automation
+- increased the size of MNBOX from 2500000 to 5000000
 
 * Tue Mar 27 2018 Daniele Branchini <dbranchini@arpae.it> - 4.2-112%{dist}
 - aggiornamenti e correzione bug per dballe v7
