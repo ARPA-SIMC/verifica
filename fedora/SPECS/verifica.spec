@@ -1,13 +1,15 @@
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
 Version:       4.3
-Release:       1
+Release:       2
 License:       GPL
 Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
 Source0:       https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: libtool, gfortran, libdballef4 >= 6.0
+BuildRequires: libtool
+BuildRequires: gfortran
+BuildRequires: libdballef4 >= 6.0
 Requires: libdballef4 >= 6.0
 
 %if 0%{?fedora} < 9
