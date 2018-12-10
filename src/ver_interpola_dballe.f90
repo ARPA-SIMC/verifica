@@ -40,7 +40,7 @@
 
     parameter (MIDIMG=1200000)
     parameter (MNGIO=150)
-    parameter (MNBOX=250000)
+    parameter (MNBOX=500000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:),lsm(:),oro(:)
     REAL, ALLOCATABLE :: xgridu(:),xgridv(:)
