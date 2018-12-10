@@ -7,14 +7,31 @@ Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
 Source0:       https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: libtool
-BuildRequires: gcc-gfortran
-BuildRequires: libdballef4 >= 6.0
-Requires: libdballef4 >= 6.0
 
 %if 0%{?fedora} < 9
-%define _fmoddir       %{_libdir}/gfortran/modules
+%define _fmoddir %{_libdir}/gfortran/modules
 %endif
+
+%if 0%{?fedora} <= 24
+# grib_api is used only on older fedoras
+%define grib_sw grib_api
+%else
+%define grib_sw eccodes
+BuildRequires: eccodes-simc
+%endif
+
+# expliciting eccodes for centos7
+%if 0%{?el7}
+%define grib_sw eccodes
+BuildRequires: eccodes-simc
+%endif
+
+BuildRequires: libtool
+BuildRequires: gcc-gfortran
+BuildRequires: %{grib_sw}-devel
+BuildRequires: libdballef4 >= 6.0
+Requires: libdballef4 >= 6.0
+Requires: %{grib_sw}
 
 %description
 Tale pacchetto permette di effettuare una verifica oggettiva di vari
@@ -37,7 +54,7 @@ sh autogen.sh
 
 %build
 
-%configure FC=gfortran FCFLAGS="$RPM_OPT_FLAGS -I/usr/include/ -I/usr/lib64/gfortran/modules/ -I%{_fmoddir}"
+%configure FC=gfortran FCFLAGS="$RPM_OPT_FLAGS -I/usr/include/ -I%{_fmoddir}"
 
 make
 
@@ -63,6 +80,9 @@ make
 %{_libdir}/*.so*
 
 %changelog
+* Mon Dec 10 2018 Daniele Branchini <dbranchini@arpae.it> - 4.3-2
+- added grib_api flags and dependencies
+
 * Tue May 15 2018 Daniele Branchini <dbranchini@arpae.it> - 4.3-1
 - migrated to github, adding travis and copr automation
 - increased the size of MNBOX from 2500000 to 5000000
