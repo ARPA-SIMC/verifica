@@ -34,7 +34,7 @@
 
     parameter (MIDIMG=1200000)
     parameter (MNSTAZ=55000,MNGIO=150)
-    parameter (MNBOX=450000)
+    parameter (MNBOX=750000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:),lsm(:),obm(:),oro(:)
     REAL, ALLOCATABLE :: rmgrid(:,:)

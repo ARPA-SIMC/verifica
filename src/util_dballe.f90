@@ -828,7 +828,7 @@
     integer :: nbox
     REAL :: alorot,alarot,slon1,slon2,slat1,slat2
 
-    parameter (MIDIMG=1200000)
+    parameter (MIDIMG=1600000)
     integer :: kgrib(MIDIMG)
 ! grib fields
     integer :: ksec0(2),ksec1(104),ksec2(22),ksec3(2),ksec4(42)

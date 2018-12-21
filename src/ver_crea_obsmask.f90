@@ -29,7 +29,7 @@
 
     USE util_dballe
 
-    parameter (MNBOX=250000)
+    parameter (MNBOX=900000)
     parameter (MIDIMG=1200000)
     integer :: kgrib(MIDIMG)
     REAL, ALLOCATABLE :: xgrid(:)
