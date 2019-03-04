@@ -1,7 +1,7 @@
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
-Version:       4.3
-Release:       2
+Version:       4.4
+Release:       1
 License:       GPL
 Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
@@ -80,6 +80,10 @@ make
 %{_libdir}/*.so*
 
 %changelog
+* Mon Mar 4 2019 Daniele Branchini <dbranchini@arpae.it> - 4.4-1
+- increased size of MNBOX to accomodate 5km grids
+- rebuild on dballe 8
+
 * Mon Dec 10 2018 Daniele Branchini <dbranchini@arpae.it> - 4.3-2
 - added grib_api flags and dependencies
 
