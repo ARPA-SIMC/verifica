@@ -40,7 +40,7 @@
         if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
             npo=npo+1
             maerr=maerr+abs(pred(iv)-obs(iv))
-            print*,'maerr ',npo,pred(iv),obs(iv),maerr
+!            print*,'maerr ',npo,pred(iv),obs(iv),maerr
         endif
     enddo
     if(npo > 0)then
@@ -54,32 +54,44 @@
 
 !****************************************************************
 
-    subroutine mse(MNV,obs,pred,nv,rmddb,rmd,npo,mserr,rmserr)
+    subroutine mse(MNV,obs,pred,nv,rmddb,rmd,npo,mserr,rmserr,stdv)
 
 ! c VERIFICA - scores_util.f
 ! c subroutine per il calcolo del mean square error
 
-    integer :: npo
-    real :: mserr,rmserr
-    real :: obs(MNV),pred(MNV)
-
-    mserr=0.
-    npo=0
-    do iv=1,nv
-        if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
+      integer :: npo
+      real :: mserr,rmserr,stdv
+      real :: predm
+      real :: obs(MNV),pred(MNV)
+      
+      mserr=0.
+      stdv=0.
+      npo=0
+      predm=0.
+      do iv=1,nv
+         if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
             npo=npo+1
+            predm=predm+pred(iv)
+         endif
+      enddo
+      if(npo > 0)predm=predm/npo
+      do iv=1,nv
+         if(pred(iv) /= rmddb .AND. obs(iv) /= rmddb)then
             mserr=mserr+(pred(iv)-obs(iv))**2
-        endif
-    enddo
-    if(npo > 0)then
-        mserr=mserr/real(npo)
-        rmserr=sqrt(mserr)
-    else
-        mserr=rmd
-        rmserr=rmd
-    endif
-
-    return
+            stdv=stdv+(pred(iv)-predm)**2
+         endif
+      enddo
+      if(npo > 0)then
+         mserr=mserr/real(npo)
+         rmserr=sqrt(mserr)
+         stdv=sqrt(stdv/real(npo))
+      else
+         mserr=rmd
+         rmserr=rmd
+         stdv=rmd
+      endif
+      
+      return
     end subroutine mse
 
 !******************************************************************
@@ -308,26 +320,28 @@
         ENDIF
       ENDIF
       
+    ! stampa della tabella di contingenza
+      
+      WRITE(10,'(a,f6.1/)')'cont. table ',soglie(ith)
+      ia=nc
+      ib=nf-ia
+      ic=no-ia
+      id=npo-ia-ib-ic
+      WRITE(10,'(11x,a)')'obs'
+      WRITE(10,'(9x,a,6x,a/)')'y','n'
+      WRITE(10,'(4x,a,1x,i6,2x,i6)')'y',ia,ib
+      WRITE(10,'(1x,a)')'fc'
+      WRITE(10,'(4x,a,1x,i6,2x,i6/)')'n',ic,id
+          
     ! calcolo degli scores statistici
       
-      IF(no > 0)THEN
-        
+      IF(no > 0)THEN 
+         
         mserr=mserr/REAL(no)
         rmserr=SQRT(mserr)
         b=b/REAL(no)
         
         IF(nf > 0 .AND. npo /= 0) THEN
-          
-          WRITE(10,'(a,f6.1/)')'cont. table ',soglie(ith)
-          ia=nc
-          ib=nf-ia
-          ic=no-ia
-          id=npo-ia-ib-ic
-          WRITE(10,'(11x,a)')'obs'
-          WRITE(10,'(9x,a,6x,a/)')'y','n'
-          WRITE(10,'(4x,a,1x,i6,2x,i6)')'y',ia,ib
-          WRITE(10,'(1x,a)')'fc'
-          WRITE(10,'(4x,a,1x,i6,2x,i6/)')'n',ic,id
           
           ! li trasformo in reali prima di fare i conti perche' ottengo numeri
           ! troppo grandi per essere contenuti in un intero

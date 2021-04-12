@@ -77,11 +77,11 @@
   bs=0.
   bscli=0.
   DO ig=1,ngio
-!!!     print*,'igio',ig
+!     print*,'igio',ig
     DO is=1,nstaz
-       if(ig == 1)then
+!!!       if(ig == 1)then
 !!!          print*,is,obs(is,ig)
-       endif
+!!!       endif
       ! check on missing data
       nmd=0
       ifc=1
@@ -98,6 +98,7 @@
       IF(nmd == 0)THEN
         kobs=0
         IF(obs(is,ig) > thr)kobs=1
+        IF(obs(is,ig) > thr)print*,is,obs(is,ig)
         kpred=0
         DO ifc=1,nfc
           IF(pred(is,ig,ifc) > thr)kpred=kpred+wght(ig,ifc)

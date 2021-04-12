@@ -14,6 +14,7 @@ missing
 libtool
 Makefile.in
 Makefile
+verifica.sh
 .deps
 .libs
 *.o

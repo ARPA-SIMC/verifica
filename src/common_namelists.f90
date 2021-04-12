@@ -13,13 +13,13 @@ MODULE common_namelists
     integer :: kvar(3,2)=-1
 ! stat.nml
     character(len=10) :: model=''
-    integer :: itipo=1,iana=0,imet=0,imod=0,ls=-1,nminobs=1
-    LOGICAL :: ruota=.FALSE.,diffh=.FALSE.,corrq=.FALSE.
-    logical :: media=.false.,massimo=.false.,prob=.false.,distr=.false.
-    real :: dxb=1.0,dyb=1.0,diffmax=100.,thr=1.,perc=50.
+    integer :: itipo=1,iana=0
+    LOGICAL :: diffh=.FALSE.,corrq=.FALSE.
+    real :: diffmax=100.
     integer :: lobm=0 ! uso della observational mask
     LOGICAL :: laree=.false.
     CHARACTER(len=512) :: shapefile=''
+    CHARACTER(len=20) :: reportobs='',reportpre=''
 ! lista.nml
     CHARACTER(len=6) :: cvar=''
     CHARACTER(len=20) :: reteref=''
@@ -40,9 +40,9 @@ MODULE common_namelists
     NAMELIST /date/DATA
     NAMELIST /scadenza/scadenze
     NAMELIST /parametro/kvar
-    NAMELIST /stat/model,itipo,iana,imet,imod,ls, &
-     ruota,nminobs,media,massimo,prob,distr,dxb,dyb, &
-     diffh,diffmax,corrq,thr,perc,lobm,laree,shapefile
+    NAMELIST /stat/model,itipo,iana, &
+     reportobs,reportpre, &
+     diffh,diffmax,corrq,lobm,laree,shapefile
     NAMELIST  /lista/cvar,reteref,iquota,hlimite,lthr,nsoglie,soglie,daily,ldir,lselect, &
      distmean
     NAMELIST /listaens/lwght,nowght,nelsupens,lselect,lsprerr

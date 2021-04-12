@@ -4,7 +4,7 @@
 ### script per l'esecuzione del calcolo degli scores deterministici
 ### usa solo osservati e previsti che si trovano sul database DbAlle
 ### autore: Chiara Marsigli
-# ----------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 if [ "$1" = -h ] ; then
   echo "uso: $0 [-b]"
@@ -25,18 +25,18 @@ if [ $BATCH -eq 0 ] ; then
   fi
 fi
 
-if [ ! -f ./profilestra ] ; then
-  echo "file profilestra mancante, lanciare ver_prepara_naml.sh" 1>&2
+if [ ! -f ./profile_verifica ] ; then
+  echo "file profile_verifica mancante, lanciare ver_prepara_nml.sh" 1>&2
   exit 1
 fi
 
-if [ ! -f ./profilever ] ; then
-  cp $VERSHARE/profilever.template ./profilever
+if [ ! -f ./profile_scores ] ; then
+  cp $VERSHARE/profile_scores.template ./profile_scores
 fi
-[ $BATCH -eq 0 ] && $EDITOR profilever
+[ $BATCH -eq 0 ] && $EDITOR profile_scores
 
-. profilestra
-. profilever
+. profile_verifica
+. profile_scores
 
 if [ ! -f ./odbc.nml ] ; then
   cp $VERSHARE/odbc.nml.template ./odbc.nml
@@ -63,24 +63,13 @@ elif [ $boxfix = 'T' ] ; then
 fi
 
 echo ' $stat' > stat.nml
-echo '   model="'$mod'",' >> stat.nml
+echo '   model="'$model'",' >> stat.nml
 echo '   itipo='$itipo',' >> stat.nml
 echo '   iana='$iana',' >> stat.nml
-echo '   imet='$imet',' >> stat.nml
-echo '   imod='$imod',' >> stat.nml
-echo '   ls='$ls',' >> stat.nml
-echo '   ruota='$ruota',' >> stat.nml
-echo '   nminobs='$nminobs',' >> stat.nml
-echo '   media='$media',' >> stat.nml
-echo '   massimo='$massimo',' >> stat.nml
-echo '   prob='$prob',' >> stat.nml
-echo '   distr='$distr',' >> stat.nml
-echo '   dxb='$dxb',' >> stat.nml
-echo '   dyb='$dyb',' >> stat.nml
+echo '   reportobs='$reportobs',' >> stat.nml
+echo '   reportpre='$reportpre',' >> stat.nml
 echo '   diffh='$diffh',' >> stat.nml
 echo '   diffmax='$diffmax',' >> stat.nml
-echo '   thr='$thr',' >> stat.nml
-echo '   perc='$perc',' >> stat.nml
 echo ' $end' >> stat.nml
 
 if [ $deterministico = 'T' ] ; then

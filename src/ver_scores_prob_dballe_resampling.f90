@@ -1,9 +1,10 @@
-    PROGRAM scores_prob_dballe
+    PROGRAM ver_scores_prob_dballe_resampling
 
-! c VERIFICA - scores_prob_dballe.f
+! c VERIFICA - ver_scores_prob_dballe_resampling.f90
 ! c programma per il calcolo degli scores probabilistici
+! c e degli intervalli di confidenza
 ! c autore: Chiara Marsigli
-! c ultima modifica: 7 febbraio 2006 - passaggio a DbAlle
+! c ultima modifica: 29 gennaio 2021 - update verifica
 
 ! Copyright (C) 2004
 
@@ -29,6 +30,7 @@
     USE util_dballe
     USE scores_prob_util_dballe
     USE common_namelists
+    USE datetime_class
 
     parameter (MNSTAZ=5000,MNGIO=190,MNORE=1)
     parameter (MNV=MNSTAZ*MNGIO*MNORE)
@@ -47,6 +49,8 @@
     integer :: pesi(MNRM)
     LOGICAL :: loutput
 
+    logical :: prob=.FALSE. ! temporaneamente disattivato
+    
     logical :: lhyptest=.TRUE.
     character(len=20) :: descr2,descrfisso2='clepsmed05'
     integer :: icic,ncic=100,irand
@@ -62,6 +66,10 @@
     integer :: debug=1
 
     integer :: ier
+
+    TYPE(datetime) :: dt1
+    TYPE(timedelta) :: td1
+    INTEGER :: iyear,imonth,iday,ihour,imin
 
     DATA rmdo/-999.9/,imd/32767/,rmddb/-999.9/,rmds/-9.999/
     DATA loutput/.TRUE./
@@ -113,10 +121,7 @@
         call exit (1)
     endif
 
-    call descrittore(model,itipo,imod,ls,media,massimo,prob, &
-    distr,dxb,dyb,descr)
-    print*,'descrittore ',descr
-    descrfisso=descr
+    descrfisso=reportpre
     if(itipo == 1)then
         itipost=0
         if(iana == 1)itipost=90
@@ -193,9 +198,17 @@
         
         READ(1,nml=date,err=9004)
         ! trovo data e ora di validita'
-        CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2),iminuti)
-        iminuti=iminuti+iscaddb*60
-        CALL JELADATA6(iday,imonth,iyear,ihour,imin,iminuti)
+        
+!        CALL JELADATA5(DATA(1),DATA(2),DATA(3),ora(1),ora(2),iminuti)
+!        iminuti=iminuti+iscaddb*60
+!        CALL JELADATA6(iday,imonth,iyear,ihour,imin,iminuti)
+
+        dt1=datetime_new(year=data(3), month=data(2), day=data(1), hour=ora(1), minute=ora(2))
+!        dt1=datetime_new(simpledate=DATA(3)//DATA(2)//DATA(1)//ora(1)//ora(2))
+        td1=timedelta_new(minute=60*iscaddb)
+        dt1=dt1+td1
+        call getval(dt1, year=iyear, month=imonth, day=iday, hour=ihour, minute=imin)
+
         dataval(1)=iday
         dataval(2)=imonth
         dataval(3)=iyear
@@ -666,4 +679,4 @@
     STOP
 9006 PRINT*,'errore nella lettura della namelist lista'
     STOP
-  END PROGRAM scores_prob_dballe
+  END PROGRAM ver_scores_prob_dballe_resampling

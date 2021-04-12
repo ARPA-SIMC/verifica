@@ -20,11 +20,6 @@ AC_LANG_PUSH(Fortran)
 
 LIBDBALLEF_DEFS
 
-AC_CHECK_LIB([mega], [jeladata5], , AC_MSG_ERROR([mega library not found]), )
-AC_CHECK_LIB([hibu], [ngetpoint], , AC_MSG_ERROR([hibu library not found]), )
-AC_CHECK_LIB([emos], [gribex], , AC_MSG_ERROR([emos library not found]), )
-AC_CHECK_LIB([grib_util], [findgrib], , AC_MSG_ERROR([gributil library not found]), )
-
 grib_api_flavor=
 AC_CHECK_LIB(
 	     [eccodes_f90],

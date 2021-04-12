@@ -1,9 +1,9 @@
-    program scores_dballe
+    program ver_scores_dballe
 
 ! mstart
-! dx VERIFICA - scores_dballe.f - programma per il calcolo degli score deterministici
+! dx VERIFICA - ver_scores_dballe.f90 - programma per il calcolo degli score deterministici
 ! autore: Chiara Marsigli
-! ultima modifica: 22 Settembre 2005 (passaggio a dballe)
+! ultima modifica: 29 gennaio 2021 - update verifica
 
 ! ATTENZIONE!!! ora le soglie vanno nell'unita' di misura prevista dalla
 ! Blocale, per omogeneita' tra le variabili!!! E per ora lascio cosi'
@@ -30,9 +30,6 @@
 ! namelist stat:
 ! itipo  int numero identificativo del tipo di verifica (1 su punti, 2 su box)
 ! iana   int 0 se verifico contro osservati, 1 se contro un'analisi
-! imod   int identificativo del tipo di interpolazione (se itipo=1) (vedi ngetpoint)
-! ls     int uso della maschera mare terra (se itipo=1) (vedi ngetpoint)
-! ruota  log T se si verifica un modello ruotato, F altrimenti (non usato)
 ! media  log T se si verificano le medie
 ! massimo log T se si verificano i massimi
 ! prob   log T se si verificano le probabilita'
@@ -95,7 +92,8 @@
 
     USE util_dballe
     USE common_namelists
-
+    USE datetime_class
+    
     PARAMETER (MNSTAZ=5000,MNGIO=366,MNORE=1)
     PARAMETER (MNV=MNSTAZ*MNGIO*MNORE)
 ! attenzione!!! Non sono usate, servono solo per dare
@@ -109,7 +107,7 @@
     integer :: pind,fctime,period
     CHARACTER :: descr*20,descrfisso*20,cel*3
     INTEGER :: npo
-    REAL :: maerr,mserr,rmserr,bi
+    REAL :: maerr,mserr,rmserr,stdv,bi
     REAL :: cog
 
     REAL, ALLOCATABLE :: oss(:),prev(:,:),lon(:),lat(:)
@@ -122,6 +120,10 @@
 
     integer :: ier
 
+    TYPE(datetime) :: dt1
+    TYPE(timedelta) :: td1
+    INTEGER :: iyear,imonth,iday,ihour,imin
+    
     DATA      rmdo/-999.9/,imd/32767/,rmddb/-999.9/
     
     print*,'program scores'
@@ -143,9 +145,7 @@
     open(2,file='lista.nml',status='old')
     read(2,nml=lista,err=9003)
 
-    call descrittore(model,itipo,imod,ls,media,massimo,prob, &
-    distr,dxb,dyb,descr)
-    descrfisso=descr
+    descrfisso=reportpre
     print*,'descrittore ',descrfisso
     if(itipo == 1)then
         itipost=0
@@ -290,14 +290,14 @@
 
         iscaddb=scad1+inc*(iscad-1)
         write(11,'(a,i3)')' scadenza= ',iscaddb
-        write(11,'(4x,a3,8x,a5,8x,a5,7x,a6,9x,a4)') &
-        'npo','maerr','mserr','rmserr','bias'
+        write(11,'(4x,a3,8x,a5,8x,a5,7x,a6,9x,a4,9x,a4)') &
+        'npo','maerr','mserr','rmserr','bias','stdv'
         write(13,'(a,i3)')' scadenza= ',iscaddb
         write(15,'(a,i3)')' scadenza= ',iscaddb
         WRITE(15,'(4x,a3,6x,a3,6x,a8)')'npo','cog','distmean'
         write(66,'(a,i3)')' scadenza= ',iscaddb
-        write(66,'(3(1x,a3),2(8x,a5),7x,a6,9x,a4)') &
-        'gio','ora','npo','maerr','mserr','rmserr','bias'
+        write(66,'(3(1x,a3),2(8x,a5),7x,a6,9x,a4,9x,a4)') &
+        'gio','ora','npo','maerr','mserr','rmserr','bias','stdv'
         print*,'scadenza ',iscaddb
 
         open(1,file='date.nml',status='old')
@@ -308,11 +308,18 @@
             ora(2)=mod(nora,100)
 
         ! trovo data e ora di validita' della previsione
-            call JELADATA5(data(1),data(2),data(3), &
-            ora(1),ora(2),iminuti)
-            iminuti=iminuti+iscaddb*60
-            call JELADATA6(iday,imonth,iyear, &
-            ihour,imin,iminuti)
+!            call JELADATA5(data(1),data(2),data(3), &
+!            ora(1),ora(2),iminuti)
+!            iminuti=iminuti+iscaddb*60
+!            call JELADATA6(iday,imonth,iyear, &
+!            ihour,imin,iminuti)
+
+            dt1=datetime_new(year=data(3), month=data(2), day=data(1), hour=ora(1), minute=ora(2))
+!            dt1=datetime_new(simpledate=data(3)//data(2)//data(1)//ora(1)//ora(2))
+            td1=timedelta_new(minute=60*iscaddb)
+            dt1=dt1+td1
+            call getval(dt1, year=iyear, month=imonth, day=iday, hour=ihour, minute=imin)
+            
             dataval(1)=iday
             dataval(2)=imonth
             dataval(3)=iyear
@@ -372,6 +379,10 @@
                    pind=205
                    fctime=scaddb(3)
                    period=scaddb(3)-scaddb(2)
+                case(3) ! media
+                   pind=0
+                   fctime=scaddb(2)
+                   period=scaddb(3)
                 case(13) ! analisi di precipitazione
                    pind=1
                    print*,'controllo - verrebbe fctime= ',scaddb(2), &
@@ -465,7 +476,7 @@
 
                         iv=ipos+nstaz*(igio-1)+nstaz*ngio*(iore-1)
                         prev(iv,irm)=dato
-                        print*,'prev ',iv,prev(iv,irm),icodice%lon,icodice%lat
+!                        print*,'prev ',iv,prev(iv,irm),icodice%lon,icodice%lat
 
                         20 continue
 
@@ -528,6 +539,10 @@
                    pind=205
                    fctime=0
                    period=scaddb(3)-scaddb(2)
+                case(3) ! media
+                   pind=0
+                   fctime=scaddb(2)
+                   period=scaddb(3)
                 case(13) ! analisi di precipitazione
                    pind=1
                    print*,'controllo - verrebbe fctime= ', &
@@ -594,7 +609,7 @@
                             icodice%lon == anaid(i)%lon)then !!!
                             ipos=i
                         endif
-                    enddo
+                     enddo
                     IF(ipos == 0)goto30
 
                     ier=idba_enq (handleana,"lon",rlon)
@@ -610,7 +625,7 @@
                     oss(iv)=dato
                     lon(iv)=rlon
                     lat(iv)=rlat
-                    print*,'oss ',iv,oss(iv),rlon,rlat
+!                    print*,'oss ',iv,oss(iv),rlon,rlat
 
                     30 continue
 
@@ -628,7 +643,7 @@
                           CALL mae(nstaz,oss(1+lag),previ,nstaz, &
                            rmddb,rmdo,npo,maerr)
                           CALL mse(nstaz,oss(1+lag),previ,nstaz, &
-                           rmddb,rmdo,npo,mserr,rmserr)
+                           rmddb,rmdo,npo,mserr,rmserr,stdv)
                           CALL bias(nstaz,oss(1+lag),previ,nstaz, &
                            rmddb,rmdo,npo,bi)
                         ELSE
@@ -639,8 +654,8 @@
                           CALL bias_dd(nstaz,oss(1+lag),previ,nstaz, &
                            rmddb,rmdo,npo,bi)
                         ENDIF
-                        WRITE(66,'(1x,i3,1x,i2,1x,i6,4(1x,f12.3))') &
-                        igio,iore,npo,maerr,mserr,rmserr,bi
+                        WRITE(66,'(1x,i3,1x,i2,1x,i6,5(1x,f12.3))') &
+                        igio,iore,npo,maerr,mserr,rmserr,bi,stdv
                         write(20,'(a8,i3)')' giorno= ',igio
                         if(lthr /= 0)then
                             call score_con_table(nstaz, &
@@ -674,7 +689,7 @@
         ! attenzione!!! Passo nv e non MNV perche' sono allocabili!
             IF(.NOT.ldir)THEN
               CALL mae(nv,oss,previ,nv,rmddb,rmdo,npo,maerr)
-              CALL mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
+              CALL mse(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr,stdv)
               CALL cgravity(nv,oss,previ,lon,lat,nv,rmddb,rmdo,npo,distmean,cog)
               CALL bias(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
              ELSE
@@ -682,8 +697,8 @@
               CALL mse_dd(nv,oss,previ,nv,rmddb,rmdo,npo,mserr,rmserr)
               CALL bias_dd(nv,oss,previ,nv,rmddb,rmdo,npo,bi)
             ENDIF
-            write(11,'(1x,i6,4(1x,f12.3))') &
-            npo,maerr,mserr,rmserr,bi
+            write(11,'(1x,i6,5(1x,f12.3))') &
+            npo,maerr,mserr,rmserr,bi,stdv
             WRITE(15,'(1x,i6,2(1x,f10.3))')npo,cog,distmean
             write(20,'(a11,i3)')' scadenza= ',iscaddb
             if(lthr /= 0)then
@@ -719,4 +734,4 @@
     stop
     9004 print*,'errore nella lettura della namelist date'
     stop
-    end program
+  end program ver_scores_dballe

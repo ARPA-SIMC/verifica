@@ -1,11 +1,10 @@
 #!/bin/bash
 
 ### VERIFICA - ver_prepara_nml.sh
-### script per la scrittura del profile della variabile usato da 
-### ver_estrai_calcola.sh e per la scrittura delle namelist 
-### per i programmi di verifica
+### script per la scrittura del profile della variabile e
+### per la scrittura delle namelist per i programmi di verifica
 ### autore: Chiara Marsigli
-# ----------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 if [ "$1" = -h ] ; then
   echo "uso: $0 [-b]"
@@ -26,23 +25,24 @@ if [ $BATCH -eq 0 ] ; then
   fi
 fi
 
-if [ ! -f ./profilestra ] ; then
-  cp $VERSHARE/profilestra.template ./profilestra
+export VERSHARE=$PWD
+
+if [ ! -f ./profile_verifica ] ; then
+  cp $VERSHARE/profile_verifica.template ./profile_verifica
 fi
-[ $BATCH -eq 0 ] && $EDITOR profilestra
+[ $BATCH -eq 0 ] && $EDITOR profile_verifica
 
-. profilestra
+. profile_verifica
 
-if [ $a2$m2$g2 -lt $a1$m1$g1 ] ; then
+if [ $enddate -lt $startdate ] ; then
   echo "ERRORE! Data finale minore data iniziale!" 1>&2
   exit
 fi
 
-cp $VERSHARE/profile_* .
-cp $VERSHARE/getgribdat_ver .
+###cp $VERSHARE/profile_* .
 
 # lancio il profile relativo al modello scelto (deve esistere in $VERSHARE)
-. profile_"$mod"
+. profile_"$model"
 
 ### preparo le namelist per i programmi successivi
 [ -f parameters.nml ] && rm -f parameters.nml
@@ -53,10 +53,10 @@ cp $VERSHARE/getgribdat_ver .
 
 echo ' $parameters' >> parameters.nml
 
-echo '   nora='$ora >> parameters.nml
+echo '   nora='$hourrun >> parameters.nml
 
-igiorno=$a1$m1$g1
-giornostop=`date --date ""$a2$m2$g2" 1 day" '+%Y%m%d'`
+igiorno=$startdate
+giornostop=`date --date ""$enddate" 1 day" '+%Y%m%d'`
 ngio=0
 while [ $igiorno -ne $giornostop ] ; do
   ngio=` expr $ngio + 1 `
@@ -83,30 +83,20 @@ echo '   scad1='$scad1 >> parameters.nml
 echo '   scad2='$scad2 >> parameters.nml
 echo '   inc='$inc >> parameters.nml
 
-totparam="$param"' '"$dpar"
-echo $totparam
-nvar=0
-for par in $totparam ; do
-  if [ $nvar -eq 0 ] ; then
-    kvar=$ce' '$ct' '`eval echo '$'iv$par`
-    nvar=` expr $nvar + 1 `
-  elif [ $nvar -gt 0 ] ; then
-    kvar=$kvar,$ce' '$ct' '`eval echo '$'iv$par`
-    nvar=` expr $nvar + 1 `
-  fi
-  rm -f profile_"$par"
-  echo ' par='$par >> profile_"$par"
-  echo ' livello='$lev >> profile_"$par"
-  echo ' scadenze="'$scadenze'"' >> profile_"$par"
-done
+kvar=$ce' '$ct' '`eval echo '$'iv$param`
+nvar=1
+rm -f profile_"$param"
+echo ' par='$param >> profile_"$param"
+echo ' livello='$lev >> profile_"$param"
+echo ' scadenze="'$scadenze'"' >> profile_"$param"
 
 echo '   nvar='$nvar >> parameters.nml
 
-echo '   nrm='$mem >> parameters.nml
+echo '   nrm='$ensmem >> parameters.nml
 
 if [ $analisi -eq 0 ] ; then
   nore=1
-  st_ora=$ora
+  st_ora=$hourrun
 elif [ $analisi -eq 1 ] ; then
   nore=0
   for iora in $ore ; do
