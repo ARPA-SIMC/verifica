@@ -1,6 +1,6 @@
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
-Version:       4.4
+Version:       5.0
 Release:       1
 License:       GPL
 Group:         Applications/Meteo
@@ -8,30 +8,13 @@ URL:           https://github.com/arpa-simc/%{name}
 Source0:       https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 
-%if 0%{?fedora} < 9
-%define _fmoddir %{_libdir}/gfortran/modules
-%endif
-
-%if 0%{?fedora} <= 24
-# grib_api is used only on older fedoras
-%define grib_sw grib_api
-%else
-%define grib_sw eccodes
-BuildRequires: eccodes-simc
-%endif
-
-# expliciting eccodes for centos7
-%if 0%{?el7}
-%define grib_sw eccodes
-BuildRequires: eccodes-simc
-%endif
-
 BuildRequires: libtool
 BuildRequires: gcc-gfortran
-BuildRequires: %{grib_sw}-devel
+BuildRequires: eccodes-devel
+BuildRequires: eccodes-simc
 BuildRequires: libdballef4 >= 6.0
 Requires: libdballef4 >= 6.0
-Requires: %{grib_sw}
+Requires: eccodes
 
 %description
 Tale pacchetto permette di effettuare una verifica oggettiva di vari
@@ -80,6 +63,9 @@ make
 %{_libdir}/*.so*
 
 %changelog
+* Mon Apr 26 2021 Daniele Branchini <dbranchini@arpae.it> - 5.0-1
+- massive refactory for switching from gribex/libsmr to eccodes/libsim
+
 * Mon Mar 4 2019 Daniele Branchini <dbranchini@arpae.it> - 4.4-1
 - increased size of MNBOX to accomodate 5km grids
 - rebuild on dballe 8
