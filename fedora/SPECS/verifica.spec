@@ -5,7 +5,7 @@ Release:       1
 License:       GPL
 Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
-Source0:       https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
+Source:        https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: libtool
