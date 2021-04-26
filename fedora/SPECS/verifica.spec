@@ -14,6 +14,7 @@ BuildRequires: eccodes-devel
 BuildRequires: eccodes-simc
 BuildRequires: libdballe-devel
 BuildRequires: libdballef-devel
+BuildRequires: libsim-devel
 Requires: libdballef4
 Requires: eccodes
 
