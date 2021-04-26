@@ -12,8 +12,9 @@ BuildRequires: libtool
 BuildRequires: gcc-gfortran
 BuildRequires: eccodes-devel
 BuildRequires: eccodes-simc
-BuildRequires: libdballef4 >= 6.0
-Requires: libdballef4 >= 6.0
+BuildRequires: libdballe-devel
+BuildRequires: libdballef-devel
+Requires: libdballef4
 Requires: eccodes
 
 %description
