@@ -39,9 +39,9 @@ sh autogen.sh
 
 %build
 
-%configure FC=gfortran FCFLAGS="$RPM_OPT_FLAGS -I/usr/include/ -I%{_fmoddir}"
+%configure FCFLAGS="%{optflags} -I/usr/include/ -I%{_fmoddir}"
 
-make
+%make_build
 
 %install
 [ "%{buildroot}" != / ] && rm -rf %{buildroot}
