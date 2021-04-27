@@ -18,17 +18,10 @@ verifica.sh: Makefile verifica.sh.in
 
 
 
-dist_pkgdata_DATA = share/anag.nml.template \
-share/analisi.nml.template \
-share/areabox.nml.template \
+dist_pkgdata_DATA = share/analisi.nml.template \
 share/areaoss.nml.template \
-share/boe.nml.template \
-share/caldescr.template \
 share/corrispondenze_parametri.txt \
-share/cumula.nml.template \
 share/expansion_ver.template \
-share/euro.nml.template \
-share/ffdd_nml.template \
 share/getgribdat_ver \
 share/griBlocale.txt \
 share/lista_ens.nml.template \
@@ -39,7 +32,6 @@ share/lsm_lmdet.grib \
 share/orog_lmdet.grib \
 share/lsm_lmsmr2031.grib \
 share/orog_lmsmr2031.grib \
-share/obsmask.nml.template \
 share/odbc.nml.template \
 share/param.nml.template \
 share/profile_cleps \
@@ -65,10 +57,6 @@ share/profilever.template \
 share/profile_wamad002 \
 share/profile_wamad003 \
 share/profile_wammed \
-share/region.nml.template \
-share/ricopia_ged.template \
 share/spiega_GRIBARCH.txt \
 share/spiegapar.txt \
-share/tpsott_ged.template \
-share/umrel_ged.template \
 share/verana.nml.template
