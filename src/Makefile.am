@@ -14,9 +14,18 @@ ver_scores_prob_dballe_LDADD = libverifica.la
 ver_scores_prob_dballe_resampling_SOURCES = ver_scores_prob_dballe_resampling.f90
 ver_scores_prob_dballe_resampling_LDADD = libverifica.la
 
+ver_leggidati_ana.$(OBJEXT): util_dballe.$(OBJEXT)
+ver_lettura.$(OBJEXT): util_dballe.$(OBJEXT)
+ver_scores_dballe.$(OBJEXT): util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
+ver_scores_prob_dballe.$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
+ver_scores_prob_dballe_resampling..$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
+
 dist_bin_SCRIPTS = ver_prepara_nml.sh \
  ver_scores_prob.sh \
  ver_scores.sh \
  ver_scrivi_ana.sh
 
 nodist_include_HEADERS = scores_prob_util_dballe.mod util_dballe.mod common_namelists.mod
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) *.mod
