@@ -323,48 +323,6 @@
 
 !**************************************************************************
 
-    subroutine variabile(n3,var,cvar,a,b,lgrib)
-
-! c VERIFICA - util_dballe.f90
-! c specifica le caratteristiche che ha nel database la variabile in questione:
-! c valore in Blocale e rappresentazione
-! c autore: Chiara Marsigli
-
-    character(len=6) :: cvar
-    integer :: var(n3)
-    real :: a,b
-    logical :: lgrib
-
-    character :: cvarl*6,mnem*10
-
-    open(1,file='griBlocale.txt',status='old')
-
-    if(lgrib)then
-        do while(.true.)
-            read(1,*,end=222)iv1,iv2,iv3,cvar,a,b
-            if(var(1) == iv1 .AND. var(2) == iv2 .AND. var(3) == iv3) &
-            goto111
-        enddo
-    else
-        do while(.true.)
-            read(1,*,end=222)iv1,iv2,iv3,cvarl,a,b,mnem
-            if(cvarl == cvar) &
-            goto111
-        enddo
-    endif
-
-    222 print*,'variabile non presente in griBlocale.txt',var,cvarl
-    call exit (2)
-
-
-    111 print*,'trovata! Blocale= ',cvar,a,b
-    close(1)
-
-    return
-    end subroutine variabile
-
-!******************************************************************************
-
     INTEGER FUNCTION nlenvera(stringa)
 
 ! mstart

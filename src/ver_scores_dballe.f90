@@ -30,16 +30,9 @@
 ! namelist stat:
 ! itipo  int numero identificativo del tipo di verifica (1 su punti, 2 su box)
 ! iana   int 0 se verifico contro osservati, 1 se contro un'analisi
-! media  log T se si verificano le medie
-! massimo log T se si verificano i massimi
-! prob   log T se si verificano le probabilita'
-! distr  log T se si verificano le distribuzioni
-! dxb    rea dimensione x della box su cui si verifica (se tipo=2)
-! dyb    rea dimensione y della box su cui si verifica (se tipo=2)
 ! diffh  log T se si considera la differenza di altezza tra punto oss e prev
 ! usato solo da interpola_dballe.f
 ! diffmax rea se diffh=T, max differenza di altezza consentita
-! thr    rea  soglia di probabilita' considerata (se prob=T)
 ! namelist lista:
 ! iquota int per verificare solo punti sopra o sotto ad una certa quota
 ! -1 se le voglio tutte
@@ -149,8 +142,8 @@
     print*,'descrittore ',descrfisso
     if(itipo == 1)then
         itipost=0
-        if(iana == 1)itipost=90
-    elseif(itipo == 2)then
+        if(iana == 1)itipost=90 ! verifica contro analisi
+    elseif(itipo == 2)then ! verifica su box
         itipost=80
     endif
 
@@ -351,6 +344,8 @@
             ! conversione delle scadenze in secondi (e correzione scadenze sbagliate)
                 call converti_scadenze(4,scad,scaddb)
 
+                print*,'scad scaddb',scad,scaddb
+                
 ! questa gestione delle scadenze è fatta rispetto al vettore scad scritto come
 ! lo è per i grib in formato GRIB1. Passando a GRIB2 scad sarà posta identica
 ! come sono scritte le scadenze in dballe 
@@ -377,7 +372,11 @@
                    period=0
                 case(2) ! prodotto valido in un periodo
                    pind=205
-                   fctime=scaddb(3)
+                   if(analisi == 0)then ! verifica forecast
+                      fctime=scaddb(3)
+                   elseif(analisi == 1)then ! verifica analisi
+                      fctime=0
+                   endif
                    period=scaddb(3)-scaddb(2)
                 case(3) ! media
                    pind=0

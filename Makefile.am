@@ -18,12 +18,10 @@ verifica.sh: Makefile verifica.sh.in
 
 
 
-dist_pkgdata_DATA = share/analisi.nml.template \
-share/areaoss.nml.template \
+dist_pkgdata_DATA = share/areaoss.nml.template \
 share/corrispondenze_parametri.txt \
 share/expansion_ver.template \
 share/getgribdat_ver \
-share/griBlocale.txt \
 share/lista_ens.nml.template \
 share/lista.nml.template \
 share/lsm_cleps.grib \

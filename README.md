@@ -74,22 +74,6 @@ vedere `aggiungimodello`).
  che si useranno. Tale file va copiato nella propria directory di lavoro.
  Se mancano i tipi report voluti si possono aggiungere a questa.
 
-  * Caricamento di analisi in formato GRIB
-     * E' possibile caricare campi analizzati in formato GRIB, scritti
-       in coordinate ruotate e non.
-   ATTENZIONE!!!
-   E' prima necessario fare nella directory di lavoro un link al file
-   contenente tali dati:
-   `ln -s nome_file analisi.grib`
-   ed anche un link al file di orografia appropriato (sulla stessa griglia!):
-   `ln -s nome_file_orografia (p.e. $VERSHARE/orog_lmsmr2031.grib)
-   orografia.grib`
-   Poi si puo' lanciare la script:
-     * `ver_scrivi_ana.sh`
-   per avere caricati su database [34]DbAlle i campi analizzati contenuti nel
-   file, localizzati sui punti griglia e con quota pari a quella specificata
-   del grib di orografia dato.
-
  2. Caricamento dei dati da verificare
 
   Ciascun utente e' responsabile di crearsi le script ed i codici per

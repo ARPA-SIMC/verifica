@@ -47,7 +47,6 @@ fi
 ### preparo le namelist per i programmi successivi
 [ -f parameters.nml ] && rm -f parameters.nml
 [ -f parametro.nml ] && rm -f parametro.nml
-[ -f startend.nml ] && rm -f startend.nml
 [ -f date.nml ] && rm -f date.nml
 [ -f scadenze.nml ] && rm -f scadenze.nml
 
