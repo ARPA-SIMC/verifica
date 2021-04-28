@@ -1,5 +1,6 @@
 aclocal.m4
 autom4te.cache/
+compile
 config.guess
 config.h
 config.h.in
@@ -14,6 +15,10 @@ missing
 libtool
 Makefile.in
 Makefile
+src/ver_lettura
+src/ver_scores_dballe
+src/ver_scores_prob_dballe
+src/ver_scores_prob_dballe_resampling
 verifica.sh
 .deps
 .libs
