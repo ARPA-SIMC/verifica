@@ -371,7 +371,8 @@
                    fctime=scaddb(2)
                    period=0
                 case(2) ! prodotto valido in un periodo
-                   pind=205
+!!!                   pind=205
+                   pind=2
                    if(analisi == 0)then ! verifica forecast
                       fctime=scaddb(3)
                    elseif(analisi == 1)then ! verifica analisi
@@ -535,7 +536,8 @@
                    fctime=0
                    period=0
                 case(2) ! prodotto valido in un periodo
-                   pind=205
+!!!                   pind=205
+                   pind=2
                    fctime=0
                    period=scaddb(3)-scaddb(2)
                 case(3) ! media
