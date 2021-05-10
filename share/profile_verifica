@@ -1,0 +1,76 @@
+### VERIFICA
+### profile che pilota la verifica, lanciato da ver_prepara e ver_score*
+### autore: Chiara Marsigli
+### ultima modifica: 10 maggio 2021
+
+startdate=20200601
+enddate=20200603
+enddateobs=20200604
+hourrun=0000
+periodo=JJA2020
+database="postgresql://myuser:mypassword@radicchio-smr/mydb"
+accumobs=3
+model="cosmo2I"
+scad1=3
+scad2=48
+inc=3
+param="tp"
+lev="g00"
+scadenze="1 0 3 4,1 3 6 4,1 6 9 4,1 9 12 4,1 12 15 4,1 15 18 4,1 18 21 4,1 21 24 4,1 24 27 4,1 27 30 4,1 30 33 4,1 33 36 4,1 36 39 4,1 39 42 4,1 42 45 4,1 45 48 4"
+analisi=0
+ore="0000 0100"
+interpol="near"
+medmax="average"
+gridtemplate="media.grib"
+lsmask=0
+filelsm="input_lsm.grib"
+reportobs="ossmed02"
+reportpre="cosmo2Imed02"
+DIRINDATI=${NETSCRATCH}/JJA2020
+DIROUTDATI=${NETSCRATCH}/NEW_VER
+DIROUTVER=${HOME}/nuova_verifica
+filename=tp3h
+ensmem=1
+
+###
+# startdate = data iniziale di partenza del run da verificare YYYYMMDD
+# enddate = data finale di partenza del run da verificare YYYYMMDD
+# enddateobs = data finale delle osservazioni da usare per la  verifica YYYYMMDD
+# hourrun = ora di partenza del run (od ora iniziale per le analisi) HHMM
+# periodo = label per indicare il periodo di verifica (libero)
+# database = "postgresql://myuser:mypassword@radicchio-smr/mynamedb"
+# accumobs = periodo su cui accumulare le osservazioni di pioggia (h)
+# model = nome modello da verificare (da usare nel nome report)
+# scad1 = prima scadenza
+#         - non deve essere minore di inc
+#         - per la preci e' la scadenza finale del primo periodo di cumulazione
+#         - uguale a 0 per la verifica di analisi
+# scad2 = ultima scadenza (0 per la verifica di analisi)
+# inc   = incremento temporale, 0 per le analisi
+# param = campo da verificare, coerente col file profile_$model
+# lev = livello del parametro (documentazione nel file spiega_GRIBARCH.txt)
+# scadenze = scadenze del parametro (documentazione nel file spiega_GRIBARCH.txt)
+# analisi = 1 se verifico delle analisi, 0 altrimenti
+# ore = ore cui estrarre l'analisi (compresa la prima, che e' identica a ora)
+#       quattro cifre: hhmm
+#       usata per la verifica delle analisi
+# interpol = elaborazione spaziale su punto, tipo di interpolazione
+#            (per i valori, si veda vg6d_getpoint, trans-type=inter;
+#	     es. "near" = punto piu' vicino)
+# lsmask = uso della land-sea mask; 0 se non si vuole usare, 1 se si vuole usare
+# filelsm = nome file grib contenente la land-sea mask (es. "input_lsm.grib")
+# medmax = elaborazione spaziale su box
+#          (per i valori, si vede vg6d_transform, trans-type='boxinter';
+#	   es. 'average' per la media 'max' per il massimo)
+# gridtemplate = file grib che fornisce il template della griglia su cui
+#                si effettua l'elaborazione spaziale (si deve trovare nella
+#		 directory da cui si lancia la verifica)
+# reportobs = nome report per gli osservati
+# reportpre = nome report per i previsti (uguale a $model+qualcosaltro)
+# DIRINDATI = directory dei dati in input (i grib dei run da verificare)
+# DIROUTDATI = directory dei dati in output (i grib elaborati)
+# DIROUTVER = directory di output della verifica (file ASCII degli score)
+# filename = stringa per il nome dei file di input
+#            i file si devono chimare ${filename}_${data_file}${hourrun}.grib
+# ensmem = numero di elementi dell'ensemble (1 altrimenti)
+###

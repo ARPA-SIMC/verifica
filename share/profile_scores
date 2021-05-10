@@ -1,0 +1,30 @@
+# da fissare i parametri per il tipo di verifica
+interpola='T'
+boxfix='F' 
+iana=0
+diffh='F' (non attivo)
+diffmax=500. (non attivo)
+corrq='F' (non attivo)
+laree='F' (non attivo)
+shapefile='' (non attivo)
+deterministico='T'
+probabilistico='F'
+#
+# interpola = se si vuole interpolare su punto stazione (T o F)
+# boxfix = se si vuole spazializzare su box (T o F)
+# iana = 0 se si vogliono utilizzare le osservazioni
+#      = 1 se si vuole utilizzare l'analisi
+# diffh = se si vuole eliminare l'interpolazione su una stazione la cui quota 
+#         ha una differenza rispetto a quella del punto di griglia del modello 
+#         maggiore di diffmax (vale solo con interpola='T')
+# diffmax = differenza massima ammessa tra le quote  
+# corrq = se si vuole correggere il dato per la differenza di quota tra il punto
+#         stazione ed il punto di griglia del modello (lapse=0.7)
+# laree = F per il normale calcolo dei valori su box
+#         T se si vuole calcolare la media su un'area diversa dalla box, 
+#           i cui confini sono specificati nel file shapefile
+# shapefile = nome del file (con tutto il path) dove sono specificati 
+#             i confini dell'area voluta
+# deterministico = verifica usuale del run deterministico
+#                  o, nell'ensmeble, se si vogliono gli scores usuali per elemento
+# probabilistico = verifica dell'ensemble con scores probabilistici
