@@ -47,11 +47,13 @@ share/profile_lmsmr3133 \
 share/profile_medit \
 share/profile_necmwfeu \
 share/profilestra.template \
+share/profile_scores \
 share/profile_swanad100 \
 share/profile_swanad101 \
 share/profile_swann1100 \
 share/profile_swann1101 \
 share/profilever.template \
+share/profile_verifica \
 share/profile_wamad002 \
 share/profile_wamad003 \
 share/profile_wammed \
