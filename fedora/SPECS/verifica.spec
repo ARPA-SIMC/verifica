@@ -1,6 +1,6 @@
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
-Version:       5.0
+Version:       5.1
 Release:       1
 License:       GPL
 Group:         Applications/Meteo
@@ -12,10 +12,9 @@ BuildRequires: libtool
 BuildRequires: gcc-gfortran
 BuildRequires: eccodes-devel
 BuildRequires: eccodes-simc
-BuildRequires: libdballe-devel
-BuildRequires: libdballef-devel
+BuildRequires: pkgconfig(libdballe)
+BuildRequires: pkgconfig(libdballef)
 BuildRequires: libsim-devel
-Requires: libdballef4
 Requires: eccodes
 
 %description
@@ -65,6 +64,12 @@ sh autogen.sh
 %{_libdir}/*.so*
 
 %changelog
+* Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 5.1-1
+- added profiles
+- modified parameters for gusts verification
+- cleaned up old files
+- rebuild on dballe 9
+
 * Mon Apr 26 2021 Daniele Branchini <dbranchini@arpae.it> - 5.0-1
 - massive refactory for switching from gribex/libsmr to eccodes/libsim
 
