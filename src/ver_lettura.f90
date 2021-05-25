@@ -1,6 +1,7 @@
     PROGRAM ver_lettura
 
     USE util_dballe
+    IMPLICIT NONE
 
     character(LEN=10) :: btable="",starbtable(12)
     CHARACTER(LEN=10) :: dati(12),d1,d2,d3
@@ -9,7 +10,7 @@
     character(512) :: database='',user='',password=''
 
     INTEGER :: handle,handleana,handle_err
-    integer :: debug=1
+    integer :: debug=1,i,ii,n,nn,idbhandle
 
     NAMELIST  /odbc/database,user,password
     NAMELIST /lettura/selperiod,yearmin,monthmin,daymin,yearmax,monthmax,daymax,&
@@ -27,11 +28,9 @@
     INTEGER :: idata(3),iora=00,imin=00
     integer :: pind=1,fctime=0,period=0
 
-    integer :: imd
+    integer :: imd=9999
 
     integer :: ier
-
-    DATA imd/9999/
 
     PRINT*,'program lettura'
 

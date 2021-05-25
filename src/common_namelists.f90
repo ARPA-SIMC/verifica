@@ -1,5 +1,5 @@
 MODULE common_namelists
-
+    IMPLICIT NONE
 ! here the namelist variables are declared
     PARAMETER (MNSCAD=72,MNSOG=10,MNRM=102)
 ! parameters.nml
