@@ -1,3 +1,6 @@
+# Note: define _srcarchivename in CI build only.
+%{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
+
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
 Version:       5.1
@@ -5,7 +8,8 @@ Release:       1
 License:       GPL
 Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
-Source:        https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
+Source:        https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{srcarchivename}.tar.gz
+
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: libtool
@@ -32,8 +36,7 @@ verifica e dal quale vengono poi estratti per calcolare una serie di
 misure di errore.
 
 %prep
-rm -rf %{buildroot}
-%setup -q -n %{name}-%{version}-%{release}
+%setup -q -n %{srcarchivename}
 sh autogen.sh
 
 %build
