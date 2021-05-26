@@ -1,10 +1,10 @@
 MODULE common_namelists
     IMPLICIT NONE
 ! here the namelist variables are declared
-    PARAMETER (MNSCAD=72,MNSOG=10,MNRM=102)
+    INTEGER,PARAMETER :: MNSCAD=72,MNSOG=10,MNRM=102
 ! parameters.nml
-    integer :: nora=0000,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
-    integer :: nvar=1,nrm=1,nore=1,ore(24)=0000
+    integer :: nora=0,ngio=1,nscad=1,scad1=1,scad2=1,inc=1
+    integer :: nvar=1,nrm=1,nore=1,ore(24)=0
 ! date.nml
     integer :: data(3)=(/-1,-1,-1/)
 ! scadenze.nml
@@ -31,7 +31,7 @@ MODULE common_namelists
     integer :: nowght(MNRM)=1
     INTEGER :: nelsupens=102
 ! odbc.nml
-    character(512) :: database='',user='',password=''
+    character(len=512) :: database='',user='',password=''
 
 ! here the namelists are declared
     NAMELIST /parameters/nora,ngio,nscad,scad1,scad2,inc, &
