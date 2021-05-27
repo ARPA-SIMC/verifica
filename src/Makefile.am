@@ -19,6 +19,10 @@ ver_scores_dballe.$(OBJEXT): util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
 ver_scores_prob_dballe.$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
 ver_scores_prob_dballe_resampling.$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
 
+scores_prob_util_dballe.mod: scores_prob_util_dballe.$(OBJEXT)
+util_dballe.mod: util_dballe.$(OBJEXT)
+common_namelists.mod: common_namelists.$(OBJEXT)
+
 dist_bin_SCRIPTS = ver_prepara_nml.sh \
  ver_scores_prob.sh \
  ver_scores.sh
