@@ -17,7 +17,7 @@ ver_scores_prob_dballe_resampling_LDADD = libverifica.la
 ver_lettura.$(OBJEXT): util_dballe.$(OBJEXT)
 ver_scores_dballe.$(OBJEXT): util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
 ver_scores_prob_dballe.$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
-ver_scores_prob_dballe_resampling..$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
+ver_scores_prob_dballe_resampling.$(OBJEXT): util_dballe.$(OBJEXT) scores_prob_util_dballe.$(OBJEXT) common_namelists.$(OBJEXT)
 
 dist_bin_SCRIPTS = ver_prepara_nml.sh \
  ver_scores_prob.sh \
