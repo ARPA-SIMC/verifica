@@ -435,6 +435,7 @@
 !    INTEGER :: num(nelsupens)
     INTEGER, ALLOCATABLE :: num(:)
     INTEGER, INTENT(out) :: ipos
+    INTEGER :: tmp
     LOGICAL :: loutput
     
     ALLOCATE(num(1:nelsupens))

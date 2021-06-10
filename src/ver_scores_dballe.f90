@@ -129,7 +129,7 @@
     read(1,nml=parameters,err=9001)
     close(1)
 ! ora di inizio dei runs
-    ora(1)=nora/100.
+    ora(1)=nora/100
     ora(2)=mod(nora,100)
     open(1,file='stat.nml',status='old')
     read(1,nml=stat,err=9002)
@@ -222,7 +222,7 @@
         imesef=data(2)
         iannof=data(3)
       ENDIF
-      iorai=nora/100.
+      iorai=nora/100
       imini=MOD(nora,100)
     ENDDO
     CLOSE(1)
@@ -297,7 +297,7 @@
         do igio=1,ngio
             read(1,nml=date,err=9004)
         ! ora di inizio
-            ora(1)=nora/100.
+            ora(1)=nora/100
             ora(2)=mod(nora,100)
 
         ! trovo data e ora di validita' della previsione
@@ -323,7 +323,7 @@
 
                 if(iore > 1)then
                 ! trovo data e ora dell'emissione per ore successive (analisi)
-                    ora(1)=ore(iore)/100.
+                    ora(1)=ore(iore)/100
                     ora(2)=mod(ore(iore),100)
                     oraval(1)=ora(1)
                     oraval(2)=ora(2)

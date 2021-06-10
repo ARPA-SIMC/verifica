@@ -12,10 +12,6 @@
     INTEGER :: handle,handleana,handle_err
     integer :: debug=1,i,ii,n,nn,idbhandle
 
-    NAMELIST  /odbc/database,user,password
-    NAMELIST /lettura/selperiod,yearmin,monthmin,daymin,yearmax,monthmax,daymax,&
-     seldate,idata,iora,imin,selrep,rep_memo,selscad,pind,fctime,period,selvar,btable
-
     CHARACTER(20) :: name,rep_memo=""
     real :: lat,lon
     INTEGER :: height,mobile,BLOCK,ana_id
@@ -31,6 +27,10 @@
     integer :: imd=9999
 
     integer :: ier
+
+    NAMELIST  /odbc/database,user,password
+    NAMELIST /lettura/selperiod,yearmin,monthmin,daymin,yearmax,monthmax,daymax,&
+     seldate,idata,iora,imin,selrep,rep_memo,selscad,pind,fctime,period,selvar,btable
 
     PRINT*,'program lettura'
 
