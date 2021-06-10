@@ -62,16 +62,18 @@ elif [ $boxfix = 'T' ] ; then
   itipo=2
 fi
 
-echo ' $stat' > stat.nml
-echo '   model="'$model'",' >> stat.nml
-echo '   itipo='$itipo',' >> stat.nml
-echo '   iana='$iana',' >> stat.nml
-echo '   reportobs="'$reportobs'",' >> stat.nml
-echo '   reportpre="'$reportpre'",' >> stat.nml
-echo '   analisi='$analisi',' >> stat.nml
-echo '   diffh='$diffh',' >> stat.nml
-echo '   diffmax='$diffmax',' >> stat.nml
-echo ' $end' >> stat.nml
+cat > stat.nml <<EOF
+\$stat
+  model='$model',
+  itipo=$itipo,
+  iana=$iana,
+  reportobs='$reportobs',
+  reportpre='$reportpre',
+  analisi=$analisi,
+  diffh=$diffh,
+  diffmax=$diffmax,
+\$end
+EOF
 
 if [ $deterministico = 'T' ] ; then
 
