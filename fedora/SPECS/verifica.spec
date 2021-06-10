@@ -1,10 +1,11 @@
+%global releaseno 1
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary:       Verification software for ARPAE-SIMC products
 Name:          verifica
-Version:       5.1
-Release:       1
+Version:       5.2
+Release:       %{releaseno}
 License:       GPL
 Group:         Applications/Meteo
 URL:           https://github.com/arpa-simc/%{name}
@@ -67,6 +68,9 @@ sh autogen.sh
 %{_libdir}/*.so*
 
 %changelog
+* Thu Jun 10 2021 Daniele Branchini <dbranchini@arpae.it> - 5.2-1
+- cleanup fortran code for F34 builds
+
 * Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 5.1-1
 - added profiles
 - modified parameters for gusts verification
