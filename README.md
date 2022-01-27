@@ -1,6 +1,5 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/verifica/centos7.png)](https://simc.arpae.it/moncic-ci/verifica/)
 [![Build Status](https://simc.arpae.it/moncic-ci/verifica/centos8.png)](https://simc.arpae.it/moncic-ci/verifica/)
-[![Build Status](https://simc.arpae.it/moncic-ci/verifica/fedora32.png)](https://simc.arpae.it/moncic-ci/verifica/)
 [![Build Status](https://simc.arpae.it/moncic-ci/verifica/fedora34.png)](https://simc.arpae.it/moncic-ci/verifica/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/verifica/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/verifica/)
 
@@ -86,7 +85,7 @@ in fondo a questo README.
 
   Per l'impostazione dei parametri della verifica di lancia:
 
-    * `ver_prepara_nml.sh`
+  `ver_prepara_nml.sh`
 
   che apre in editor un file dove si scelgono i parametri della verifica
   E' possibile verificare tanto i forecast dei modelli quanto le loro analisi.
@@ -95,12 +94,12 @@ in fondo a questo README.
 
   Gli score vengono calcolati eseguendo:
 
-    * `ver_scores.sh`
+  `ver_scores.sh`
 
   per gli scores di un singolo run (o di ciascun membro di un ensemble)
   oppure
 
-    * `ver_scores_prob.sh`
+  `ver_scores_prob.sh`
 
   per gli scores di un ensemble.
   Per questo, deve esistere nella directory di lavoro un file chiamato pesi.nml
@@ -143,8 +142,8 @@ reportpre (fino a 20 caratteri)
   * 5 caratteri per l'ensemble
   el001, el012, el111
 
-Per cui reportpre potrebbe essere uguale a:
-cosmo2Ispnpo
-c2ireanamed02
-c2iepsmed02el001
+Per cui reportpre potrebbe essere uguale a:  
+`cosmo2Ispnpo`  
+`c2ireanamed02`  
+`c2iepsmed02el001`
 

@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -68,6 +68,9 @@ sh autogen.sh
 %{_libdir}/*.so*
 
 %changelog
+* Thu Jan 27 2022 Daniele Branchini <dbranchini@arpae.it> - 5.2-2
+- rebuild on libsim 7
+
 * Thu Jun 10 2021 Daniele Branchini <dbranchini@arpae.it> - 5.2-1
 - cleanup fortran code for F34 builds
 
