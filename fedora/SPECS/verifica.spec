@@ -1,4 +1,4 @@
-%global releaseno 2
+%global releaseno 3
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -64,10 +64,13 @@ sh autogen.sh
 %{_includedir}/*
 
 %{_libdir}/*.a
-%{_libdir}/*.la
+%exclude %{_libdir}/*.la
 %{_libdir}/*.so*
 
 %changelog
+* Tue Sep 20 2022 Daniele Branchini <dbranchini@arpae.it> - 5.2-3
+- Removed .la files
+
 * Thu Jan 27 2022 Daniele Branchini <dbranchini@arpae.it> - 5.2-2
 - rebuild on libsim 7
 
