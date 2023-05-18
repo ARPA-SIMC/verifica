@@ -1,6 +1,8 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/verifica/centos7.png)](https://simc.arpae.it/moncic-ci/verifica/)
-[![Build Status](https://simc.arpae.it/moncic-ci/verifica/centos8.png)](https://simc.arpae.it/moncic-ci/verifica/)
+[![Build Status](https://simc.arpae.it/moncic-ci/verifica/rocky8.png)](https://simc.arpae.it/moncic-ci/verifica/)
+[![Build Status](https://simc.arpae.it/moncic-ci/verifica/rocky9.png)](https://simc.arpae.it/moncic-ci/verifica/)
 [![Build Status](https://simc.arpae.it/moncic-ci/verifica/fedora36.png)](https://simc.arpae.it/moncic-ci/verifica/)
+[![Build Status](https://simc.arpae.it/moncic-ci/verifica/fedora38.png)](https://simc.arpae.it/moncic-ci/verifica/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/verifica/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/verifica/)
 
 # Verifica
